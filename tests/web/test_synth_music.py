@@ -74,6 +74,8 @@ VERSE, CHORUS, BREAKDOWN, BUILD = 1, 2, 3, 4
 def test_song_is_long_before_it_loops() -> None:
     assert SynthMusic.song_bars() * SynthMusic.STEPS_PER_BAR * 60 / SynthMusic.BPM / 4 > 90
     assert SynthMusic.section_at(SynthMusic.song_bars()) == (SynthMusic.SONG[0], 0)
+    last = SynthMusic.SONG[-1]
+    assert SynthMusic.section_at(SynthMusic.song_bars() - 1) == (last, last.bars - 1)
 
 
 def test_backbeat_has_a_snare() -> None:

@@ -117,11 +117,11 @@ class SynthMusic:
     def section_at(cls, bar: int) -> tuple[MusicSection, int]:
         """Return the section playing at song bar ``bar`` and the bar's index within it."""
         bar %= cls.song_bars()
-        for section in cls.SONG:
+        for section in cls.SONG[:-1]:
             if bar < section.bars:
                 return section, bar
             bar -= section.bars
-        raise AssertionError  # unreachable: the bar was wrapped into the song
+        return cls.SONG[-1], bar
 
     def start(self) -> None:
         """Resume the audio context and start the music, if not already playing."""

@@ -155,11 +155,20 @@ def test_corner_hit_nudges() -> None:
     assert GameEvent.CRASHED not in events
 
 
-def test_strafing_into_a_wall_scrapes_it() -> None:
-    session = started(make_level(*["N1 N1 N1 N1 N1 N2 N1 N1"] * 20))
-    events = run(session, 0.5, ShipInput(right=True))
-    assert GameEvent.SCRAPED_RIGHT in events
-    assert GameEvent.SCRAPED_LEFT not in events
+@pytest.mark.parametrize(
+    ("row", "ship_input", "scraped", "spared"),
+    [
+        ("N1 N1 N1 N1 N1 N2 N1 N1", ShipInput(right=True), GameEvent.SCRAPED_RIGHT, GameEvent.SCRAPED_LEFT),
+        ("N1 N1 N2 N1 N1 N1 N1 N1", ShipInput(left=True), GameEvent.SCRAPED_LEFT, GameEvent.SCRAPED_RIGHT),
+    ],
+)
+def test_strafing_into_a_wall_scrapes_it(
+    row: str, ship_input: ShipInput, scraped: GameEvent, spared: GameEvent
+) -> None:
+    session = started(make_level(*[row] * 20))
+    events = run(session, 0.5, ship_input)
+    assert scraped in events
+    assert spared not in events
 
 
 def test_jump_and_land() -> None:

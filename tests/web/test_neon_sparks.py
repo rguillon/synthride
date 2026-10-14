@@ -67,6 +67,15 @@ def test_sparks_are_born_on_the_spark_clock() -> None:
     assert set(writes(sparks, "aBirth")[0][0]) == {1.5}
 
 
+def test_bumping_a_roof_sprays_sparks_down_from_the_ship_top() -> None:
+    sparks = make_sparks()
+    ship = Ship(Vector3(0, 1, 0))
+    sparks.react([GameEvent.BUMPED], ship)
+    ((positions, _),) = writes(sparks, "position")
+    assert len(positions) == 3 * NeonSparks.IMPACT.count
+    assert set(positions[1::3]) == {1 + ship.height}
+
+
 def test_ring_buffer_wraps_around() -> None:
     sparks = make_sparks()
     ship = Ship(Vector3())
