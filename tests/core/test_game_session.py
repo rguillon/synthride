@@ -7,6 +7,7 @@ from synthride.core.game_session import GameSession
 from synthride.core.level import Level
 from synthride.core.level_parser import LevelParser
 from synthride.core.ship_input import ShipInput
+from synthride.core.tile_type import TileType
 
 FLAT = "N1 N1 N1 N1 N1 N1 N1 N1"
 FORWARD = ShipInput(accelerate=True)
@@ -163,3 +164,30 @@ def test_running_out_of_oxygen():
 def test_running_out_of_fuel():
     session = started(make_level(*[FLAT] * 50, header="fuel: 0.5\n"))
     assert GameEvent.OUT_OF_FUEL in run(session, 3)
+
+
+def test_air_jump_pad_ice_and_pusher_events():
+    rows = [FLAT] * 2 + ["O1 O1 O1 O1 O1 O1 O1 O1"] + [FLAT] * 2 + ["I1 I1 I1 I1 I1 I1 I1 I1"] * 2
+    rows += ["N1 N1 N1 N1 >1 >1 >1 >1"] * 2 + [FLAT] * 2 + ["J1 J1 J1 J1 J1 J1 J1 J1"] + [FLAT] * 40
+    session = started(make_level(*rows))
+    session.oxygen.drain(1)
+    session.ship.position = session.ship.position.with_x(4.5)
+    events = run(session, 3)
+    for expected in (GameEvent.REFILLED_AIR, GameEvent.SKIDDED, GameEvent.PUSHED, GameEvent.LAUNCHED):
+        assert expected in events, expected
+    assert events.count(GameEvent.SKIDDED) == 1
+
+
+def test_ship_remembers_its_surface_until_airborne():
+    session = started(make_level(*["I1 I1 I1 I1 I1 I1 I1 I1"] * 20))
+    run(session, 0.1, ShipInput())
+    assert session.ship.surface is TileType.ICE
+    run(session, 0.05, ShipInput(jump=True))
+    assert session.ship.surface is None
+
+
+def test_jumping_in_a_tunnel_bumps_its_roof():
+    session = started(make_level(*["N1T N1T N1T N1T N1T N1T N1T N1T"] * 20))
+    events = run(session, 0.05, ShipInput(jump=True)) + run(session, 0.5, ShipInput())
+    assert GameEvent.BUMPED in events
+    assert GameEvent.LANDED in events

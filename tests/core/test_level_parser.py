@@ -2,6 +2,7 @@ import pytest
 
 from synthride.core.level_parser import LevelFormatError, LevelParser
 from synthride.core.tile_type import TileType
+from synthride.core.tunnel_kind import TunnelKind
 
 VALID = """\
 name: Neon Test   # comment
@@ -47,6 +48,8 @@ def test_defaults_when_header_is_empty():
         ("---\n" + ".. " * 7 + "N9", 2),
         ("---\n" + ".. " * 7 + "N", 2),
         ("---\n", 1),
+        ("---\n" + ".. " * 7 + "N1X", 2),
+        ("---\n" + ".. " * 7 + "N1TT", 2),
     ],
 )
 def test_errors_report_line_number(text, line):
@@ -54,3 +57,16 @@ def test_errors_report_line_number(text, line):
         LevelParser().parse(text)
     assert error.value.line_number == line
     assert f"line {line}" in str(error.value)
+
+
+def test_parses_new_tiles_and_tunnels():
+    track = LevelParser().parse("---\nJ1 I1 O1 <1 >1 N2T N2T N1A").track
+    assert [tile.tile_type for tile in track.tiles()][:5] == [
+        TileType.JUMP,
+        TileType.ICE,
+        TileType.AIR,
+        TileType.PUSH_LEFT,
+        TileType.PUSH_RIGHT,
+    ]
+    tunnels = [tile.tunnel for tile in track.tiles()]
+    assert tunnels == [None] * 5 + [TunnelKind.SQUARE, TunnelKind.SQUARE, TunnelKind.ROUND]

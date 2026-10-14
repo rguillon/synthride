@@ -18,6 +18,11 @@ class SoundEffects:
             GameEvent.BOOSTED: self._boost,
             GameEvent.SLOWED: self._slow,
             GameEvent.REFUELED: self._refuel,
+            GameEvent.REFILLED_AIR: self._refill_air,
+            GameEvent.LAUNCHED: self._launch,
+            GameEvent.SKIDDED: self._skid,
+            GameEvent.PUSHED: self._push,
+            GameEvent.BUMPED: self._bump,
             GameEvent.CRASHED: self._explode,
             GameEvent.BURNED: self._explode,
             GameEvent.FELL: self._fall,
@@ -52,6 +57,26 @@ class SoundEffects:
     def _refuel(self, now: float) -> None:
         for index, note in enumerate((72, 76, 79, 84)):
             self._voices.tone("triangle", self._voices.frequency(note), now + index * 0.06, 0.12, 0.18)
+
+    def _refill_air(self, now: float) -> None:
+        self._voices.noise(now, 0.35, 0.12, highpass_hz=1200)
+        for index, note in enumerate((79, 76, 83)):
+            self._voices.tone("sine", self._voices.frequency(note), now + index * 0.07, 0.16, 0.16)
+
+    def _launch(self, now: float) -> None:
+        self._voices.tone("square", 110, now, 0.5, 0.14, end_hz=1320, cutoff_hz=3000)
+        self._voices.tone("sine", 70, now, 0.25, 0.35, end_hz=40)
+
+    def _skid(self, now: float) -> None:
+        self._voices.noise(now, 0.4, 0.14, highpass_hz=5000)
+        self._voices.tone("sine", 2400, now, 0.3, 0.05, end_hz=3200)
+
+    def _push(self, now: float) -> None:
+        self._voices.tone("triangle", 330, now, 0.18, 0.15, end_hz=440)
+        self._voices.tone("triangle", 330, now + 0.1, 0.18, 0.12, end_hz=440)
+
+    def _bump(self, now: float) -> None:
+        self._voices.tone("square", 160, now, 0.1, 0.18, end_hz=90, cutoff_hz=900)
 
     def _explode(self, now: float) -> None:
         self._voices.noise(now, 0.5, 0.6)

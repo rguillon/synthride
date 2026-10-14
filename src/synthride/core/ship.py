@@ -4,12 +4,16 @@ from dataclasses import dataclass, field
 
 from synthride.core.bounding_box import BoundingBox
 from synthride.core.game_config import GameConfig
+from synthride.core.tile_type import TileType
 from synthride.core.vector3 import Vector3
 
 
 @dataclass
 class Ship:
-    """The player's ship. ``position`` is the centre of the bottom face of its bounding box."""
+    """The player's ship. ``position`` is the centre of the bottom face of its bounding box.
+
+    ``surface`` is the type of tile the ship rode on during the last step, None while airborne.
+    """
 
     position: Vector3
     width: float = 0.7
@@ -17,6 +21,7 @@ class Ship:
     length: float = 0.8
     velocity: Vector3 = field(default_factory=Vector3)
     grounded: bool = False
+    surface: TileType | None = None
 
     @classmethod
     def from_config(cls, position: Vector3, config: GameConfig) -> Ship:

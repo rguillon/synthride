@@ -1,4 +1,6 @@
+from synthride.core.tile_type import TileType
 from synthride.web.menu_screen import MenuScreen
+from synthride.web.palette import Palette
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
 
 
@@ -39,3 +41,12 @@ def test_other_screens_and_hide():
     menu.hide()
     assert container.hidden
     assert menu.current is None
+
+
+def test_level_select_explains_every_block():
+    legend = MenuScreen.legend()
+    explained = {tile_type for types, _, _ in MenuScreen.LEGEND for tile_type in types}
+    assert explained == set(TileType)
+    assert legend.count("<li>") == len(MenuScreen.LEGEND) + 1
+    assert Palette.css(Palette.tile_color(TileType.JUMP)) in legend
+    assert "TUNNELS" in legend

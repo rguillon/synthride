@@ -19,9 +19,12 @@ class SceneRenderer:
     CAMERA_HEIGHT = 1.25
     CAMERA_DISTANCE = 3.6
     LOOK_AHEAD = 8.0
+    CEILING_MARGIN = 0.22  # how far under a tunnel roof the camera stays
+    MIN_HEIGHT = 0.35
     FOLLOW_RATE = 7.0
     MSAA_SAMPLES = 4
-    SHAKE_EVENTS = frozenset({GameEvent.CRASHED, GameEvent.BURNED, GameEvent.FELL, GameEvent.NUDGED})
+    SHAKE_EVENTS = frozenset({GameEvent.CRASHED, GameEvent.BURNED, GameEvent.FELL, GameEvent.NUDGED, GameEvent.BUMPED})
+    LIGHT_SHAKES = frozenset({GameEvent.NUDGED, GameEvent.BUMPED})
 
     def __init__(self, bridge: JsBridge, container: Any, lines: NeonLines, rng: random.Random | None = None) -> None:
         three, window = bridge.three, bridge.window
@@ -71,12 +74,21 @@ class SceneRenderer:
 
     def react(self, events: list[GameEvent]) -> None:
         if any(event in self.SHAKE_EVENTS for event in events):
-            self._shake = 0.15 if events == [GameEvent.NUDGED] else 0.5
+            hard = any(event in self.SHAKE_EVENTS - self.LIGHT_SHAKES for event in events)
+            self._shake = 0.5 if hard else 0.15
 
-    def follow(self, ship: Ship, speed_fraction: float, dt: float, snap: bool = False) -> None:
-        """Eases the chase camera toward its spot behind the ship and widens the view with speed."""
+    def follow(
+        self, ship: Ship, speed_fraction: float, dt: float, snap: bool = False, ceiling: float | None = None
+    ) -> None:
+        """Eases the chase camera toward its spot behind the ship and widens the view with speed.
+
+        Under a ``ceiling`` (a tunnel roof), the camera drops below it so the roof never hides the ship.
+        """
         x, y, z = ship.position.x, ship.position.y, -ship.position.z
-        target = (x, y + self.CAMERA_HEIGHT, z + self.CAMERA_DISTANCE)
+        height = y + self.CAMERA_HEIGHT
+        if ceiling is not None:
+            height = max(y + self.MIN_HEIGHT, min(height, ceiling - self.CEILING_MARGIN))
+        target = (x, height, z + self.CAMERA_DISTANCE)
         blend = 1.0 if snap else 1 - math.exp(-self.FOLLOW_RATE * dt)
         self._camera_position = [
             current + (goal - current) * blend for current, goal in zip(self._camera_position, target, strict=True)

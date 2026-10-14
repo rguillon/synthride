@@ -35,8 +35,25 @@ hosted anywhere, GitHub Pages included.
 
 ### Rules
 
-- The track is 8 blocks wide and made of blocks of different heights and effects:
-  **cyan** normal, **pink** boost, **violet** slow down, **red** kill, **green** refuel, **gold** finish.
+- The track is 8 blocks wide and made of blocks of different heights and effects. Each special block carries an
+  animated marking that shows what it does, and the level select screen has a key:
+
+  | Block | Look | Effect |
+  | --- | --- | --- |
+  | normal | cyan | solid ground |
+  | boost | pink, chevrons racing forward | speed burst above top speed |
+  | slow | violet, chevrons crawling back | caps your speed |
+  | kill | red, flashing hazard stripes | burns the ship |
+  | jump pad | orange, target and rising arrows | launches the ship high into the air |
+  | ice | white, drifting crystals | no grip: sideways speed changes only slowly |
+  | pusher | lime, arrows streaming sideways | drifts the ship left or right |
+  | refuel | green, pulsing plus | refills fuel |
+  | air | blue, bubbles | refills oxygen |
+  | finish | gold checker | ends the level |
+
+- Blocks can carry a **tunnel**, square or round. Side-by-side tunnel blocks merge into one wide tunnel. Its walls
+  stop you, jumping inside bumps your head on the roof, flying into its front edge is a crash, and you can ride
+  on top of it.
 - Falling off the track, hitting a block head-on, riding a kill block, or running out of fuel or oxygen costs a life
   and restarts the level. Clipping a block with only a corner of the ship nudges you sideways instead.
 - Finish the track to unlock the next level. You have 3 lives.
@@ -54,10 +71,12 @@ fuel: 100          # 1 unit of fuel per 4 blocks travelled
 .. .. N1 N1 N1 N1 .. ..      # first row = start of the track
 .. .. N1 B1 B1 N1 .. ..
 .. N2 N2 .. .. N2 N2 ..
+.. .. N1A N1A N1A N1A .. ..  # a round tunnel four blocks wide
 ```
 
 Each row has 8 cells: `..` is a gap, otherwise a type letter (`N`ormal, `B`oost, `S`low, `K`ill, `R`efuel,
-`F`inish) followed by a height from 1 to 4.
+`O` air, `J`ump pad, `I`ce, `<` / `>` pushers, `F`inish) followed by a height from 1 to 4, optionally followed by
+`T` for a square tunnel or `A` for a round (arched) one: `N1T`, `B2A`.
 
 ## Architecture
 

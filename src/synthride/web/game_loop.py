@@ -26,6 +26,10 @@ class GameLoop:
     UP = frozenset({"ArrowUp", "KeyW"})
     DOWN = frozenset({"ArrowDown", "KeyS"})
     HUD_PHASES = frozenset({GamePhase.PLAYING, GamePhase.DYING, GamePhase.LEVEL_WON})
+    # The stretch of track whose tunnel roofs the chase camera ducks under: from where it sits behind
+    # the ship to a little ahead, so it is already low when the ship enters a tunnel.
+    CAMERA_REACH_BEHIND = SceneRenderer.CAMERA_DISTANCE + 0.5
+    CAMERA_REACH_AHEAD = 5.0
 
     def __init__(
         self,
@@ -77,12 +81,18 @@ class GameLoop:
         events = session.update(dt, self._keyboard.ship_input())
         self._sound_effects.play(events)
         self._renderer.react(events)
+        self._hud.announce(events)
+        self._hud.fade(dt)
         self._music.update()
         snap = self._show_current_level() or GameEvent.LEVEL_STARTED in events
         self._ship_model.sync(session.ship, session.phase, dt)
         if session.phase is not GamePhase.DYING:
-            speed_fraction = session.ship.speed / session.config.max_speed
-            self._renderer.follow(session.ship, min(speed_fraction, 1.3), dt, snap=snap)
+            ship = session.ship
+            speed_fraction = ship.speed / session.config.max_speed
+            ceiling = session.level.track.ceiling_over(
+                ship.position.x, ship.position.z - self.CAMERA_REACH_BEHIND, ship.position.z + self.CAMERA_REACH_AHEAD
+            )
+            self._renderer.follow(ship, min(speed_fraction, 1.3), dt, snap=snap, ceiling=ceiling)
         self._backdrop.update(self._renderer.camera_z, self._time)
         self._track_builder.animate(self._time)
         self._update_overlays()

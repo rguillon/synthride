@@ -100,6 +100,7 @@ class GameSession:
 
     def _handle_collisions(self, reports: list[CollisionReport], was_grounded: bool) -> list[GameEvent]:
         events: list[GameEvent] = []
+        surface = None
         for report in reports:
             match report.outcome:
                 case CollisionOutcome.CRASHED:
@@ -108,14 +109,19 @@ class GameSession:
                     return [*events, *self._die(GameEvent.FELL)]
                 case CollisionOutcome.NUDGED:
                     events.append(GameEvent.NUDGED)
-                case CollisionOutcome.LANDED if report.tile is not None:
+                case CollisionOutcome.BUMPED:
+                    events.append(GameEvent.BUMPED)
+                case CollisionOutcome.LANDED:
                     if not was_grounded:
                         events.append(GameEvent.LANDED)
-                    events.extend(self._apply_tile(report.tile))
+                    if report.tile is not None:
+                        events.extend(self._apply_tile(report.tile))
+                        surface = report.tile.tile_type
+        self.ship.surface = surface
         return events
 
     def _apply_tile(self, tile: Tile) -> list[GameEvent]:
-        event = self._effects.apply(tile, self.ship, self.fuel)
+        event = self._effects.apply(tile, self.ship, self.fuel, self.oxygen)
         if event is GameEvent.BURNED:
             return self._die(event)
         if event is GameEvent.LEVEL_WON:

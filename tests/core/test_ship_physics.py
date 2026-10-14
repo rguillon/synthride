@@ -4,6 +4,7 @@ from synthride.core.game_config import GameConfig
 from synthride.core.ship import Ship
 from synthride.core.ship_input import ShipInput
 from synthride.core.ship_physics import ShipPhysics
+from synthride.core.tile_type import TileType
 from synthride.core.vector3 import Vector3
 
 CONFIG = GameConfig()
@@ -63,3 +64,22 @@ def test_gravity_pulls_down():
     ship = make_ship(grounded=False)
     ShipPhysics(CONFIG).apply(ship, ShipInput(), gravity=10, dt=0.5)
     assert ship.velocity.y == -5
+
+
+def test_ice_keeps_the_ship_sliding_sideways():
+    ship = make_ship(speed=10)
+    ship.surface = TileType.ICE
+    ship.velocity = ship.velocity.with_x(3.0)
+    ShipPhysics(CONFIG).apply(ship, ShipInput(), gravity=0, dt=0.1)
+    assert 0 < ship.velocity.x < 3.0
+    ship.velocity = ship.velocity.with_x(0.0)
+    ShipPhysics(CONFIG).apply(ship, ShipInput(right=True), gravity=0, dt=0.1)
+    assert 0 < ship.velocity.x < CONFIG.min_strafe_speed
+
+
+@pytest.mark.parametrize(("surface", "direction"), [(TileType.PUSH_LEFT, -1), (TileType.PUSH_RIGHT, 1)])
+def test_pushers_drift_the_ship_sideways(surface, direction):
+    ship = make_ship(speed=10)
+    ship.surface = surface
+    ShipPhysics(CONFIG).apply(ship, ShipInput(), gravity=0, dt=0.1)
+    assert ship.velocity.x == direction * CONFIG.push_speed

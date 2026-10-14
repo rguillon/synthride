@@ -1,9 +1,12 @@
 import pytest
 
 from synthride.core.bounding_box import BoundingBox
+from synthride.core.level_parser import LevelParser
 from synthride.core.tile import Tile
 from synthride.core.tile_type import TileType
 from synthride.core.track import Track
+from synthride.core.tunnel_kind import TunnelKind
+from synthride.core.tunnel_span import TunnelSpan
 from synthride.core.vector3 import Vector3
 
 
@@ -48,3 +51,31 @@ def test_surface_height_at():
     track = make_track()
     assert track.surface_height_at(4.5, 0.5) == 1.0
     assert track.surface_height_at(0.5, 0.5) is None
+
+
+def test_neighbouring_tunnel_tiles_merge_into_spans():
+    track = LevelParser().parse("---\nN1T N1T N2T N1A N1A .. N1T N1").track
+    spans = [(span.kind, span.first_column, span.last_column, span.deck) for span in track.tunnels]
+    assert spans == [
+        (TunnelKind.SQUARE, 0, 1, 0.5),
+        (TunnelKind.SQUARE, 2, 2, 1.0),
+        (TunnelKind.ROUND, 3, 4, 0.5),
+        (TunnelKind.SQUARE, 6, 6, 0.5),
+    ]
+
+
+def test_solids_under_include_tunnel_shells_once():
+    track = LevelParser().parse("---\n.. .. N1T N1T .. .. .. ..").track
+    box = BoundingBox(Vector3(2.5, 0, 0.2), Vector3(3.5, 1, 0.8))
+    solids = track.solids_under(box)
+    assert len([solid for solid in solids if solid.tile is not None]) == 2
+    assert len([solid for solid in solids if solid.tile is None]) == 1  # the roof spans both tiles
+    assert track.tiles_under(box) == [track.tile_at(2, 0), track.tile_at(3, 0)]
+
+
+def test_ceiling_over_finds_the_lowest_tunnel_roof_in_range():
+    track = LevelParser().parse("---\n" + "N1 " * 8 + "\n" + "N1T " * 8 + "\n" + "N2T " * 8).track
+    assert track.ceiling_over(4, 0.0, 0.9) is None
+    assert track.ceiling_over(4, 0.0, 1.5) == 0.5 + TunnelSpan.CLEARANCE
+    assert track.ceiling_over(4, 2.0, 2.5) == 1.0 + TunnelSpan.CLEARANCE
+    assert track.ceiling_over(-1, 0.0, 3.0) is None

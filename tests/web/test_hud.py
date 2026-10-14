@@ -1,6 +1,9 @@
+from synthride.core.game_event import GameEvent
 from synthride.core.game_session import GameSession
 from synthride.core.level_parser import LevelParser
+from synthride.core.tile_type import TileType
 from synthride.web.hud import Hud
+from synthride.web.palette import Palette
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
 
 
@@ -37,3 +40,22 @@ def test_show_and_hide():
     assert hud.container.hidden
     hud.show(True)
     assert not hud.container.hidden
+
+
+def test_announces_block_effects_then_fades_out():
+    document, hud, _ = make_hud()
+    callout = document.getElementById("hud-callout")
+    hud.announce([GameEvent.LANDED])
+    assert callout.textContent == ""
+    hud.announce([GameEvent.LANDED, GameEvent.BOOSTED])
+    assert callout.textContent == "BOOST"
+    assert callout.style.color == Palette.css(Palette.tile_color(TileType.BOOST))
+    assert callout.style.opacity == "1.00"
+    hud.fade(Hud.CALLOUT_SECONDS)
+    assert callout.style.opacity == "0.00"
+
+
+def test_every_effect_event_has_a_callout():
+    effects = {GameEvent.BOOSTED, GameEvent.SLOWED, GameEvent.REFUELED, GameEvent.REFILLED_AIR}
+    effects |= {GameEvent.LAUNCHED, GameEvent.SKIDDED, GameEvent.PUSHED, GameEvent.BUMPED}
+    assert set(Hud.CALLOUTS) == effects

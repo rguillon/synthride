@@ -6,6 +6,7 @@ from synthride.core.level import Level
 from synthride.core.tile import Tile
 from synthride.core.tile_type import TileType
 from synthride.core.track import Track
+from synthride.core.tunnel_kind import TunnelKind
 
 
 class LevelFormatError(ValueError):
@@ -21,7 +22,8 @@ class LevelParser:
 
     A header of ``key: value`` lines ends with ``---``. Each following line is one track row of eight
     whitespace-separated cells: ``..`` for a gap, or a tile letter followed by a height digit (``N1``,
-    ``B2``...). The first row is the start of the track. ``#`` starts a comment.
+    ``B2``...), optionally followed by a tunnel letter (``N1T`` for a square tunnel, ``N1A`` for a round
+    one). The first row is the start of the track. ``#`` starts a comment.
     """
 
     SEPARATOR = "---"
@@ -77,10 +79,14 @@ class LevelParser:
     def _parse_cell(self, number: int, row: int, column: int, cell: str) -> Tile | None:
         if cell == self.GAP:
             return None
-        if len(cell) != 2 or not cell[1].isdigit() or not 1 <= int(cell[1]) <= self.MAX_LEVEL:
+        if len(cell) not in (2, 3) or not cell[1].isdigit() or not 1 <= int(cell[1]) <= self.MAX_LEVEL:
             raise LevelFormatError(number, f"invalid cell {cell!r}")
         try:
             tile_type = TileType(cell[0])
         except ValueError:
             raise LevelFormatError(number, f"unknown tile type {cell[0]!r}") from None
-        return Tile(tile_type, column, row, int(cell[1]))
+        try:
+            tunnel = TunnelKind(cell[2]) if len(cell) == 3 else None
+        except ValueError:
+            raise LevelFormatError(number, f"unknown tunnel kind {cell[2]!r}") from None
+        return Tile(tile_type, column, row, int(cell[1]), tunnel)

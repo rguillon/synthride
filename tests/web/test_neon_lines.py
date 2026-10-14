@@ -40,3 +40,11 @@ def test_released_lines_stop_resizing():
     lines.resize(10, 10)
     assert lines.count == 0
     assert line.args[1].resolution.set.calls == [(1, 1)]
+
+
+def test_knows_which_lines_it_keeps_sized():
+    lines = NeonLines(FakeJsBridge())
+    line = lines.segments([0, 0, 0, 1, 1, 1], 0xFFFFFF, 2)
+    assert line in lines
+    lines.release(line)
+    assert line not in lines

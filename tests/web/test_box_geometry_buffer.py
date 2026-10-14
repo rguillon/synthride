@@ -48,3 +48,12 @@ def test_boxes_accumulate():
     buffer.add_box(Vector3(1, 0, 0), Vector3(2, 1, 1))
     assert buffer.vertex_count == 60
     assert buffer.box_count == 2
+
+
+def test_quad_normal_follows_its_winding():
+    buffer = BoxGeometryBuffer()
+    red = (1.0, 0.0, 0.0)
+    buffer.add_quad(((0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0)), (red,) * 4)
+    assert buffer.vertex_count == 6
+    assert buffer.normals[:3] == [0.0, 0.0, 1.0]
+    assert buffer.colors[:3] == list(red)

@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from html import escape
+from typing import ClassVar
 
+from synthride.core.tile_type import TileType
 from synthride.web.js_bridge import JsBridge
+from synthride.web.palette import Palette
 
 
 class MenuScreen:
@@ -11,6 +14,19 @@ class MenuScreen:
 
     KEYS = "↑ ↓ accelerate / brake &nbsp;·&nbsp; ← → strafe &nbsp;·&nbsp; SPACE jump"
     KEYS_EXTRA = "ESC menu &nbsp;·&nbsp; M mute"
+    # (tile types sharing a line, the pattern drawn on them, what they do)
+    LEGEND: ClassVar[tuple[tuple[tuple[TileType, ...], str, str], ...]] = (
+        ((TileType.NORMAL,), "■", "solid ground"),
+        ((TileType.BOOST,), "︿︿", "speed burst"),
+        ((TileType.SLOW,), "﹀﹀", "brakes you"),
+        ((TileType.KILL,), "▨", "burns · avoid"),
+        ((TileType.JUMP,), "⇡", "launches you"),
+        ((TileType.ICE,), "✳", "no grip · you slide"),
+        ((TileType.PUSH_LEFT, TileType.PUSH_RIGHT), "◂ ▸", "pushes sideways"),
+        ((TileType.REFUEL,), "+", "refills fuel"),
+        ((TileType.AIR,), "○", "refills oxygen"),
+        ((TileType.FINISH,), "▚", "finish line"),
+    )
 
     def __init__(self, bridge: JsBridge) -> None:
         self._container = bridge.document.getElementById("menu")
@@ -36,9 +52,22 @@ class MenuScreen:
         self._show(
             f"select:{selected}",
             '<p class="subtitle">SELECT LEVEL</p>'
-            f'<ul class="level-list">{items}</ul>'
+            f'<ul class="level-list">{items}</ul>{self.legend()}'
             '<p class="keys">↑ ↓ choose &nbsp;·&nbsp; ENTER ride &nbsp;·&nbsp; ESC back</p>',
         )
+
+    @classmethod
+    def legend(cls) -> str:
+        """A key to the blocks: each one's colour, marking and effect, and a word about tunnels."""
+        entries = "".join(
+            f'<li><span class="swatch" style="color:{Palette.css(Palette.tile_color(types[0]))}">{glyph}</span>'
+            f"{escape(effect.upper())}</li>"
+            for types, glyph, effect in cls.LEGEND
+        )
+        tunnels = (
+            f'<li><span class="swatch" style="color:{Palette.css(Palette.TUNNEL)}">∩</span>TUNNELS · MIND THE ROOF</li>'
+        )
+        return f'<ul class="legend">{entries}{tunnels}</ul>'
 
     def show_level_won(self, name: str) -> None:
         self._show(

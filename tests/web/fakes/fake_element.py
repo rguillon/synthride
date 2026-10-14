@@ -7,8 +7,11 @@ from tests.web.fakes.fake_js_object import FakeJsObject
 class FakeElement:
     """A DOM element with the properties the game touches."""
 
-    def __init__(self, element_id: str = "") -> None:
+    def __init__(self, element_id: str = "", tag: str = "div") -> None:
         self.id = element_id
+        self.tag = tag
+        self.width = self.height = 0
+        self.context = FakeJsObject("context")
         self.hidden = False
         self.innerHTML = ""
         self.textContent = ""
@@ -18,3 +21,6 @@ class FakeElement:
 
     def appendChild(self, child) -> None:
         self.children.append(child)
+
+    def getContext(self, kind: str) -> FakeJsObject:
+        return self.context

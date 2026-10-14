@@ -17,6 +17,9 @@ class GameConfig:
     boost_factor: float = 1.35
     boost_decay: float = 2.5
     slow_factor: float = 0.45
+    launch_velocity: float = 10.0
+    ice_grip: float = 1.8
+    push_speed: float = 3.0
 
     min_strafe_speed: float = 2.5
     strafe_ratio: float = 0.3

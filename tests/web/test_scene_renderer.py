@@ -58,6 +58,14 @@ def test_follow_snaps_behind_ship_and_widens_fov():
     assert renderer.camera.fov == SceneRenderer.BASE_FOV + SceneRenderer.SPEED_FOV
 
 
+def test_follow_ducks_under_tunnel_roofs():
+    _, _, renderer = make_renderer()
+    renderer.follow(Ship(Vector3(4, 0.5, 10)), 0, 0.016, snap=True, ceiling=1.4)
+    assert renderer.camera.position.set.calls[-1][1] == pytest.approx(1.4 - SceneRenderer.CEILING_MARGIN)
+    renderer.follow(Ship(Vector3(4, 0.5, 10)), 0, 0.016, snap=True, ceiling=0.6)
+    assert renderer.camera.position.set.calls[-1][1] == pytest.approx(0.5 + SceneRenderer.MIN_HEIGHT)
+
+
 def test_follow_eases_sideways():
     _, _, renderer = make_renderer()
     renderer.follow(Ship(Vector3(0, 0, 0)), 0, 0.016, snap=True)

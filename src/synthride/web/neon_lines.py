@@ -40,6 +40,9 @@ class NeonLines:
         for _, material in self._lines:
             material.resolution.set(width, height)
 
+    def __contains__(self, line: Any) -> bool:
+        return any(kept is line for kept, _ in self._lines)
+
     @property
     def count(self) -> int:
         return len(self._lines)

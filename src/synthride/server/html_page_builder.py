@@ -34,7 +34,7 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
   background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,0.18) 2px 3px); }
 #stage, #stage canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 .overlay { position: fixed; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 1.2rem; text-align: center; padding: 16px;
+  justify-content: safe center; gap: 1.2rem; text-align: center; padding: 16px; overflow-y: auto;
   background: radial-gradient(ellipse at center, rgba(42,8,69,0.55), rgba(11,0,20,0.85)); }
 .overlay[hidden] { display: none; }
 .logo { font-size: clamp(2.6rem, 11vw, 7rem); font-weight: 800; letter-spacing: 0.08em; margin: 0;
@@ -66,9 +66,17 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
 .gauge.low .gauge-fill { animation: blink 0.4s steps(2, start) infinite; }
 .progress { margin-top: 0.6rem; height: 4px; background: rgba(255,255,255,0.12); }
 .progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--cyan), var(--pink)); }
+.legend { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem 1.4rem; font-size: 0.7rem; letter-spacing: 0.12em; text-align: left; opacity: 0.9; }
+.legend li { display: flex; align-items: center; gap: 0.6rem; white-space: nowrap; }
+.swatch { display: inline-block; min-width: 2.4em; text-align: center; font-weight: 800;
+  text-shadow: 0 0 8px currentColor; }
+.hud-callout { position: absolute; top: 26%; left: 0; right: 0; text-align: center; opacity: 0;
+  font-size: clamp(1.3rem, 5vw, 2.6rem); font-weight: 800; letter-spacing: 0.25em;
+  text-shadow: 0 0 14px currentColor, 0 0 30px currentColor; }
 #loading { z-index: 4; }
 @keyframes blink { to { visibility: hidden; } }
-@media (max-width: 600px) { .hud-bottom { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .hud-bottom, .legend { grid-template-columns: 1fr; } }
 </style>
 <script type="importmap">
 {"imports": {"three": "$three_url/build/three.module.js", "three/addons/": "$three_url/examples/jsm/"}}

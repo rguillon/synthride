@@ -5,12 +5,16 @@ from typing import ClassVar
 
 from synthride.core.bounding_box import BoundingBox
 from synthride.core.tile_type import TileType
+from synthride.core.tunnel_kind import TunnelKind
 from synthride.core.vector3 import Vector3
 
 
 @dataclass(frozen=True)
 class Tile:
-    """One solid block of the track, occupying a 1x1 cell and rising from the abyss to its top."""
+    """One solid block of the track, occupying a 1x1 cell and rising from the abyss to its top.
+
+    A tile may carry a tunnel, whose shell stands on its top.
+    """
 
     SIZE: ClassVar[float] = 1.0
     HEIGHT_UNIT: ClassVar[float] = 0.5
@@ -20,6 +24,7 @@ class Tile:
     column: int
     row: int
     level: int
+    tunnel: TunnelKind | None = None
 
     @property
     def top(self) -> float:

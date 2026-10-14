@@ -17,12 +17,18 @@ class Palette:
     SHIP_EDGE = 0x00F0FF
     SHIP_GLOW = 0xFF2BD6
     EXPLOSION = 0xFF6D00
+    TUNNEL = 0xFF2BD6
     TILE_COLORS: ClassVar[dict[TileType, int]] = {
         TileType.NORMAL: 0x00F0FF,
         TileType.BOOST: 0xFF2BD6,
         TileType.SLOW: 0x9D4EDD,
         TileType.KILL: 0xFF1744,
         TileType.REFUEL: 0x7DFF9B,
+        TileType.AIR: 0x4D8CFF,
+        TileType.JUMP: 0xFF8A00,
+        TileType.ICE: 0xD9FBFF,
+        TileType.PUSH_LEFT: 0xC6FF00,
+        TileType.PUSH_RIGHT: 0xD4FF33,  # the pushers are one family: their arrows tell them apart
         TileType.FINISH: 0xFFE066,
     }
 

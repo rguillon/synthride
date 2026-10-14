@@ -6,6 +6,7 @@ from synthride.core.game_config import GameConfig
 from synthride.core.level_parser import LevelParser
 from synthride.core.ship import Ship
 from synthride.core.track import Track
+from synthride.core.tunnel_span import TunnelSpan
 from synthride.core.vector3 import Vector3
 
 CONFIG = GameConfig()
@@ -98,3 +99,51 @@ def test_falls_off_below_limit():
     ship = make_ship(y=CONFIG.fall_limit_y + 0.1, velocity=Vector3(0, -10, 0))
     track = make_track(".. .. .. .. .. .. .. ..")
     assert outcomes(CollisionResolver(track, CONFIG).move(ship, 0.02)) == [CollisionOutcome.FELL]
+
+
+TUNNEL = ".. .. N1T N1T N1T N1T .. .."
+ROUND_TUNNEL = ".. .. N1A N1A N1A N1A .. .."
+
+
+@pytest.mark.parametrize("row", [TUNNEL, ROUND_TUNNEL])
+def test_drives_into_a_tunnel(row):
+    track = make_track(".. .. N1 N1 N1 N1 .. ..", row)
+    ship = make_ship(x=4, velocity=Vector3(0, -0.1, 10))
+    reports = CollisionResolver(track, CONFIG).move(ship, 0.05)
+    assert outcomes(reports) == [CollisionOutcome.LANDED]
+    assert ship.position.z == pytest.approx(1.0)
+
+
+def test_flying_into_a_tunnel_roof_crashes():
+    track = make_track(".. .. N1 N1 N1 N1 .. ..", TUNNEL)
+    ship = make_ship(x=4, y=0.5 + TunnelSpan.CLEARANCE - 0.1, velocity=Vector3(0, 0, 10))
+    assert outcomes(CollisionResolver(track, CONFIG).move(ship, 0.05)) == [CollisionOutcome.CRASHED]
+
+
+@pytest.mark.parametrize("row", [TUNNEL, ROUND_TUNNEL])
+def test_jumping_inside_a_tunnel_bumps_the_ceiling(row):
+    track = make_track(row)
+    ship = make_ship(x=4, velocity=Vector3(0, 20, 0))
+    reports = CollisionResolver(track, CONFIG).move(ship, 0.1)
+    assert outcomes(reports) == [CollisionOutcome.BUMPED]
+    assert ship.velocity.y == 0
+    box, tunnel = ship.bounding_box, track.tunnels[0]
+    ceiling = min(tunnel.inner_height(box.minimum.x), tunnel.inner_height(box.maximum.x))
+    assert ceiling - 0.25 < box.maximum.y < ceiling
+    assert not ship.grounded
+
+
+def test_tunnel_walls_stop_strafing():
+    ship = make_ship(x=3, velocity=Vector3(-5, 0, 0))
+    CollisionResolver(make_track(TUNNEL), CONFIG).move(ship, 0.2)
+    assert ship.position.x == pytest.approx(2 + TunnelSpan.WALL + CONFIG.ship_width / 2, abs=1e-4)
+    assert ship.velocity.x == 0
+
+
+def test_lands_on_a_tunnel_roof_without_a_tile():
+    roof = 0.5 + TunnelSpan.CLEARANCE + TunnelSpan.ROOF
+    ship = make_ship(x=4, y=roof + 0.05, velocity=Vector3(0, -5, 0))
+    reports = CollisionResolver(make_track(TUNNEL), CONFIG).move(ship, 0.02)
+    assert outcomes(reports) == [CollisionOutcome.LANDED]
+    assert reports[0].tile is None
+    assert ship.position.y == pytest.approx(roof)

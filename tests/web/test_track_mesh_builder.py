@@ -25,9 +25,10 @@ def rails_of(three, color):
 
 def test_one_mesh_and_one_rail_set_per_tile_type_plus_seams():
     three, _, group, _ = build("N1 N1 K1 .. .. .. .. ..\nN2 B1 .. .. .. .. .. ..")
-    assert len(three.Mesh.created) == 3
+    assert len(three.Mesh.created) == 5  # three tile types, plus kill and boost markings
+    assert len(three.MeshBasicMaterial.created) == 2
     assert len(three.LineSegments2.created) == 4
-    assert len(group.add.calls) == 7
+    assert len(group.add.calls) == 8  # meshes, rail sets, seams and the markings group
     widths = sorted(m.args[0]["linewidth"] for m in three.LineMaterial.created)
     assert widths == [TrackMeshBuilder.SEAM_WIDTH] + [TrackMeshBuilder.LINE_WIDTH] * 3
     emissive = sorted(material.args[0]["emissive"] for material in three.MeshStandardMaterial.created)
@@ -73,3 +74,11 @@ def test_rebuilding_releases_previous_outlines():
     _, builder, _, lines = build("N1 K1 .. .. .. .. .. ..")
     builder.build(LevelParser().parse("---\n" + "N1 " * 8).track)
     assert lines.count == 2  # one rail set and the seams
+
+
+def test_tunnels_join_the_track_and_their_outlines_are_released_on_rebuild():
+    three, builder, _, lines = build("N1T N1T .. .. .. .. .. ..\nN1T N1T .. .. .. .. .. ..")
+    assert len(three.MeshStandardMaterial.created) == 2  # tiles and tunnel shell
+    assert lines.count == 4  # tile rails, seams, tunnel mouths and ribs
+    builder.build(LevelParser().parse("---\n" + "N1 " * 8).track)
+    assert lines.count == 2

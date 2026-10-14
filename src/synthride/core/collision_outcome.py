@@ -5,6 +5,7 @@ class CollisionOutcome(Enum):
     """What happened to the ship while it moved during one step."""
 
     LANDED = auto()
+    BUMPED = auto()
     NUDGED = auto()
     CRASHED = auto()
     FELL = auto()
