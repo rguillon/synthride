@@ -130,6 +130,10 @@ class GameSession:
                     events.append(GameEvent.NUDGED)
                 case CollisionOutcome.BUMPED:
                     events.append(GameEvent.BUMPED)
+                case CollisionOutcome.SCRAPED_LEFT:
+                    events.append(GameEvent.SCRAPED_LEFT)
+                case CollisionOutcome.SCRAPED_RIGHT:
+                    events.append(GameEvent.SCRAPED_RIGHT)
                 case _:  # CollisionOutcome.LANDED
                     if not was_grounded:
                         events.append(GameEvent.LANDED)

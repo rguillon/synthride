@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from synthride.web.hud import Hud
     from synthride.web.js_bridge import JsBridge, JsObject
     from synthride.web.menu_screen import MenuScreen
+    from synthride.web.neon_sparks import NeonSparks
     from synthride.web.ship_model import ShipModel
     from synthride.web.sound_effects import SoundEffects
     from synthride.web.space_backdrop import SpaceBackdrop
@@ -47,6 +48,7 @@ class GameLoop:
         renderer: SceneRenderer,
         track_builder: TrackMeshBuilder,
         ship_model: ShipModel,
+        sparks: NeonSparks,
         backdrop: SpaceBackdrop,
         hud: Hud,
         menu: MenuScreen,
@@ -60,6 +62,7 @@ class GameLoop:
         self._renderer = renderer
         self._track_builder = track_builder
         self._ship_model = ship_model
+        self._sparks = sparks
         self._hud = hud
         self._menu = menu
         self._music = music
@@ -72,6 +75,7 @@ class GameLoop:
         self._frame_proxy = bridge.proxy(self.on_frame)
         backdrop.add_to(renderer.scene)
         renderer.add(ship_model.group)
+        renderer.add(sparks.points)
 
     def start(self) -> None:
         """Request the first animation frame."""
@@ -93,6 +97,8 @@ class GameLoop:
         events = session.update(dt, self._keyboard.ship_input())
         self._sound_effects.play(events)
         self._renderer.react(events)
+        self._sparks.react(events, session.ship)
+        self._sparks.update(dt)
         self._hud.announce(events)
         self._hud.fade(dt)
         self._hud.count_frame(dt)

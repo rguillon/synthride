@@ -13,6 +13,7 @@ from synthride.web.game_loop import GameLoop
 from synthride.web.hud import Hud
 from synthride.web.menu_screen import MenuScreen
 from synthride.web.neon_lines import NeonLines
+from synthride.web.neon_sparks import NeonSparks
 from synthride.web.scene_renderer import SceneRenderer
 from synthride.web.ship_model import ShipModel
 from synthride.web.sound_effects import SoundEffects
@@ -44,6 +45,7 @@ def game() -> SimpleNamespace:
         renderer=renderer,
         track_builder=TrackMeshBuilder(bridge, lines),
         ship_model=ShipModel(bridge, lines),
+        sparks=NeonSparks(bridge),
         backdrop=SpaceBackdrop(bridge),
         hud=Hud(bridge),
         menu=MenuScreen(bridge),
@@ -77,7 +79,7 @@ def test_title_shows_menu_and_track(game: SimpleNamespace) -> None:
     game.loop.tick(0.016)
     assert "SYNTHRIDE" in menu_html(game)
     assert game.bridge.document.getElementById("hud").hidden
-    assert len(game.renderer.scene.add.calls) == 6  # 2 lights, sky, dust, ship, track
+    assert len(game.renderer.scene.add.calls) == 7  # 2 lights, sky, dust, ship, sparks, track
 
 
 def test_menu_navigation_to_playing_and_back(game: SimpleNamespace) -> None:

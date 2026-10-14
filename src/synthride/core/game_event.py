@@ -15,6 +15,8 @@ class GameEvent(Enum):
     LANDED = auto()
     BUMPED = auto()
     NUDGED = auto()
+    SCRAPED_LEFT = auto()
+    SCRAPED_RIGHT = auto()
     BOOSTED = auto()
     SLOWED = auto()
     REFUELED = auto()

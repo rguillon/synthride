@@ -93,3 +93,9 @@ def test_tile_type_without_drop_has_no_rails() -> None:
     three, _, _, _ = build("N1 N1 N1 .. .. .. .. ..\nN1 B1 N1 .. .. .. .. ..\nN1 N1 N1 .. .. .. .. ..")
     assert rails_of(three, Palette.tile_color(TileType.BOOST)) == set()
     assert len(three.LineSegments2.created) == 2  # normal rails and seams only
+
+
+def test_solids_are_pushed_behind_their_lines() -> None:
+    three, _, _, _ = build("N1T K1 .. .. .. .. .. ..")
+    assert all(material.args[0]["polygonOffset"] for material in three.MeshStandardMaterial.created)
+    assert all(material.args[0]["polygonOffsetFactor"] > 0 for material in three.MeshStandardMaterial.created)

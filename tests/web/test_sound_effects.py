@@ -18,7 +18,7 @@ def test_every_audible_event_makes_a_sound() -> None:
     for event in GameEvent:
         context, effects = make_effects()
         effects.play([event])
-        silent = {GameEvent.LEVEL_STARTED, GameEvent.LIFE_LOST}
+        silent = {GameEvent.LEVEL_STARTED, GameEvent.LIFE_LOST, GameEvent.SCRAPED_LEFT, GameEvent.SCRAPED_RIGHT}
         assert bool(context.oscillators or context.noise_sources) == (event not in silent), event
 
 

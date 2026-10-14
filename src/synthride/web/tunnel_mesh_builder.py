@@ -73,6 +73,9 @@ class TunnelMeshBuilder:
                 emissiveIntensity=self.BODY_GLOW,
                 roughness=0.5,
                 metalness=0.3,
+                polygonOffset=True,  # keeps the neon on top at a distance, like the track slabs
+                polygonOffsetFactor=1,
+                polygonOffsetUnits=4,
             )
         )
         geometry = three.BufferGeometry.new()

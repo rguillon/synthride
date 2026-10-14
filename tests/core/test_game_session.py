@@ -155,6 +155,13 @@ def test_corner_hit_nudges() -> None:
     assert GameEvent.CRASHED not in events
 
 
+def test_strafing_into_a_wall_scrapes_it() -> None:
+    session = started(make_level(*["N1 N1 N1 N1 N1 N2 N1 N1"] * 20))
+    events = run(session, 0.5, ShipInput(right=True))
+    assert GameEvent.SCRAPED_RIGHT in events
+    assert GameEvent.SCRAPED_LEFT not in events
+
+
 def test_jump_and_land() -> None:
     session = started(make_level(*[FLAT] * 20))
     events = run(session, 0.05, ShipInput(jump=True)) + run(session, 1.5, ShipInput())

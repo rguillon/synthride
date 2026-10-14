@@ -5,4 +5,12 @@ from synthride.core.collision_outcome import CollisionOutcome
 
 
 def test_outcomes() -> None:
-    assert {outcome.name for outcome in CollisionOutcome} == {"LANDED", "BUMPED", "NUDGED", "CRASHED", "FELL"}
+    assert {outcome.name for outcome in CollisionOutcome} == {
+        "LANDED",
+        "BUMPED",
+        "NUDGED",
+        "SCRAPED_LEFT",
+        "SCRAPED_RIGHT",
+        "CRASHED",
+        "FELL",
+    }

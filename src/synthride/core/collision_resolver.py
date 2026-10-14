@@ -38,8 +38,8 @@ class CollisionResolver:
 
     def move(self, ship: Ship, dt: float) -> list[CollisionReport]:
         """Move the ship by its velocity for ``dt`` seconds and report what it hit."""
-        self._move_laterally(ship, dt)
-        reports = self._move_forward(ship, dt)
+        reports = self._move_laterally(ship, dt)
+        reports += self._move_forward(ship, dt)
         if any(report.outcome is CollisionOutcome.CRASHED for report in reports):
             return reports
         reports.extend(self._move_vertically(ship, dt))
@@ -56,16 +56,19 @@ class CollisionResolver:
             if solid.box.maximum.y > floor and solid.box.minimum.y < box.maximum.y - self.EPSILON
         ]
 
-    def _move_laterally(self, ship: Ship, dt: float) -> None:
+    def _move_laterally(self, ship: Ship, dt: float) -> list[CollisionReport]:
+        """Strafes the ship, reporting a scrape on the side of any wall that stops it."""
         vx = ship.velocity.x
         if vx == 0:
-            return
+            return []
         target = ship.position.with_x(ship.position.x + vx * dt)
         blockers = self._blockers(ship.box_at(target))
-        if blockers:
-            target = target.with_x(self._clear_x(ship, blockers, toward_positive=vx > 0))
-            ship.velocity = ship.velocity.with_x(0.0)
-        ship.position = target
+        if not blockers:
+            ship.position = target
+            return []
+        ship.position = target.with_x(self._clear_x(ship, blockers, toward_positive=vx > 0))
+        ship.velocity = ship.velocity.with_x(0.0)
+        return [CollisionReport(CollisionOutcome.SCRAPED_RIGHT if vx > 0 else CollisionOutcome.SCRAPED_LEFT)]
 
     def _clear_x(self, ship: Ship, blockers: list[Solid], *, toward_positive: bool) -> float:
         """Return the x position that places the ship just beside ``blockers``."""

@@ -27,6 +27,11 @@ def test_sets_up_canvas_and_bloom_pipeline() -> None:
     assert len(renderer.composer.addPass.calls) == 3
 
 
+def test_bloom_threshold_ramps_softly() -> None:
+    _, _, renderer = make_renderer()
+    assert renderer.bloom.highPassUniforms.smoothWidth.value == SceneRenderer.BLOOM_SOFTNESS
+
+
 def test_post_processing_target_is_multisampled() -> None:
     bridge, _, _ = make_renderer()
     (target,) = bridge.three.WebGLRenderTarget.created

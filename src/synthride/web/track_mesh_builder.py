@@ -101,6 +101,10 @@ class TrackMeshBuilder:
                     emissiveIntensity=self.BODY_GLOW,
                     roughness=0.55,
                     metalness=0.2,
+                    # Far away, depth precision gets coarser than LINE_LIFT: push the slabs back so lines stay on top.
+                    polygonOffset=True,
+                    polygonOffsetFactor=1,
+                    polygonOffsetUnits=4,
                 )
             )
             self._materials[tile_type] = material

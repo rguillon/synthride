@@ -13,6 +13,7 @@ from synthride.web.hud import Hud
 from synthride.web.js_bridge import JsBridge
 from synthride.web.menu_screen import MenuScreen
 from synthride.web.neon_lines import NeonLines
+from synthride.web.neon_sparks import NeonSparks
 from synthride.web.scene_renderer import SceneRenderer
 from synthride.web.ship_model import ShipModel
 from synthride.web.sound_effects import SoundEffects
@@ -47,6 +48,7 @@ class Main:
             renderer=SceneRenderer(bridge, bridge.document.getElementById("stage"), lines),
             track_builder=TrackMeshBuilder(bridge, lines),
             ship_model=ShipModel(bridge, lines),
+            sparks=NeonSparks(bridge),
             backdrop=SpaceBackdrop(bridge),
             hud=Hud(bridge),
             menu=MenuScreen(bridge),

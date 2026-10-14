@@ -92,16 +92,23 @@ def test_lower_tile_ahead_does_not_block() -> None:
 def test_side_wall_stops_strafing() -> None:
     track = make_track("N1 N1 N1 N1 N1 N2 N1 N1")
     ship = make_ship(velocity=Vector3(5, 0, 0))
-    CollisionResolver(track, CONFIG).move(ship, 0.1)
+    reports = CollisionResolver(track, CONFIG).move(ship, 0.1)
     assert ship.position.x == pytest.approx(5 - CONFIG.ship_width / 2, abs=1e-4)
     assert ship.velocity.x == 0
+    assert outcomes(reports) == [CollisionOutcome.SCRAPED_RIGHT, CollisionOutcome.LANDED]
 
 
 def test_strafing_left_into_wall() -> None:
     track = make_track("N1 N1 N1 N2 N1 N1 N1 N1")
     ship = make_ship(velocity=Vector3(-5, 0, 0))
-    CollisionResolver(track, CONFIG).move(ship, 0.1)
+    reports = CollisionResolver(track, CONFIG).move(ship, 0.1)
     assert ship.position.x == pytest.approx(4 + CONFIG.ship_width / 2, abs=1e-4)
+    assert outcomes(reports) == [CollisionOutcome.SCRAPED_LEFT, CollisionOutcome.LANDED]
+
+
+def test_free_strafing_does_not_scrape() -> None:
+    ship = make_ship(velocity=Vector3(5, 0, 0))
+    assert outcomes(CollisionResolver(make_track(FLAT), CONFIG).move(ship, 0.1)) == [CollisionOutcome.LANDED]
 
 
 def test_falls_off_below_limit() -> None:

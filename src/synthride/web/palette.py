@@ -28,6 +28,7 @@ class Palette:
     SHIP_EDGE = 0x00F0FF
     SHIP_GLOW = 0xFF2BD6
     EXPLOSION = 0xFF6D00
+    SPARKS = (0x00F0FF, 0xFF2BD6, 0xFFFFFF, 0x9FE8FF)
     TUNNEL = 0xFF2BD6
     TILE_COLORS: ClassVar[dict[TileType, int]] = {
         TileType.NORMAL: 0x00F0FF,

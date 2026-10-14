@@ -32,6 +32,12 @@ class SceneRenderer:
     MSAA_SAMPLES = 4
     FOG_NEAR = 30.0
     FOG_FAR = 170.0
+    BLOOM_STRENGTH = 0.7
+    BLOOM_RADIUS = 0.35
+    # Bloom picks bright pixels at half resolution, so a thin line's brightness there depends on how it sits on
+    # the pixel rows. A hard threshold turns that into glow popping on and off as lines move: ramp it softly.
+    BLOOM_THRESHOLD = 0.35
+    BLOOM_SOFTNESS = 0.5
     SHAKE_EVENTS = frozenset({GameEvent.CRASHED, GameEvent.BURNED, GameEvent.FELL, GameEvent.NUDGED, GameEvent.BUMPED})
     LIGHT_SHAKES = frozenset({GameEvent.NUDGED, GameEvent.BUMPED})
 
@@ -58,7 +64,10 @@ class SceneRenderer:
         target = three.WebGLRenderTarget.new(1, 1, bridge.obj(type=three.HalfFloatType, samples=self.MSAA_SAMPLES))
         self.composer = three.EffectComposer.new(self.renderer, target)
         self.composer.addPass(three.RenderPass.new(self.scene, self.camera))
-        self.bloom = three.UnrealBloomPass.new(three.Vector2.new(1, 1), 0.7, 0.35, 0.55)
+        self.bloom = three.UnrealBloomPass.new(
+            three.Vector2.new(1, 1), self.BLOOM_STRENGTH, self.BLOOM_RADIUS, self.BLOOM_THRESHOLD
+        )
+        self.bloom.highPassUniforms.smoothWidth.value = self.BLOOM_SOFTNESS
         self.composer.addPass(self.bloom)
         self.composer.addPass(three.OutputPass.new())
         self._camera_position = [0.0, 0.0, 0.0]

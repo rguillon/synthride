@@ -12,5 +12,7 @@ class CollisionOutcome(Enum):
     LANDED = auto()
     BUMPED = auto()
     NUDGED = auto()
+    SCRAPED_LEFT = auto()
+    SCRAPED_RIGHT = auto()
     CRASHED = auto()
     FELL = auto()
