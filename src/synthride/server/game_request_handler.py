@@ -1,3 +1,8 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""HTTP request handling for the local game server."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -12,6 +17,7 @@ class GameRequestHandler(BaseHTTPRequestHandler):
     """Serves the game page and the Python bundle, rebuilt on every request so edits show on reload."""
 
     def do_GET(self) -> None:
+        """Serve the page, the bundle, or a 404."""
         server = cast("GameServer", self.server)
         path = self.path.split("?", 1)[0]
         if path in ("/", "/index.html"):

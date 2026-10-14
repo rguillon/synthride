@@ -1,18 +1,25 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The track's meshes."""
+
 from __future__ import annotations
 
 import math
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from synthride.core.tile import Tile
 from synthride.core.tile_type import TileType
-from synthride.core.track import Track
 from synthride.core.vector3 import Vector3
 from synthride.web.box_geometry_buffer import BoxGeometryBuffer
-from synthride.web.js_bridge import JsBridge
-from synthride.web.neon_lines import NeonLines
 from synthride.web.palette import Palette
 from synthride.web.tile_decals import TileDecals
 from synthride.web.tunnel_mesh_builder import TunnelMeshBuilder
+
+if TYPE_CHECKING:
+    from synthride.core.track import Track
+    from synthride.web.js_bridge import JsBridge, JsObject
+    from synthride.web.neon_lines import NeonLines
 
 
 class TrackMeshBuilder:
@@ -55,14 +62,16 @@ class TrackMeshBuilder:
         tunnels: TunnelMeshBuilder | None = None,
         decals: TileDecals | None = None,
     ) -> None:
+        """Build tunnels with ``tunnels`` and markings with ``decals``."""
         self._bridge = bridge
         self._lines = lines
         self._tunnels = tunnels or TunnelMeshBuilder(bridge, lines)
         self._decals = decals or TileDecals(bridge)
-        self._materials: dict[TileType, Any] = {}
-        self._outlines: list[Any] = []
+        self._materials: dict[TileType, JsObject] = {}
+        self._outlines: list[JsObject] = []
 
-    def build(self, track: Track) -> Any:
+    def build(self, track: Track) -> JsObject:
+        """Return a group holding every mesh of ``track``."""
         three = self._bridge.three
         buffers: dict[TileType, BoxGeometryBuffer] = {}
         rails: dict[TileType, list[float]] = {}
@@ -112,7 +121,7 @@ class TrackMeshBuilder:
         return group
 
     def _trace_edges(self, track: Track, tile: Tile, rails: list[float], seams: list[float]) -> None:
-        """Adds a rail on each top edge that drops away, and a seam (owned by one side) toward an equal neighbour."""
+        """Add a rail on each top edge that drops away, and a seam (owned by one side) toward an equal neighbour."""
         y = tile.top + self.LINE_LIFT
         for (dc, dr), corners in self.SIDES:
             neighbour = track.tile_at(tile.column + dc, tile.row + dr)
@@ -125,18 +134,18 @@ class TrackMeshBuilder:
             for cx, cz in corners:
                 target.extend(((tile.column + cx) * Tile.SIZE, y, -(tile.row + cz) * Tile.SIZE))
 
-    def _add_lines(self, group: Any, positions: list[float], color: int, width: float) -> None:
+    def _add_lines(self, group: JsObject, positions: list[float], color: int, width: float) -> None:
         line = self._lines.segments(positions, color, width)
         self._outlines.append(line)
         group.add(line)
 
     def animate(self, time: float) -> None:
-        """Makes dangerous and special tiles throb, and their markings move."""
+        """Make dangerous and special tiles throb, and their markings move."""
         self._decals.animate(time)
         for tile_type, frequency in self.PULSING.items():
             material = self._materials.get(tile_type)
             if material is not None:
                 material.emissiveIntensity = self.BODY_GLOW + 0.25 * (1 + math.sin(time * frequency)) / 2
 
-    def _attribute(self, values: list[float]) -> Any:
+    def _attribute(self, values: list[float]) -> JsObject:
         return self._bridge.three.BufferAttribute.new(self._bridge.float32_array(values), 3)

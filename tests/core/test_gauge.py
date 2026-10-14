@@ -1,9 +1,12 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
 import pytest
 
 from synthride.core.gauge import Gauge
 
 
-def test_drains_and_refills():
+def test_drains_and_refills() -> None:
     gauge = Gauge(10)
     assert gauge.is_full
     gauge.drain(4)
@@ -16,6 +19,6 @@ def test_drains_and_refills():
     assert gauge.value == 10
 
 
-def test_rejects_non_positive_capacity():
-    with pytest.raises(ValueError):
+def test_rejects_non_positive_capacity() -> None:
+    with pytest.raises(ValueError, match="capacity must be positive"):
         Gauge(0)

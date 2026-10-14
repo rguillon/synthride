@@ -1,22 +1,30 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The ship's 3D model."""
+
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
 from itertools import pairwise
-from typing import Any
+from typing import TYPE_CHECKING
 
 from synthride.core.game_phase import GamePhase
-from synthride.core.ship import Ship
-from synthride.web.js_bridge import JsBridge
-from synthride.web.neon_lines import NeonLines
 from synthride.web.palette import Palette
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from synthride.core.ship import Ship
+    from synthride.web.js_bridge import JsBridge, JsObject
+    from synthride.web.neon_lines import NeonLines
 
 Point = tuple[float, float, float]
 Ring = tuple[Point, ...]
 
 
 def _section(z: float, half_width: float, bottom: float, top: float) -> Ring:
-    """A chamfered hexagonal cross-section of the body at depth ``z``."""
+    """Return a chamfered hexagonal cross-section of the body at depth ``z``."""
     w, shoulder = half_width, bottom + 0.55 * (top - bottom)
     return tuple(
         (x, y, z)
@@ -31,8 +39,10 @@ def _section(z: float, half_width: float, bottom: float, top: float) -> Ring:
     )
 
 
-def _slab(z: float, half_bottom: float, half_top: float, bottom: float, top: float, x: float = 0.0) -> Ring:
-    """A trapezoid cross-section centred on ``x`` at depth ``z``."""
+def _slab(  # noqa: PLR0913
+    z: float, half_bottom: float, half_top: float, bottom: float, top: float, *, x: float = 0.0
+) -> Ring:
+    """Return a trapezoid cross-section centred on ``x`` at depth ``z``."""
     return ((x - half_bottom, bottom, z), (x + half_bottom, bottom, z), (x + half_top, top, z), (x - half_top, top, z))
 
 
@@ -52,11 +62,11 @@ def _fan(ring: Ring) -> list[Point]:
 
 
 def _runner(x: float, half_width: float) -> tuple[Ring, ...]:
-    """A runner centred on ``x``: curled up at its tip, then lying flat on the ground under the body."""
+    """Return a runner centred on ``x``: curled up at its tip, then lying flat on the ground under the body."""
     return (
-        _slab(-0.36, half_width, half_width, 0.05, 0.075, x),
-        _slab(-0.3, half_width, half_width, 0.0, 0.04, x),
-        _slab(0.34, half_width, half_width, 0.0, 0.04, x),
+        _slab(-0.36, half_width, half_width, 0.05, 0.075, x=x),
+        _slab(-0.3, half_width, half_width, 0.0, 0.04, x=x),
+        _slab(0.34, half_width, half_width, 0.0, 0.04, x=x),
     )
 
 
@@ -112,6 +122,7 @@ class ShipModel:
     EXPLOSION_GROWTH = 5.0
 
     def __init__(self, bridge: JsBridge, lines: NeonLines) -> None:
+        """Build the ship's meshes, reactor, shadow and explosion."""
         self._bridge = bridge
         self._lines = lines
         three = bridge.three
@@ -166,7 +177,7 @@ class ShipModel:
                 triangles += (lower[i], lower[j], upper[j], lower[i], upper[j], upper[i])
         return triangles + _fan(rings[0]) + _fan(rings[-1])
 
-    def _glow_material(self, color: int, opacity: float = 1.0) -> Any:
+    def _glow_material(self, color: int, opacity: float = 1.0) -> JsObject:
         three = self._bridge.three
         return three.MeshBasicMaterial.new(
             self._bridge.obj(
@@ -179,7 +190,7 @@ class ShipModel:
             )
         )
 
-    def _glow_mesh(self, triangles: list[Point], material: Any) -> Any:
+    def _glow_mesh(self, triangles: list[Point], material: JsObject) -> JsObject:
         three = self._bridge.three
         geometry = three.BufferGeometry.new()
         geometry.setAttribute(
@@ -187,7 +198,7 @@ class ShipModel:
         )
         return three.Mesh.new(geometry, material)
 
-    def _reactor(self) -> Any:
+    def _reactor(self) -> JsObject:
         """Light the whole tail: a glowing nozzle face, a hot core, a plume of shells and a row of lights.
 
         Returns the plume group, which ``sync`` stretches backwards with speed.
@@ -212,7 +223,7 @@ class ShipModel:
             self.body.add(light)
         return plume
 
-    def _contact_shadow(self) -> Any:
+    def _contact_shadow(self) -> JsObject:
         """Soft darkening of the deck under the hull: stacked translucent ellipses, darkest at the centre."""
         three = self._bridge.three
         material = three.MeshBasicMaterial.new(
@@ -234,7 +245,7 @@ class ShipModel:
             shadow.add(layer)
         return shadow
 
-    def _add_solid(self, triangles: list[Point], material: Any, parent: Any) -> None:
+    def _add_solid(self, triangles: list[Point], material: JsObject, parent: JsObject) -> None:
         three = self._bridge.three
         geometry = three.BufferGeometry.new()
         geometry.setAttribute(
@@ -243,11 +254,12 @@ class ShipModel:
         geometry.computeVertexNormals()
         self._add_outlined(geometry, material, parent)
 
-    def _add_outlined(self, geometry: Any, material: Any, parent: Any) -> None:
+    def _add_outlined(self, geometry: JsObject, material: JsObject, parent: JsObject) -> None:
         parent.add(self._bridge.three.Mesh.new(geometry, material))
         parent.add(self._lines.edges_of(geometry, Palette.SHIP_EDGE, self.LINE_WIDTH))
 
     def sync(self, ship: Ship, phase: GamePhase, dt: float) -> None:
+        """Place, tilt and animate the model to match ``ship``."""
         self._time += dt
         position = ship.position
         self.group.position.set(position.x, position.y, -position.z)

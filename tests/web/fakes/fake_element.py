@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
 from __future__ import annotations
 
 from tests.web.fakes.fake_class_list import FakeClassList
@@ -19,8 +22,8 @@ class FakeElement:
         self.classList = FakeClassList()
         self.children: list = []
 
-    def appendChild(self, child) -> None:
+    def appendChild(self, child: object) -> None:  # noqa: N802
         self.children.append(child)
 
-    def getContext(self, kind: str) -> FakeJsObject:
+    def getContext(self, _kind: str) -> FakeJsObject:  # noqa: N802
         return self.context

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
 from types import SimpleNamespace
 
 import pytest
@@ -13,10 +16,11 @@ from synthride.web.neon_lines import NeonLines
 from synthride.web.scene_renderer import SceneRenderer
 from synthride.web.ship_model import ShipModel
 from synthride.web.sound_effects import SoundEffects
+from synthride.web.space_backdrop import SpaceBackdrop
 from synthride.web.synth_music import SynthMusic
 from synthride.web.synth_voices import SynthVoices
-from synthride.web.synthwave_backdrop import SynthwaveBackdrop
 from synthride.web.track_mesh_builder import TrackMeshBuilder
+from tests.level_json import level_json
 from tests.web.fakes.fake_audio_context import FakeAudioContext
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
 from tests.web.fakes.fake_js_object import FakeJsObject
@@ -26,9 +30,9 @@ FLAT = "N1 N1 N1 N1 N1 N1 N1 N1"
 
 
 @pytest.fixture
-def game():
+def game() -> SimpleNamespace:
     bridge = FakeJsBridge()
-    levels = [LevelParser().parse(f"name: L{n}\n---\n" + "\n".join([FLAT] * 5)) for n in (1, 2)]
+    levels = [LevelParser().parse(level_json(*[FLAT] * 5, name=f"L{n}")) for n in (1, 2)]
     context = FakeAudioContext()
     voices = SynthVoices(bridge, context, FakeJsObject("destination"))
     lines = NeonLines(bridge)
@@ -40,7 +44,7 @@ def game():
         renderer=renderer,
         track_builder=TrackMeshBuilder(bridge, lines),
         ship_model=ShipModel(bridge, lines),
-        backdrop=SynthwaveBackdrop(bridge, lines),
+        backdrop=SpaceBackdrop(bridge),
         hud=Hud(bridge),
         menu=MenuScreen(bridge),
         music=SynthMusic(voices),
@@ -49,18 +53,18 @@ def game():
     return SimpleNamespace(bridge=bridge, loop=loop, session=loop.session, context=context, renderer=renderer)
 
 
-def press(game, *codes):
+def press(game: SimpleNamespace, *codes: str) -> None:
     for code in codes:
         game.bridge.window.dispatch("keydown", FakeKeyEvent(code))
         game.bridge.window.dispatch("keyup", FakeKeyEvent(code))
     game.loop.tick(1 / 60)
 
 
-def menu_html(game):
+def menu_html(game: SimpleNamespace) -> str:
     return game.bridge.document.getElementById("menu").innerHTML
 
 
-def test_frames_keep_requesting_themselves(game):
+def test_frames_keep_requesting_themselves(game: SimpleNamespace) -> None:
     window = game.bridge.window
     game.loop.start()
     window.frame_callbacks.pop()(1000.0)
@@ -69,14 +73,14 @@ def test_frames_keep_requesting_themselves(game):
     assert game.renderer.composer.render.calls == [(), ()]
 
 
-def test_title_shows_menu_and_track(game):
+def test_title_shows_menu_and_track(game: SimpleNamespace) -> None:
     game.loop.tick(0.016)
     assert "SYNTHRIDE" in menu_html(game)
     assert game.bridge.document.getElementById("hud").hidden
-    assert len(game.renderer.scene.add.calls) == 6  # 2 lights, sky, grid, ship, track
+    assert len(game.renderer.scene.add.calls) == 6  # 2 lights, sky, dust, ship, track
 
 
-def test_menu_navigation_to_playing_and_back(game):
+def test_menu_navigation_to_playing_and_back(game: SimpleNamespace) -> None:
     press(game, "Enter")
     assert game.session.phase is GamePhase.LEVEL_SELECT
     assert game.context.resume.calls == [()]
@@ -96,13 +100,19 @@ def test_menu_navigation_to_playing_and_back(game):
     assert game.session.phase is GamePhase.TITLE
 
 
-def test_mute_toggle(game):
+def test_level_select_ignores_other_keys(game: SimpleNamespace) -> None:
+    press(game, "Enter", "KeyX")
+    assert game.session.phase is GamePhase.LEVEL_SELECT
+    assert game.session.selected_level == 0
+
+
+def test_mute_toggle(game: SimpleNamespace) -> None:
     press(game, "KeyM")
-    assert game.loop._music.muted
+    assert game.loop._music.muted  # noqa: SLF001
 
 
 @pytest.mark.parametrize("phase", [GamePhase.GAME_OVER, GamePhase.VICTORY])
-def test_end_screens_return_to_level_select(game, phase):
+def test_end_screens_return_to_level_select(game: SimpleNamespace, phase: GamePhase) -> None:
     game.session.phase = phase
     game.loop.tick(0.016)
     assert "PRESS ENTER" in menu_html(game)
@@ -110,7 +120,7 @@ def test_end_screens_return_to_level_select(game, phase):
     assert game.session.phase is GamePhase.LEVEL_SELECT
 
 
-def play_until(game, phase, *codes):
+def play_until(game: SimpleNamespace, phase: GamePhase, *codes: str) -> None:
     for code in codes:
         game.bridge.window.dispatch("keydown", FakeKeyEvent(code))
     for _ in range(600):
@@ -120,13 +130,13 @@ def play_until(game, phase, *codes):
     pytest.fail(f"never reached {phase}")
 
 
-def test_level_won_banner(game):
+def test_level_won_banner(game: SimpleNamespace) -> None:
     game.session.start()
     play_until(game, GamePhase.LEVEL_WON, "ArrowUp")
     assert "LEVEL CLEAR" in menu_html(game)
 
 
-def test_camera_freezes_while_dying(game):
+def test_camera_freezes_while_dying(game: SimpleNamespace) -> None:
     game.session.start()
     play_until(game, GamePhase.DYING, "ArrowRight")
     calls = len(game.renderer.camera.position.set.calls)

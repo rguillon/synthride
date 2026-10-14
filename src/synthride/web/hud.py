@@ -1,20 +1,29 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The in-game heads-up display."""
+
 from __future__ import annotations
 
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from synthride.core.game_event import GameEvent
-from synthride.core.game_session import GameSession
 from synthride.core.tile_type import TileType
-from synthride.web.js_bridge import JsBridge
+from synthride.web.fps_counter import FpsCounter
 from synthride.web.palette import Palette
+
+if TYPE_CHECKING:
+    from synthride.core.game_session import GameSession
+    from synthride.web.js_bridge import JsBridge, JsObject
 
 
 class Hud:
-    """The in-game overlay: level name, lives, progress, speed / fuel / oxygen gauges, and effect callouts."""
+    """The in-game overlay: level name, frame rate, lives, progress, gauges, and effect callouts."""
 
     LAYOUT = """
       <div class="hud-top">
         <span id="hud-level"></span>
+        <span id="hud-fps" class="hud-fps"></span>
         <span id="hud-lives" class="hud-lives"></span>
       </div>
       <div class="progress"><div id="hud-progress" class="progress-fill"></div></div>
@@ -40,6 +49,7 @@ class Hud:
         "oxygen",
         "oxygen-fill",
         "callout",
+        "fps",
     )
     LOW = 0.2
     CALLOUT_SECONDS = 1.1
@@ -57,16 +67,20 @@ class Hud:
     KMH_PER_UNIT = 20
 
     def __init__(self, bridge: JsBridge) -> None:
+        """Fill the ``hud`` element with the display's layout."""
         document = bridge.document
         self._container = document.getElementById("hud")
         self._container.innerHTML = self.LAYOUT
         self._elements = {name: document.getElementById(f"hud-{name}") for name in self.ELEMENT_NAMES}
         self._callout_left = 0.0
+        self._fps = FpsCounter()
 
-    def show(self, visible: bool) -> None:
+    def show(self, *, visible: bool) -> None:
+        """Show or hide the display."""
         self._container.hidden = not visible
 
     def update(self, session: GameSession) -> None:
+        """Refresh every readout from ``session``."""
         config, ship = session.config, session.ship
         speed_fraction = min(1.0, ship.speed / (config.max_speed * config.boost_factor))
         self._elements["level"].textContent = f"{session.level_index + 1:02d} · {session.level.name.upper()}"
@@ -97,7 +111,12 @@ class Hud:
         style.opacity = f"{min(1.0, life * 2.5):.2f}"
         style.transform = f"scale({1.25 - 0.25 * life:.3f})"
 
-    def _set_gauge(self, name: str, fraction: float, warn: bool = True) -> None:
+    def count_frame(self, dt: float) -> None:
+        """Count a frame that took ``dt`` seconds, refreshing the frame-rate readout when a reading is ready."""
+        if self._fps.record(dt) and self._fps.fps is not None:
+            self._elements["fps"].textContent = f"{round(self._fps.fps)} FPS"
+
+    def _set_gauge(self, name: str, fraction: float, *, warn: bool = True) -> None:
         self._elements[f"{name}-fill"].style.width = self._percent(fraction)
         self._elements[name].classList.toggle("low", warn and fraction < self.LOW)
 
@@ -106,5 +125,6 @@ class Hud:
         return f"{max(0.0, min(1.0, fraction)) * 100:.1f}%"
 
     @property
-    def container(self) -> Any:
+    def container(self) -> JsObject:
+        """The element holding the display."""
         return self._container

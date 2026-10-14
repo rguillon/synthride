@@ -1,3 +1,8 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The gameplay tunables."""
+
 from dataclasses import dataclass
 
 
@@ -24,6 +29,7 @@ class GameConfig:
     min_strafe_speed: float = 2.5
     strafe_ratio: float = 0.3
     jump_velocity: float = 6.5
+    double_jump_velocity: float = 5.5
 
     step_tolerance: float = 0.12
     crash_overlap_ratio: float = 0.35

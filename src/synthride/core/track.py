@@ -1,13 +1,22 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The track: a grid of tiles and the tunnels on them."""
+
 from __future__ import annotations
 
 import math
-from collections.abc import Iterator, Sequence
+from typing import TYPE_CHECKING
 
-from synthride.core.bounding_box import BoundingBox
 from synthride.core.solid import Solid
 from synthride.core.tile import Tile
-from synthride.core.tunnel_kind import TunnelKind
 from synthride.core.tunnel_span import TunnelSpan
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
+
+    from synthride.core.bounding_box import BoundingBox
+    from synthride.core.tunnel_kind import TunnelKind
 
 
 class Track:
@@ -19,8 +28,10 @@ class Track:
     COLUMNS = 8
 
     def __init__(self, rows: Sequence[Sequence[Tile | None]]) -> None:
+        """Build a track from ``rows`` of eight cells each, None meaning a gap."""
         if any(len(row) != self.COLUMNS for row in rows):
-            raise ValueError(f"every track row must have {self.COLUMNS} cells")  # noqa: TRY003
+            msg = f"every track row must have {self.COLUMNS} cells"
+            raise ValueError(msg)
         self._rows = tuple(tuple(row) for row in rows)
         self._tunnels = tuple(span for row in self._rows for span in self._spans_in(row))
         self._tunnels_by_row: dict[int, list[TunnelSpan]] = {}
@@ -48,26 +59,32 @@ class Track:
 
     @property
     def row_count(self) -> int:
+        """The number of rows."""
         return len(self._rows)
 
     @property
     def length(self) -> float:
+        """The length of the track along the z axis."""
         return self.row_count * Tile.SIZE
 
     @property
     def width(self) -> float:
+        """The width of the track along the x axis."""
         return self.COLUMNS * Tile.SIZE
 
     @property
     def tunnels(self) -> tuple[TunnelSpan, ...]:
+        """Every tunnel span, row by row."""
         return self._tunnels
 
     def tile_at(self, column: int, row: int) -> Tile | None:
+        """Return the tile in a cell, or None for a gap or a cell outside the track."""
         if 0 <= column < self.COLUMNS and 0 <= row < self.row_count:
             return self._rows[row][column]
         return None
 
     def tiles(self) -> Iterator[Tile]:
+        """Yield every tile, row by row."""
         for row in self._rows:
             yield from (tile for tile in row if tile is not None)
 
@@ -90,7 +107,7 @@ class Track:
         return list(found.values())
 
     def ceiling_over(self, x: float, first_z: float, last_z: float) -> float | None:
-        """The lowest tunnel ceiling above ``x`` from ``first_z`` to ``last_z``, or None when no tunnel covers it."""
+        """Return the lowest tunnel ceiling above ``x`` from ``first_z`` to ``last_z``, or None outside tunnels."""
         first_row, last_row = math.floor(first_z / Tile.SIZE), math.floor(last_z / Tile.SIZE)
         ceilings = [
             span.inner_height(x)
@@ -101,5 +118,6 @@ class Track:
         return min(ceilings, default=None)
 
     def surface_height_at(self, x: float, z: float) -> float | None:
+        """Return the top of the tile under ``(x, z)``, or None over a gap."""
         tile = self.tile_at(math.floor(x / Tile.SIZE), math.floor(z / Tile.SIZE))
         return None if tile is None else tile.top

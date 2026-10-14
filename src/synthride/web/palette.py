@@ -1,3 +1,8 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The synthwave colour scheme."""
+
 from __future__ import annotations
 
 from typing import ClassVar
@@ -8,9 +13,15 @@ from synthride.core.tile_type import TileType
 class Palette:
     """The synthwave colour scheme, as 0xRRGGBB integers."""
 
-    NIGHT = 0x0B0014
-    HORIZON = 0x5A189A
-    FOG = 0x2A0845
+    SPACE = 0x020109
+    NEBULA = 0x6A1B9A
+    NEBULA_GLOW = 0x00A3C4
+    PLANET_DARK = 0x2A1458
+    PLANET_LIGHT = 0x8E4FB8
+    PLANET_RIM = 0x4DD9FF
+    STARS = (0xFFFFFF, 0xBFD4FF, 0xFFD9F2, 0x9FE8FF, 0xFFE9B8)
+    DUST = 0x8C7BFF
+    FOG = 0x060418
     GRID = 0xFF2BD6
     TILE_BODY = 0x12001F
     SHIP_BODY = 0x1B1035
@@ -34,10 +45,12 @@ class Palette:
 
     @classmethod
     def tile_color(cls, tile_type: TileType) -> int:
+        """Return the colour of a tile type."""
         return cls.TILE_COLORS[tile_type]
 
     @staticmethod
     def css(color: int) -> str:
+        """Return ``color`` as a CSS hex colour."""
         return f"#{color:06x}"
 
     @staticmethod

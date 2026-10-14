@@ -1,19 +1,24 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+from collections.abc import Iterator, Sequence
+
 from synthride.core.vector3 import Vector3
 from synthride.web.box_geometry_buffer import BoxGeometryBuffer
 
 
-def triangles(buffer: BoxGeometryBuffer):
+def triangles(buffer: BoxGeometryBuffer) -> Iterator[tuple[list[tuple[float, ...]], tuple[float, ...]]]:
     points = [tuple(buffer.positions[i : i + 3]) for i in range(0, len(buffer.positions), 3)]
     normals = [tuple(buffer.normals[i : i + 3]) for i in range(0, len(buffer.normals), 3)]
     for index in range(0, len(points), 3):
         yield points[index : index + 3], normals[index]
 
 
-def cross(u, v):
+def cross(u: Sequence[float], v: Sequence[float]) -> tuple[float, float, float]:
     return (u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0])
 
 
-def test_five_faces_two_triangles_each():
+def test_five_faces_two_triangles_each() -> None:
     buffer = BoxGeometryBuffer()
     buffer.add_box(Vector3(0, 0, 0), Vector3(1, 2, 3))
     assert buffer.vertex_count == 30
@@ -21,7 +26,7 @@ def test_five_faces_two_triangles_each():
     assert buffer.box_count == 1
 
 
-def test_triangles_are_wound_counter_clockwise_toward_their_normal():
+def test_triangles_are_wound_counter_clockwise_toward_their_normal() -> None:
     buffer = BoxGeometryBuffer()
     buffer.add_box(Vector3(0, 0, 0), Vector3(1, 2, 3))
     for (a, b, c), normal in triangles(buffer):
@@ -31,7 +36,7 @@ def test_triangles_are_wound_counter_clockwise_toward_their_normal():
         assert sum(n * f for n, f in zip(normal, face_normal, strict=True)) > 0
 
 
-def test_top_face_and_walls_take_their_own_colours():
+def test_top_face_and_walls_take_their_own_colours() -> None:
     buffer = BoxGeometryBuffer()
     top, upper, lower = (1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)
     buffer.add_box(Vector3(0, 0, 0), Vector3(1, 2, 3), top, upper, lower)
@@ -42,7 +47,7 @@ def test_top_face_and_walls_take_their_own_colours():
         assert tuple(buffer.colors[index * 3 : index * 3 + 3]) == expected
 
 
-def test_boxes_accumulate():
+def test_boxes_accumulate() -> None:
     buffer = BoxGeometryBuffer()
     buffer.add_box(Vector3(0, 0, 0), Vector3(1, 1, 1))
     buffer.add_box(Vector3(1, 0, 0), Vector3(2, 1, 1))
@@ -50,7 +55,7 @@ def test_boxes_accumulate():
     assert buffer.box_count == 2
 
 
-def test_quad_normal_follows_its_winding():
+def test_quad_normal_follows_its_winding() -> None:
     buffer = BoxGeometryBuffer()
     red = (1.0, 0.0, 0.0)
     buffer.add_quad(((0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0)), (red,) * 4)

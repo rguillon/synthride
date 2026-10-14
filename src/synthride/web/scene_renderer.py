@@ -1,14 +1,21 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The Three.js scene, chase camera and post-processing."""
+
 from __future__ import annotations
 
 import math
 import random
-from typing import Any
+from typing import TYPE_CHECKING
 
 from synthride.core.game_event import GameEvent
-from synthride.core.ship import Ship
-from synthride.web.js_bridge import JsBridge
-from synthride.web.neon_lines import NeonLines
 from synthride.web.palette import Palette
+
+if TYPE_CHECKING:
+    from synthride.core.ship import Ship
+    from synthride.web.js_bridge import JsBridge, JsObject
+    from synthride.web.neon_lines import NeonLines
 
 
 class SceneRenderer:
@@ -23,10 +30,15 @@ class SceneRenderer:
     MIN_HEIGHT = 0.35
     FOLLOW_RATE = 7.0
     MSAA_SAMPLES = 4
+    FOG_NEAR = 30.0
+    FOG_FAR = 170.0
     SHAKE_EVENTS = frozenset({GameEvent.CRASHED, GameEvent.BURNED, GameEvent.FELL, GameEvent.NUDGED, GameEvent.BUMPED})
     LIGHT_SHAKES = frozenset({GameEvent.NUDGED, GameEvent.BUMPED})
 
-    def __init__(self, bridge: JsBridge, container: Any, lines: NeonLines, rng: random.Random | None = None) -> None:
+    def __init__(
+        self, bridge: JsBridge, container: JsObject, lines: NeonLines, rng: random.Random | None = None
+    ) -> None:
+        """Create the renderer inside ``container`` and keep it sized to the window."""
         three, window = bridge.three, bridge.window
         self._bridge = bridge
         self._lines = lines
@@ -36,12 +48,12 @@ class SceneRenderer:
         self.renderer.toneMapping = three.ACESFilmicToneMapping
         container.appendChild(self.renderer.domElement)
         self.scene = three.Scene.new()
-        self.scene.fog = three.Fog.new(Palette.FOG, 30, 170)
+        self.scene.fog = three.Fog.new(Palette.FOG, self.FOG_NEAR, self.FOG_FAR)
         self.camera = three.PerspectiveCamera.new(self.BASE_FOV, 1, 0.1, 1500)
         self.scene.add(three.HemisphereLight.new(Palette.GRID, Palette.SHIP_EDGE, 0.25))
-        sunlight = three.DirectionalLight.new(0xFFD1F0, 0.5)
-        sunlight.position.set(4, 12, -20)
-        self.scene.add(sunlight)
+        starlight = three.DirectionalLight.new(0xC9D2FF, 0.45)
+        starlight.position.set(-6, 12, -20)
+        self.scene.add(starlight)
         # Post-processing renders off-screen, which bypasses the canvas antialiasing: multisample the target.
         target = three.WebGLRenderTarget.new(1, 1, bridge.obj(type=three.HalfFloatType, samples=self.MSAA_SAMPLES))
         self.composer = three.EffectComposer.new(self.renderer, target)
@@ -56,9 +68,11 @@ class SceneRenderer:
 
     @property
     def camera_z(self) -> float:
+        """The camera's position along the z axis."""
         return self._camera_position[2]
 
     def resize(self) -> None:
+        """Fit the renderer and camera to the window."""
         width, height = self._bridge.window.innerWidth, self._bridge.window.innerHeight
         self.renderer.setSize(width, height)
         self.composer.setSize(width, height)
@@ -66,19 +80,22 @@ class SceneRenderer:
         self.camera.updateProjectionMatrix()
         self._lines.resize(width, height)
 
-    def add(self, item: Any) -> None:
+    def add(self, item: JsObject) -> None:
+        """Add ``item`` to the scene."""
         self.scene.add(item)
 
-    def remove(self, item: Any) -> None:
+    def remove(self, item: JsObject) -> None:
+        """Remove ``item`` from the scene."""
         self.scene.remove(item)
 
     def react(self, events: list[GameEvent]) -> None:
+        """Shake the camera on impacts."""
         if any(event in self.SHAKE_EVENTS for event in events):
             hard = any(event in self.SHAKE_EVENTS - self.LIGHT_SHAKES for event in events)
             self._shake = 0.5 if hard else 0.15
 
     def follow(
-        self, ship: Ship, speed_fraction: float, dt: float, snap: bool = False, ceiling: float | None = None
+        self, ship: Ship, speed_fraction: float, dt: float, *, snap: bool = False, ceiling: float | None = None
     ) -> None:
         """Eases the chase camera toward its spot behind the ship and widens the view with speed.
 
@@ -103,4 +120,5 @@ class SceneRenderer:
         self.camera.updateProjectionMatrix()
 
     def render(self) -> None:
+        """Render a frame."""
         self.composer.render()

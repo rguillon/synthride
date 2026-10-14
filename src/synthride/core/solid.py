@@ -1,9 +1,16 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""Boxes the ship collides with."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from synthride.core.bounding_box import BoundingBox
-from synthride.core.tile import Tile
+if TYPE_CHECKING:
+    from synthride.core.bounding_box import BoundingBox
+    from synthride.core.tile import Tile
 
 
 @dataclass(frozen=True)

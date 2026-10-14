@@ -1,3 +1,8 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The phases of the game session."""
+
 from enum import Enum, auto
 
 

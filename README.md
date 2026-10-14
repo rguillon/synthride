@@ -29,7 +29,7 @@ hosted anywhere, GitHub Pages included.
 | `↑` / `W` | accelerate |
 | `↓` / `S` | brake |
 | `←` `→` / `A` `D` | strafe |
-| `Space` | jump |
+| `Space` | jump; press again in mid-air for one double jump |
 | `Esc` | back to level select |
 | `M` | mute music |
 
@@ -60,19 +60,26 @@ hosted anywhere, GitHub Pages included.
 
 ## Levels
 
-Levels are plain text files in `src/synthride/levels/`, picked up automatically in file-name order:
+Levels are JSON files in `src/synthride/levels/`, picked up automatically in file-name order:
 
-```text
-name: Neon Highway
-gravity: 18        # optional, these are the defaults
-oxygen: 90         # seconds of air
-fuel: 100          # 1 unit of fuel per 4 blocks travelled
----
-.. .. N1 N1 N1 N1 .. ..      # first row = start of the track
-.. .. N1 B1 B1 N1 .. ..
-.. N2 N2 .. .. N2 N2 ..
-.. .. N1A N1A N1A N1A .. ..  # a round tunnel four blocks wide
+```json
+{
+  "name": "Neon Highway",
+  "gravity": 18,
+  "oxygen": 90,
+  "fuel": 100,
+  "track": [
+    "# first row = start of the track",
+    ".. .. N1 N1 N1 N1 .. ..",
+    ".. .. N1 B1 B1 N1 .. ..",
+    ".. N2 N2 .. .. N2 N2 ..",
+    ".. .. N1A N1A N1A N1A .. ..  # a round tunnel four blocks wide"
+  ]
+}
 ```
+
+`gravity`, `oxygen` (seconds of air) and `fuel` (1 unit per 4 blocks travelled) are optional; the values above are
+the defaults. `track` lists one string per row; `#` starts a comment, so a string starting with `#` is skipped.
 
 Each row has 8 cells: `..` is a gap, otherwise a type letter (`N`ormal, `B`oost, `S`low, `K`ill, `R`efuel,
 `O` air, `J`ump pad, `I`ce, `<` / `>` pushers, `F`inish) followed by a height from 1 to 4, optionally followed by

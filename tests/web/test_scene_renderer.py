@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
 import random
 
 import pytest
@@ -11,27 +14,27 @@ from tests.web.fakes.fake_element import FakeElement
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
 
 
-def make_renderer():
+def make_renderer() -> tuple[FakeJsBridge, FakeElement, SceneRenderer]:
     bridge = FakeJsBridge()
     container = FakeElement("stage")
-    return bridge, container, SceneRenderer(bridge, container, NeonLines(bridge), rng=random.Random(1))
+    return bridge, container, SceneRenderer(bridge, container, NeonLines(bridge), rng=random.Random(1))  # noqa: S311
 
 
-def test_sets_up_canvas_and_bloom_pipeline():
+def test_sets_up_canvas_and_bloom_pipeline() -> None:
     _, container, renderer = make_renderer()
     assert container.children == [renderer.renderer.domElement]
     assert renderer.renderer.setPixelRatio.calls == [(2,)]
     assert len(renderer.composer.addPass.calls) == 3
 
 
-def test_post_processing_target_is_multisampled():
+def test_post_processing_target_is_multisampled() -> None:
     bridge, _, _ = make_renderer()
     (target,) = bridge.three.WebGLRenderTarget.created
     assert target.args[2]["samples"] == SceneRenderer.MSAA_SAMPLES
     assert bridge.three.EffectComposer.created[0].args[1] is target
 
 
-def test_resize_updates_line_resolution():
+def test_resize_updates_line_resolution() -> None:
     bridge = FakeJsBridge()
     lines = NeonLines(bridge)
     line = lines.segments([0, 0, 0, 1, 1, 1], 0xFFFFFF, 2)
@@ -39,7 +42,7 @@ def test_resize_updates_line_resolution():
     assert line.args[1].resolution.set.calls[-1] == (800, 400)
 
 
-def test_resize_follows_window():
+def test_resize_follows_window() -> None:
     bridge, _, renderer = make_renderer()
     bridge.window.innerWidth, bridge.window.innerHeight = 1000, 500
     bridge.window.dispatch("resize")
@@ -47,7 +50,7 @@ def test_resize_follows_window():
     assert renderer.camera.aspect == 2
 
 
-def test_follow_snaps_behind_ship_and_widens_fov():
+def test_follow_snaps_behind_ship_and_widens_fov() -> None:
     _, _, renderer = make_renderer()
     ship = Ship(Vector3(4, 0.5, 10))
     renderer.follow(ship, speed_fraction=1.0, dt=0.016, snap=True)
@@ -58,7 +61,7 @@ def test_follow_snaps_behind_ship_and_widens_fov():
     assert renderer.camera.fov == SceneRenderer.BASE_FOV + SceneRenderer.SPEED_FOV
 
 
-def test_follow_ducks_under_tunnel_roofs():
+def test_follow_ducks_under_tunnel_roofs() -> None:
     _, _, renderer = make_renderer()
     renderer.follow(Ship(Vector3(4, 0.5, 10)), 0, 0.016, snap=True, ceiling=1.4)
     assert renderer.camera.position.set.calls[-1][1] == pytest.approx(1.4 - SceneRenderer.CEILING_MARGIN)
@@ -66,14 +69,14 @@ def test_follow_ducks_under_tunnel_roofs():
     assert renderer.camera.position.set.calls[-1][1] == pytest.approx(0.5 + SceneRenderer.MIN_HEIGHT)
 
 
-def test_follow_eases_sideways():
+def test_follow_eases_sideways() -> None:
     _, _, renderer = make_renderer()
     renderer.follow(Ship(Vector3(0, 0, 0)), 0, 0.016, snap=True)
     renderer.follow(Ship(Vector3(2, 0, 0)), 0, 0.016)
     assert 0 < renderer.camera.position.set.calls[-1][0] < 2
 
 
-def test_crash_shakes_camera():
+def test_crash_shakes_camera() -> None:
     _, _, renderer = make_renderer()
     renderer.react([GameEvent.CRASHED])
     renderer.follow(Ship(Vector3(0, 0, 0)), 0, 0.016, snap=True)
@@ -81,7 +84,7 @@ def test_crash_shakes_camera():
     assert x != 0
 
 
-def test_add_remove_and_render():
+def test_add_remove_and_render() -> None:
     _, _, renderer = make_renderer()
     renderer.add("mesh")
     renderer.remove("mesh")
@@ -91,7 +94,7 @@ def test_add_remove_and_render():
     assert renderer.composer.render.calls == [()]
 
 
-def test_camera_never_rolls_when_strafing():
+def test_camera_never_rolls_when_strafing() -> None:
     _, _, renderer = make_renderer()
     renderer.follow(Ship(Vector3(4, 0.5, 10), velocity=Vector3(5, 0, 10)), 0.5, 0.016)
     assert renderer.camera.rotateZ.calls == []

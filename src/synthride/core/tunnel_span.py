@@ -1,3 +1,8 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""Tunnel spans: runs of tunnel tiles covered by a single shell."""
+
 from __future__ import annotations
 
 import math
@@ -40,30 +45,36 @@ class TunnelSpan:
 
     @property
     def left(self) -> float:
+        """The x coordinate of the shell's left side."""
         return self.first_column * Tile.SIZE
 
     @property
     def right(self) -> float:
+        """The x coordinate of the shell's right side."""
         return (self.last_column + 1) * Tile.SIZE
 
     @property
     def center(self) -> float:
+        """The x coordinate of the tunnel's centre."""
         return (self.left + self.right) / 2
 
     @property
     def half_width(self) -> float:
+        """Half the outer width of the shell."""
         return (self.right - self.left) / 2
 
     @property
     def inner_half_width(self) -> float:
+        """Half the width inside the walls."""
         return self.half_width - self.WALL
 
     @property
     def rise(self) -> float:
+        """How high the round roof rises above its springing line."""
         return min(self.MAX_RISE, self.inner_half_width)
 
     def continues(self, other: TunnelSpan | None) -> bool:
-        """True when ``other`` is the same tunnel one row further, so no mouth separates them."""
+        """Return True when ``other`` is the same tunnel one row further, so no mouth separates them."""
         return other is not None and (other.kind, other.first_column, other.last_column, other.deck) == (
             self.kind,
             self.first_column,
@@ -72,12 +83,14 @@ class TunnelSpan:
         )
 
     def outer_path(self) -> list[Point]:
+        """Return the shell's outer outline, from the left foot to the right foot."""
         if self.kind is TunnelKind.SQUARE:
             top = self.deck + self.CLEARANCE + self.ROOF
             return [(self.left, self.deck), (self.left, top), (self.right, top), (self.right, self.deck)]
         return [(self.left, self.deck), *self._arch(self.half_width, self.rise + self.SHELL), (self.right, self.deck)]
 
     def inner_path(self) -> list[Point]:
+        """Return the shell's inner outline, from the left foot to the right foot."""
         left, right = self.left + self.WALL, self.right - self.WALL
         if self.kind is TunnelKind.SQUARE:
             top = self.deck + self.CLEARANCE
@@ -90,6 +103,7 @@ class TunnelSpan:
         return [(self.center + half_width * math.cos(angle), base + rise * math.sin(angle)) for angle in angles]
 
     def solids(self) -> list[Solid]:
+        """Return the walls and roof slices the ship collides with."""
         wall_top = self.outer_height(self.left + self.WALL)
         parts = [
             (self.left, self.left + self.WALL, self.deck, wall_top),
@@ -117,13 +131,13 @@ class TunnelSpan:
         return slices
 
     def inner_height(self, x: float) -> float:
-        """The height of the ceiling above ``x``."""
+        """Return the height of the ceiling above ``x``."""
         if self.kind is TunnelKind.SQUARE:
             return self.deck + self.CLEARANCE
         return self.deck + self.SPRING + self.rise * self._dome(x, self.inner_half_width)
 
     def outer_height(self, x: float) -> float:
-        """The height of the shell's outside above ``x``."""
+        """Return the height of the shell's outside above ``x``."""
         if self.kind is TunnelKind.SQUARE:
             return self.deck + self.CLEARANCE + self.ROOF
         return self.deck + self.SPRING + (self.rise + self.SHELL) * self._dome(x, self.half_width)

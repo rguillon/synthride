@@ -1,14 +1,23 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""Moving the ship through the track and resolving its collisions."""
+
 from __future__ import annotations
 
-from synthride.core.bounding_box import BoundingBox
+from typing import TYPE_CHECKING
+
 from synthride.core.collision_outcome import CollisionOutcome
 from synthride.core.collision_report import CollisionReport
-from synthride.core.game_config import GameConfig
-from synthride.core.ship import Ship
-from synthride.core.solid import Solid
-from synthride.core.tile import Tile
-from synthride.core.track import Track
-from synthride.core.vector3 import Vector3
+
+if TYPE_CHECKING:
+    from synthride.core.bounding_box import BoundingBox
+    from synthride.core.game_config import GameConfig
+    from synthride.core.ship import Ship
+    from synthride.core.solid import Solid
+    from synthride.core.tile import Tile
+    from synthride.core.track import Track
+    from synthride.core.vector3 import Vector3
 
 
 class CollisionResolver:
@@ -23,10 +32,12 @@ class CollisionResolver:
     EPSILON = 1e-6
 
     def __init__(self, track: Track, config: GameConfig) -> None:
+        """Resolve collisions against the solids of ``track``."""
         self._track = track
         self._config = config
 
     def move(self, ship: Ship, dt: float) -> list[CollisionReport]:
+        """Move the ship by its velocity for ``dt`` seconds and report what it hit."""
         self._move_laterally(ship, dt)
         reports = self._move_forward(ship, dt)
         if any(report.outcome is CollisionOutcome.CRASHED for report in reports):
@@ -56,8 +67,8 @@ class CollisionResolver:
             ship.velocity = ship.velocity.with_x(0.0)
         ship.position = target
 
-    def _clear_x(self, ship: Ship, blockers: list[Solid], toward_positive: bool) -> float:
-        """The x position that places the ship just beside ``blockers``."""
+    def _clear_x(self, ship: Ship, blockers: list[Solid], *, toward_positive: bool) -> float:
+        """Return the x position that places the ship just beside ``blockers``."""
         half_width = ship.width / 2 + self.EPSILON
         if toward_positive:
             return min(solid.box.minimum.x for solid in blockers) - half_width
@@ -141,7 +152,7 @@ class CollisionResolver:
         return [CollisionReport(CollisionOutcome.BUMPED)]
 
     def _tile_beneath(self, ship: Ship, supports: list[Solid], surface: float) -> Tile | None:
-        """The tile of the highest solid under the ship's centre, else of any highest support.
+        """Return the tile of the highest solid under the ship's centre, else of any highest support.
 
         None when the ship rests on a tunnel's shell, which has no effect.
         """

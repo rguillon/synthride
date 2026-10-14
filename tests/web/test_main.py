@@ -1,5 +1,10 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
 import sys
 from types import SimpleNamespace
+
+import pytest
 
 from synthride.web import main as main_module
 from synthride.web.game_loop import GameLoop
@@ -9,14 +14,14 @@ from tests.web.fakes.fake_js_object import FakeJsObject
 from tests.web.fakes.fake_window import FakeWindow
 
 
-def test_build_wires_a_game_loop_with_bundled_levels():
+def test_build_wires_a_game_loop_with_bundled_levels() -> None:
     bridge = FakeJsBridge()
     loop = Main(bridge).build()
     assert isinstance(loop, GameLoop)
     assert len(loop.session.levels) >= 3
 
 
-def test_main_boots_from_pyodide_modules(monkeypatch):
+def test_main_boots_from_pyodide_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     window = FakeWindow()
     ffi = SimpleNamespace(create_proxy=lambda function: function, to_js=lambda value, **_: value)
     monkeypatch.setitem(sys.modules, "js", SimpleNamespace(window=window, THREE=FakeJsObject("THREE")))

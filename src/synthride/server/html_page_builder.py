@@ -1,3 +1,8 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The HTML5 page that boots the game."""
+
 from __future__ import annotations
 
 from string import Template
@@ -54,6 +59,7 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
   text-shadow: 0 0 6px var(--cyan); }
 #hud[hidden] { display: none; }
 .hud-top { display: flex; justify-content: space-between; gap: 1rem; letter-spacing: 0.15em; }
+.hud-fps { opacity: 0.6; letter-spacing: 0.1em; }
 .hud-lives { color: var(--pink); text-shadow: 0 0 8px var(--pink); letter-spacing: 0.3em; }
 .hud-bottom { position: absolute; left: 16px; right: 16px; bottom: 16px; display: grid;
   grid-template-columns: repeat(3, 1fr); gap: 0.8rem; }
@@ -127,19 +133,23 @@ try {
         three_version: str = THREE_VERSION,
         bundle_url: str = "synthride.zip",
     ) -> None:
+        """Use the given library versions and load the bundle from ``bundle_url``."""
         self._pyodide_version = pyodide_version
         self._three_version = three_version
         self._bundle_url = bundle_url
 
     @property
     def pyodide_url(self) -> str:
+        """The CDN folder Pyodide is loaded from."""
         return f"https://cdn.jsdelivr.net/pyodide/v{self._pyodide_version}/full"
 
     @property
     def three_url(self) -> str:
+        """The CDN folder Three.js is loaded from."""
         return f"https://cdn.jsdelivr.net/npm/three@{self._three_version}"
 
     def build(self) -> str:
+        """Return the page's HTML."""
         return self.TEMPLATE.substitute(
             pyodide_url=self.pyodide_url, three_url=self.three_url, bundle_url=self._bundle_url
         )

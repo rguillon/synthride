@@ -1,9 +1,12 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
 from synthride.server.bundle_builder import BundleBuilder
 from synthride.server.game_server import GameServer
 from synthride.server.html_page_builder import HtmlPageBuilder
 
 
-def test_binds_and_reports_url():
+def test_binds_and_reports_url() -> None:
     page, bundle = HtmlPageBuilder(), BundleBuilder()
     with GameServer(port=0, page_builder=page, bundle_builder=bundle) as server:
         assert server.url.startswith("http://127.0.0.1:")

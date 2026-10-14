@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
 import pytest
 
 from synthride.core.level_parser import LevelParser
@@ -5,29 +8,31 @@ from synthride.core.tunnel_span import TunnelSpan
 from synthride.web.neon_lines import NeonLines
 from synthride.web.palette import Palette
 from synthride.web.tunnel_mesh_builder import TunnelMeshBuilder
+from tests.level_json import level_json
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
+from tests.web.fakes.fake_js_object import FakeJsObject
 
 
-def build(*rows: str):
+def build(*rows: str) -> tuple[FakeJsObject, TunnelMeshBuilder, list[FakeJsObject]]:
     bridge = FakeJsBridge()
     builder = TunnelMeshBuilder(bridge, NeonLines(bridge))
-    parts = builder.build(LevelParser().parse("---\n" + "\n".join(rows)).track)
+    parts = builder.build(LevelParser().parse(level_json(*rows)).track)
     return bridge.three, builder, parts
 
 
-def segments(line) -> list[tuple[tuple[float, ...], tuple[float, ...]]]:
+def segments(line: FakeJsObject) -> list[tuple[tuple[float, ...], tuple[float, ...]]]:
     positions = line.args[0].setPositions.calls[0][0]
     return [(tuple(positions[i : i + 3]), tuple(positions[i + 3 : i + 6])) for i in range(0, len(positions), 6)]
 
 
-def test_no_tunnel_builds_nothing():
+def test_no_tunnel_builds_nothing() -> None:
     three, builder, parts = build("N1 N1 N1 N1 N1 N1 N1 N1")
     assert parts == []
     assert builder.material is None
     assert three.Mesh.created == []
 
 
-def test_one_shell_mesh_with_mouths_and_ribs():
+def test_one_shell_mesh_with_mouths_and_ribs() -> None:
     three, builder, parts = build(".. N1T N1T .. .. .. .. ..", ".. N1T N1T .. .. .. .. ..")
     assert len(parts) == 3
     assert parts[0] is three.Mesh.created[0]
@@ -38,7 +43,7 @@ def test_one_shell_mesh_with_mouths_and_ribs():
     assert {point[2] for segment in ribs for point in segment} == {-1.0}  # one ring between the two rows
 
 
-def test_shell_is_closed_and_shaded_toward_the_outside():
+def test_shell_is_closed_and_shaded_toward_the_outside() -> None:
     three, _, _ = build(".. N1T N1T .. .. .. .. ..")
     normals = three.BufferAttribute.created[1].args[0]
     positions = three.BufferAttribute.created[0].args[0]
@@ -50,7 +55,7 @@ def test_shell_is_closed_and_shaded_toward_the_outside():
             assert normals[3 * index + 1] == pytest.approx(1.0)
 
 
-def test_round_tunnel_ridges_include_the_crown():
+def test_round_tunnel_ridges_include_the_crown() -> None:
     three, _, _ = build(".. N1A N1A N1A .. .. .. ..")
     mouths = segments(three.LineSegments2.created[0])
     lengthwise = [segment for segment in mouths if segment[0][2] != segment[1][2]]

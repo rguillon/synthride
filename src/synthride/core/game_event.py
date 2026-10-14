@@ -1,3 +1,8 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""Events emitted by the game session."""
+
 from enum import Enum, auto
 
 
@@ -6,6 +11,7 @@ class GameEvent(Enum):
 
     LEVEL_STARTED = auto()
     JUMPED = auto()
+    DOUBLE_JUMPED = auto()
     LANDED = auto()
     BUMPED = auto()
     NUDGED = auto()

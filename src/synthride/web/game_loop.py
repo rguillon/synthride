@@ -1,21 +1,28 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The per-frame game loop."""
+
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 
 from synthride.core.game_event import GameEvent
 from synthride.core.game_phase import GamePhase
-from synthride.core.game_session import GameSession
-from synthride.core.level import Level
-from synthride.web.browser_keyboard import BrowserKeyboard
-from synthride.web.hud import Hud
-from synthride.web.js_bridge import JsBridge
-from synthride.web.menu_screen import MenuScreen
 from synthride.web.scene_renderer import SceneRenderer
-from synthride.web.ship_model import ShipModel
-from synthride.web.sound_effects import SoundEffects
-from synthride.web.synth_music import SynthMusic
-from synthride.web.synthwave_backdrop import SynthwaveBackdrop
-from synthride.web.track_mesh_builder import TrackMeshBuilder
+
+if TYPE_CHECKING:
+    from synthride.core.game_session import GameSession
+    from synthride.core.level import Level
+    from synthride.web.browser_keyboard import BrowserKeyboard
+    from synthride.web.hud import Hud
+    from synthride.web.js_bridge import JsBridge, JsObject
+    from synthride.web.menu_screen import MenuScreen
+    from synthride.web.ship_model import ShipModel
+    from synthride.web.sound_effects import SoundEffects
+    from synthride.web.space_backdrop import SpaceBackdrop
+    from synthride.web.synth_music import SynthMusic
+    from synthride.web.track_mesh_builder import TrackMeshBuilder
 
 
 class GameLoop:
@@ -31,20 +38,22 @@ class GameLoop:
     CAMERA_REACH_BEHIND = SceneRenderer.CAMERA_DISTANCE + 0.5
     CAMERA_REACH_AHEAD = 5.0
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         bridge: JsBridge,
+        *,
         session: GameSession,
         keyboard: BrowserKeyboard,
         renderer: SceneRenderer,
         track_builder: TrackMeshBuilder,
         ship_model: ShipModel,
-        backdrop: SynthwaveBackdrop,
+        backdrop: SpaceBackdrop,
         hud: Hud,
         menu: MenuScreen,
         music: SynthMusic,
         sound_effects: SoundEffects,
     ) -> None:
+        """Wire the loop to the session and every browser-side component."""
         self._bridge = bridge
         self.session = session
         self._keyboard = keyboard
@@ -57,7 +66,7 @@ class GameLoop:
         self._sound_effects = sound_effects
         self._backdrop = backdrop
         self._shown_level: Level | None = None
-        self._track_group: Any = None
+        self._track_group: JsObject = None
         self._last_timestamp: float | None = None
         self._time = 0.0
         self._frame_proxy = bridge.proxy(self.on_frame)
@@ -65,15 +74,18 @@ class GameLoop:
         renderer.add(ship_model.group)
 
     def start(self) -> None:
+        """Request the first animation frame."""
         self._bridge.window.requestAnimationFrame(self._frame_proxy)
 
     def on_frame(self, timestamp: float) -> None:
+        """Advance by the time since the last frame, then request the next one."""
         dt = 0.0 if self._last_timestamp is None else (timestamp - self._last_timestamp) / 1000
         self._last_timestamp = timestamp
         self.tick(min(max(dt, 0.0), self.MAX_FRAME_SECONDS))
         self._bridge.window.requestAnimationFrame(self._frame_proxy)
 
     def tick(self, dt: float) -> None:
+        """Advance the whole game by ``dt`` seconds and render a frame."""
         self._time += dt
         session = self.session
         for key in self._keyboard.consume_presses():
@@ -83,6 +95,7 @@ class GameLoop:
         self._renderer.react(events)
         self._hud.announce(events)
         self._hud.fade(dt)
+        self._hud.count_frame(dt)
         self._music.update()
         snap = self._show_current_level() or GameEvent.LEVEL_STARTED in events
         self._ship_model.sync(session.ship, session.phase, dt)
@@ -99,6 +112,7 @@ class GameLoop:
         self._renderer.render()
 
     def handle_key(self, key: str) -> None:
+        """React to a fresh key press in the menus."""
         session, phase = self.session, self.session.phase
         if key == "KeyM":
             self._music.toggle_mute()
@@ -133,7 +147,7 @@ class GameLoop:
 
     def _update_overlays(self) -> None:
         session, phase = self.session, self.session.phase
-        self._hud.show(phase in self.HUD_PHASES)
+        self._hud.show(visible=phase in self.HUD_PHASES)
         if phase in self.HUD_PHASES:
             self._hud.update(session)
         match phase:

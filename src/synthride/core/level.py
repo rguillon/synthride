@@ -1,3 +1,8 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""A playable level."""
+
 from dataclasses import dataclass
 
 from synthride.core.track import Track

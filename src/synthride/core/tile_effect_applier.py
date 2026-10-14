@@ -1,13 +1,20 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The effects of the tiles the ship rides on."""
+
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
-from synthride.core.game_config import GameConfig
 from synthride.core.game_event import GameEvent
-from synthride.core.gauge import Gauge
-from synthride.core.ship import Ship
-from synthride.core.tile import Tile
 from synthride.core.tile_type import TileType
+
+if TYPE_CHECKING:
+    from synthride.core.game_config import GameConfig
+    from synthride.core.gauge import Gauge
+    from synthride.core.ship import Ship
+    from synthride.core.tile import Tile
 
 
 class TileEffectApplier:
@@ -27,16 +34,17 @@ class TileEffectApplier:
     ONCE_PER_PATCH = frozenset({GameEvent.SLOWED, GameEvent.REFUELED, GameEvent.REFILLED_AIR, *RIDING_EVENTS.values()})
 
     def __init__(self, config: GameConfig) -> None:
+        """Use the tunables from ``config``."""
         self._config = config
 
     def apply(self, tile: Tile, ship: Ship, fuel: Gauge, oxygen: Gauge) -> GameEvent | None:
-        """Returns the event produced by the effect, or None when nothing worth reporting happened."""
+        """Return the event produced by the effect, or None when nothing worth reporting happened."""
         event = self._effect(tile, ship, fuel, oxygen)
         if event in self.ONCE_PER_PATCH and ship.surface is tile.tile_type:
             return None
         return event
 
-    def _effect(self, tile: Tile, ship: Ship, fuel: Gauge, oxygen: Gauge) -> GameEvent | None:
+    def _effect(self, tile: Tile, ship: Ship, fuel: Gauge, oxygen: Gauge) -> GameEvent | None:  # noqa: PLR0911
         match tile.tile_type:
             case TileType.BOOST:
                 return self._boost(ship)

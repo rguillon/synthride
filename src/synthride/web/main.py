@@ -1,3 +1,8 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The browser entry point and composition root."""
+
 from __future__ import annotations
 
 from synthride.core.game_session import GameSession
@@ -11,9 +16,9 @@ from synthride.web.neon_lines import NeonLines
 from synthride.web.scene_renderer import SceneRenderer
 from synthride.web.ship_model import ShipModel
 from synthride.web.sound_effects import SoundEffects
+from synthride.web.space_backdrop import SpaceBackdrop
 from synthride.web.synth_music import SynthMusic
 from synthride.web.synth_voices import SynthVoices
-from synthride.web.synthwave_backdrop import SynthwaveBackdrop
 from synthride.web.track_mesh_builder import TrackMeshBuilder
 
 
@@ -23,10 +28,12 @@ class Main:
     MASTER_VOLUME = 0.6
 
     def __init__(self, bridge: JsBridge, catalog: LevelCatalog | None = None) -> None:
+        """Build the game on ``bridge``, with the levels from ``catalog``."""
         self._bridge = bridge
         self._catalog = catalog or LevelCatalog()
 
     def build(self) -> GameLoop:
+        """Create the game loop and everything it drives."""
         bridge = self._bridge
         context = bridge.window.AudioContext.new()
         master = context.createGain()
@@ -40,7 +47,7 @@ class Main:
             renderer=SceneRenderer(bridge, bridge.document.getElementById("stage"), lines),
             track_builder=TrackMeshBuilder(bridge, lines),
             ship_model=ShipModel(bridge, lines),
-            backdrop=SynthwaveBackdrop(bridge, lines),
+            backdrop=SpaceBackdrop(bridge),
             hud=Hud(bridge),
             menu=MenuScreen(bridge),
             music=SynthMusic(SynthVoices(bridge, context, master)),
@@ -50,8 +57,8 @@ class Main:
 
 def main() -> GameLoop:
     """Browser entry point, called by the page once Pyodide has unpacked the bundle."""
-    import js  # ty: ignore[unresolved-import]  (these modules only exist inside Pyodide)
-    from pyodide.ffi import create_proxy, to_js  # ty: ignore[unresolved-import]
+    import js  # noqa: PLC0415  # ty: ignore[unresolved-import]  (these modules only exist inside Pyodide)
+    from pyodide.ffi import create_proxy, to_js  # noqa: PLC0415  # ty: ignore[unresolved-import]
 
     loop = Main(JsBridge(js.window, js.THREE, create_proxy, to_js)).build()
     loop.start()

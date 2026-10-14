@@ -1,37 +1,62 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The ship's velocity from input, gravity and the surface underneath."""
+
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
-from synthride.core.game_config import GameConfig
-from synthride.core.ship import Ship
-from synthride.core.ship_input import ShipInput
+from synthride.core.game_event import GameEvent
 from synthride.core.tile_type import TileType
 from synthride.core.vector3 import Vector3
+
+if TYPE_CHECKING:
+    from synthride.core.game_config import GameConfig
+    from synthride.core.ship import Ship
+    from synthride.core.ship_input import ShipInput
 
 
 class ShipPhysics:
     """Turns player input, gravity and the surface underneath into the ship's velocity for one step.
 
     On ice the ship only slowly gets the sideways speed the player asks for, so it keeps sliding. Pushers
-    add a constant sideways drift.
+    add a constant sideways drift. Holding jump on the ground keeps hopping; once airborne, a fresh press
+    gives one more jump, recharged on landing.
     """
 
     PUSH_DIRECTIONS: ClassVar[dict[TileType, int]] = {TileType.PUSH_LEFT: -1, TileType.PUSH_RIGHT: 1}
 
     def __init__(self, config: GameConfig) -> None:
+        """Use the tunables from ``config``."""
         self._config = config
 
-    def apply(self, ship: Ship, ship_input: ShipInput, gravity: float, dt: float) -> bool:
-        """Updates ``ship.velocity``. Returns True when the ship jumped during this step."""
+    def apply(self, ship: Ship, ship_input: ShipInput, gravity: float, dt: float) -> GameEvent | None:
+        """Update ``ship.velocity`` and return the jump the ship made during this step, if any."""
         speed = self._forward_speed(ship.speed, ship_input, dt)
         lateral = self._lateral_speed(ship, speed, ship_input, dt)
         vertical = ship.velocity.y
-        jumped = ship_input.jump and ship.grounded
-        if jumped:
+        jump = self._jump(ship, ship_input)
+        if jump is GameEvent.JUMPED:
             vertical = self._config.jump_velocity
-            ship.grounded = False
+        elif jump is GameEvent.DOUBLE_JUMPED:
+            vertical = self._config.double_jump_velocity
         ship.velocity = Vector3(lateral, vertical - gravity * dt, speed)
-        return jumped
+        return jump
+
+    @staticmethod
+    def _jump(ship: Ship, ship_input: ShipInput) -> GameEvent | None:
+        fresh_press = ship_input.jump and not ship.jump_held
+        ship.jump_held = ship_input.jump
+        if ship.grounded:
+            ship.air_jump_ready = True
+            if ship_input.jump:
+                ship.grounded = False
+                return GameEvent.JUMPED
+        elif fresh_press and ship.air_jump_ready:
+            ship.air_jump_ready = False
+            return GameEvent.DOUBLE_JUMPED
+        return None
 
     def _forward_speed(self, speed: float, ship_input: ShipInput, dt: float) -> float:
         config = self._config

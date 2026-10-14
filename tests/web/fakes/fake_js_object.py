@@ -1,6 +1,12 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from synthride.web.js_bridge import JsObject
 
 
 class FakeJsObject:
@@ -15,18 +21,18 @@ class FakeJsObject:
         self.calls: list[tuple] = []
         self.created: list[FakeJsObject] = []
 
-    def __getattr__(self, attribute: str) -> Any:
+    def __getattr__(self, attribute: str) -> JsObject:
         if attribute.startswith("__"):
             raise AttributeError(attribute)
         child = FakeJsObject(f"{self._name}.{attribute}")
         setattr(self, attribute, child)
         return child
 
-    def __call__(self, *args: Any) -> FakeJsObject:
+    def __call__(self, *args: object) -> FakeJsObject:
         self.calls.append(args)
         return FakeJsObject(f"{self._name}()", args)
 
-    def new(self, *args: Any) -> FakeJsObject:
+    def new(self, *args: object) -> FakeJsObject:
         instance = FakeJsObject(self._name, args)
         self.created.append(instance)
         return instance

@@ -60,53 +60,33 @@ line-length = 120
 fix = true
 
 [tool.ruff.lint]
-select = [
-    # flake8-2020
-    "YTT",
-    # flake8-bandit
-    "S",
-    # flake8-bugbear
-    "B",
-    # flake8-builtins
-    "A",
-    # flake8-comprehensions
-    "C4",
-    # flake8-debugger
-    "T10",
-    # flake8-simplify
-    "SIM",
-    # isort
-    "I",
-    # mccabe
-    "C90",
-    # pycodestyle
-    "E", "W",
-    # pyflakes
-    "F",
-    # pygrep-hooks
-    "PGH",
-    # pyupgrade
-    "UP",
-    # ruff
-    "RUF",
-    # tryceratops
-    "TRY",
-]
-ignore = [
-    # LineTooLong
-    "E501",
-    # DoNotAssignLambda
-    "E731",
-]
+fixable = ["ALL"]
+select = ["ALL", "RUF022"]
+ignore = [  "COM812",   # cause incompatibility with the formatter
+            "ISC001",   # cause incompatibility with the formatter
+            "D203",     # conflict with another rule
+            "D213",     # conflict with another rule
+            "PLR2004",  # Magic values
+            ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101", "S311"]
+"tests/*" = [ "S101",     # Allow assert in tests
+              "D100",     # No docstring in tests
+              "D101",     # No docstring in tests
+              "D102",     # No docstring in tests
+              "D103",     # No docstring in tests
+              "D105",     # No docstring in tests
+              "D107",     # No docstring in tests
+              ]
 
 [tool.ruff.format]
 preview = true
 
 [tool.coverage.report]
 skip_empty = true
+fail_under = 100
+show_missing = true
+skip_covered = true
 
 [tool.coverage.run]
 branch = true

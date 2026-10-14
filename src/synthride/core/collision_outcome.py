@@ -1,3 +1,8 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The outcomes of moving the ship through the track."""
+
 from enum import Enum, auto
 
 

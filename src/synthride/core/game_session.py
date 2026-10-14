@@ -1,21 +1,30 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The game session: phase machine, lives and level simulation."""
+
 from __future__ import annotations
 
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 from synthride.core.collision_outcome import CollisionOutcome
-from synthride.core.collision_report import CollisionReport
 from synthride.core.collision_resolver import CollisionResolver
 from synthride.core.game_config import GameConfig
 from synthride.core.game_event import GameEvent
 from synthride.core.game_phase import GamePhase
 from synthride.core.gauge import Gauge
-from synthride.core.level import Level
 from synthride.core.ship import Ship
-from synthride.core.ship_input import ShipInput
 from synthride.core.ship_physics import ShipPhysics
 from synthride.core.tile import Tile
 from synthride.core.tile_effect_applier import TileEffectApplier
 from synthride.core.vector3 import Vector3
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from synthride.core.collision_report import CollisionReport
+    from synthride.core.level import Level
+    from synthride.core.ship_input import ShipInput
 
 
 class GameSession:
@@ -24,8 +33,10 @@ class GameSession:
     MAX_STEPS_PER_UPDATE = 30
 
     def __init__(self, levels: Sequence[Level], config: GameConfig | None = None) -> None:
+        """Create a session on the title screen, with the first level loaded."""
         if not levels:
-            raise ValueError("a session needs at least one level")  # noqa: TRY003
+            msg = "a session needs at least one level"
+            raise ValueError(msg)
         self.config = config or GameConfig()
         self.levels = tuple(levels)
         self.phase = GamePhase.TITLE
@@ -39,30 +50,37 @@ class GameSession:
 
     @property
     def level(self) -> Level:
+        """The level being played."""
         return self.levels[self.level_index]
 
     @property
     def progress(self) -> float:
+        """How far along the track the ship is, from 0 to 1."""
         return min(1.0, max(0.0, self.ship.position.z / self.level.track.length))
 
     def open_level_select(self) -> None:
+        """Switch to the level selection screen."""
         self.phase = GamePhase.LEVEL_SELECT
 
     def select_next_level(self) -> None:
+        """Select the next level, wrapping around to the first."""
         self.selected_level = (self.selected_level + 1) % len(self.levels)
 
     def select_previous_level(self) -> None:
+        """Select the previous level, wrapping around to the last."""
         self.selected_level = (self.selected_level - 1) % len(self.levels)
 
     def start(self) -> list[GameEvent]:
-        """Starts a new game with full lives at the selected level."""
+        """Start a new game with full lives at the selected level."""
         self.lives = self.config.lives
         return self._begin_level(self.selected_level)
 
     def return_to_title(self) -> None:
+        """Go back to the title screen."""
         self.phase = GamePhase.TITLE
 
     def update(self, dt: float, ship_input: ShipInput) -> list[GameEvent]:
+        """Advance the session by ``dt`` seconds and return the events that happened."""
         if self.phase is GamePhase.PLAYING:
             return self._simulate(dt, ship_input)
         if self.phase in (GamePhase.DYING, GamePhase.LEVEL_WON):
@@ -84,8 +102,9 @@ class GameSession:
         ship = self.ship
         was_grounded = ship.grounded
         start_z = ship.position.z
-        events = [GameEvent.JUMPED] if self._physics.apply(ship, ship_input, self.level.gravity, dt) else []
-        events += self._handle_collisions(self._resolver.move(ship, dt), was_grounded)
+        jump = self._physics.apply(ship, ship_input, self.level.gravity, dt)
+        events = [] if jump is None else [jump]
+        events += self._handle_collisions(self._resolver.move(ship, dt), was_grounded=was_grounded)
         if self.phase is not GamePhase.PLAYING:
             return events
         self.fuel.drain((ship.position.z - start_z) * self.config.fuel_per_unit)
@@ -98,7 +117,7 @@ class GameSession:
             return [*events, *self._win()]
         return events
 
-    def _handle_collisions(self, reports: list[CollisionReport], was_grounded: bool) -> list[GameEvent]:
+    def _handle_collisions(self, reports: list[CollisionReport], *, was_grounded: bool) -> list[GameEvent]:
         events: list[GameEvent] = []
         surface = None
         for report in reports:
@@ -111,7 +130,7 @@ class GameSession:
                     events.append(GameEvent.NUDGED)
                 case CollisionOutcome.BUMPED:
                     events.append(GameEvent.BUMPED)
-                case CollisionOutcome.LANDED:
+                case _:  # CollisionOutcome.LANDED
                     if not was_grounded:
                         events.append(GameEvent.LANDED)
                     if report.tile is not None:

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
 import pytest
 
 from synthride.core.bounding_box import BoundingBox
@@ -8,6 +11,7 @@ from synthride.core.track import Track
 from synthride.core.tunnel_kind import TunnelKind
 from synthride.core.tunnel_span import TunnelSpan
 from synthride.core.vector3 import Vector3
+from tests.level_json import level_json
 
 
 def make_track() -> Track:
@@ -16,19 +20,19 @@ def make_track() -> Track:
     return Track([first, second])
 
 
-def test_dimensions():
+def test_dimensions() -> None:
     track = make_track()
     assert track.row_count == 2
     assert track.length == 2
     assert track.width == 8
 
 
-def test_rejects_rows_of_wrong_width():
-    with pytest.raises(ValueError):
+def test_rejects_rows_of_wrong_width() -> None:
+    with pytest.raises(ValueError, match="must have 8 cells"):
         Track([[None] * 7])
 
 
-def test_tile_at():
+def test_tile_at() -> None:
     track = make_track()
     boost = track.tile_at(4, 0)
     assert boost is not None
@@ -38,23 +42,23 @@ def test_tile_at():
     assert track.tile_at(0, 9) is None
 
 
-def test_tiles_iterates_non_empty_cells():
+def test_tiles_iterates_non_empty_cells() -> None:
     assert len(list(make_track().tiles())) == 10
 
 
-def test_tiles_under_box_footprint():
+def test_tiles_under_box_footprint() -> None:
     box = BoundingBox(Vector3(3.5, 0, 0.2), Vector3(4.5, 1, 0.8))
     assert {tile.column for tile in make_track().tiles_under(box)} == {3, 4}
 
 
-def test_surface_height_at():
+def test_surface_height_at() -> None:
     track = make_track()
     assert track.surface_height_at(4.5, 0.5) == 1.0
     assert track.surface_height_at(0.5, 0.5) is None
 
 
-def test_neighbouring_tunnel_tiles_merge_into_spans():
-    track = LevelParser().parse("---\nN1T N1T N2T N1A N1A .. N1T N1").track
+def test_neighbouring_tunnel_tiles_merge_into_spans() -> None:
+    track = LevelParser().parse(level_json("N1T N1T N2T N1A N1A .. N1T N1")).track
     spans = [(span.kind, span.first_column, span.last_column, span.deck) for span in track.tunnels]
     assert spans == [
         (TunnelKind.SQUARE, 0, 1, 0.5),
@@ -64,8 +68,8 @@ def test_neighbouring_tunnel_tiles_merge_into_spans():
     ]
 
 
-def test_solids_under_include_tunnel_shells_once():
-    track = LevelParser().parse("---\n.. .. N1T N1T .. .. .. ..").track
+def test_solids_under_include_tunnel_shells_once() -> None:
+    track = LevelParser().parse(level_json(".. .. N1T N1T .. .. .. ..")).track
     box = BoundingBox(Vector3(2.5, 0, 0.2), Vector3(3.5, 1, 0.8))
     solids = track.solids_under(box)
     assert len([solid for solid in solids if solid.tile is not None]) == 2
@@ -73,8 +77,8 @@ def test_solids_under_include_tunnel_shells_once():
     assert track.tiles_under(box) == [track.tile_at(2, 0), track.tile_at(3, 0)]
 
 
-def test_ceiling_over_finds_the_lowest_tunnel_roof_in_range():
-    track = LevelParser().parse("---\n" + "N1 " * 8 + "\n" + "N1T " * 8 + "\n" + "N2T " * 8).track
+def test_ceiling_over_finds_the_lowest_tunnel_roof_in_range() -> None:
+    track = LevelParser().parse(level_json("N1 " * 8, "N1T " * 8, "N2T " * 8)).track
     assert track.ceiling_over(4, 0.0, 0.9) is None
     assert track.ceiling_over(4, 0.0, 1.5) == 0.5 + TunnelSpan.CLEARANCE
     assert track.ceiling_over(4, 2.0, 2.5) == 1.0 + TunnelSpan.CLEARANCE

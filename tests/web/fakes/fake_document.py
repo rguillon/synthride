@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
 from __future__ import annotations
 
 from tests.web.fakes.fake_element import FakeElement
@@ -10,10 +13,10 @@ class FakeDocument:
         self.elements: dict[str, FakeElement] = {}
         self.created: list[FakeElement] = []
 
-    def getElementById(self, element_id: str) -> FakeElement:
+    def getElementById(self, element_id: str) -> FakeElement:  # noqa: N802
         return self.elements.setdefault(element_id, FakeElement(element_id))
 
-    def createElement(self, tag: str) -> FakeElement:
+    def createElement(self, tag: str) -> FakeElement:  # noqa: N802
         element = FakeElement(tag=tag)
         self.created.append(element)
         return element

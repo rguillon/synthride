@@ -1,15 +1,22 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The tunnels' meshes."""
+
 from __future__ import annotations
 
 from itertools import pairwise
-from typing import Any
+from typing import TYPE_CHECKING
 
-from synthride.core.track import Track
 from synthride.core.tunnel_kind import TunnelKind
-from synthride.core.tunnel_span import Point, TunnelSpan
 from synthride.web.box_geometry_buffer import BoxGeometryBuffer, Rgb
-from synthride.web.js_bridge import JsBridge
-from synthride.web.neon_lines import NeonLines
 from synthride.web.palette import Palette
+
+if TYPE_CHECKING:
+    from synthride.core.track import Track
+    from synthride.core.tunnel_span import Point, TunnelSpan
+    from synthride.web.js_bridge import JsBridge, JsObject
+    from synthride.web.neon_lines import NeonLines
 
 
 class TunnelMeshBuilder:
@@ -29,12 +36,13 @@ class TunnelMeshBuilder:
     CAP = Palette.linear_rgb(Palette.mix(Palette.TILE_BODY, Palette.TUNNEL, 0.3))
 
     def __init__(self, bridge: JsBridge, lines: NeonLines) -> None:
+        """Create meshes with the bridge's Three.js and outline them with ``lines``."""
         self._bridge = bridge
         self._lines = lines
-        self.material: Any = None
+        self.material: JsObject = None
 
-    def build(self, track: Track) -> list[Any]:
-        """The shell mesh and its neon line sets, or nothing when the track has no tunnel."""
+    def build(self, track: Track) -> list[JsObject]:
+        """Return the shell mesh and its neon line sets, or nothing when the track has no tunnel."""
         if not track.tunnels:
             return []
         rows: dict[int, list[TunnelSpan]] = {}
@@ -94,7 +102,7 @@ class TunnelMeshBuilder:
 
     @staticmethod
     def _ridges(span: TunnelSpan, outer: list[Point]) -> list[Point]:
-        """The outline points that neon runs along: the roof's edges, plus a round roof's crown."""
+        """Return the outline points that neon runs along: the roof's edges, plus a round roof's crown."""
         if span.kind is TunnelKind.SQUARE:
             return [outer[1], outer[2]]
         return [outer[1], outer[len(outer) // 2], outer[-2]]

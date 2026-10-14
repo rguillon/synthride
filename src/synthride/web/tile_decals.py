@@ -1,15 +1,22 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""The animated markings on special tiles."""
+
 from __future__ import annotations
 
 import math
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from synthride.core.tile import Tile
 from synthride.core.tile_type import TileType
-from synthride.core.track import Track
 from synthride.web.decal_painter import DecalPainter
 from synthride.web.decal_style import DecalStyle
-from synthride.web.js_bridge import JsBridge
 from synthride.web.palette import Palette
+
+if TYPE_CHECKING:
+    from synthride.core.track import Track
+    from synthride.web.js_bridge import JsBridge, JsObject
 
 
 class TileDecals:
@@ -41,12 +48,13 @@ class TileDecals:
     }
 
     def __init__(self, bridge: JsBridge, painter: DecalPainter | None = None) -> None:
+        """Paint the markings with ``painter``."""
         self._bridge = bridge
         self._painter = painter or DecalPainter(bridge)
-        self._layers: list[tuple[DecalStyle, Any, Any]] = []  # (style, texture, material)
+        self._layers: list[tuple[DecalStyle, JsObject, JsObject]] = []  # (style, texture, material)
 
-    def build(self, track: Track) -> Any:
-        """A group holding every marking of ``track``. Replaces (and frees) the previous one."""
+    def build(self, track: Track) -> JsObject:
+        """Return a group holding every marking of ``track``. Replaces (and frees) the previous one."""
         for _, texture, _ in self._layers:
             texture.dispose()
         self._layers = []
@@ -66,6 +74,7 @@ class TileDecals:
         return group
 
     def animate(self, time: float) -> None:
+        """Scroll and pulse the markings at ``time``."""
         for style, texture, material in self._layers:
             dx, dy = style.drift
             texture.offset.set(-dx * time % 1, -dy * time % 1)
@@ -74,6 +83,7 @@ class TileDecals:
 
     @property
     def layer_count(self) -> int:
+        """The number of marking layers built."""
         return len(self._layers)
 
     def _deck_quad(self, tile: Tile) -> list[tuple[float, ...]]:
@@ -89,7 +99,7 @@ class TileDecals:
         ]
 
     def _curtain_quad(self, tile: Tile) -> list[tuple[float, ...]]:
-        """A sheet standing across the middle of the tile, facing the camera, fading out toward its top."""
+        """Return a sheet standing across the middle of the tile, facing the camera, fading out toward its top."""
         x0, x1 = tile.column * Tile.SIZE, (tile.column + 1) * Tile.SIZE
         z = -(tile.row + 0.5) * Tile.SIZE
         y0, y1 = tile.top, tile.top + self.CURTAIN_HEIGHT
@@ -101,7 +111,7 @@ class TileDecals:
             (x0, y1, z, x0, height, 0.0),
         ]
 
-    def _layer(self, style: DecalStyle, tile_type: TileType, quads: list[list[tuple[float, ...]]]) -> Any:
+    def _layer(self, style: DecalStyle, tile_type: TileType, quads: list[list[tuple[float, ...]]]) -> JsObject:
         three, bridge = self._bridge.three, self._bridge
         positions: list[float] = []
         uvs: list[float] = []

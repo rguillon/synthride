@@ -1,16 +1,19 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
 from synthride.core.game_phase import GamePhase
 from synthride.core.game_session import GameSession
 from synthride.core.level_catalog import LevelCatalog
 from synthride.core.ship_input import ShipInput
 
 
-def test_lists_bundled_levels_in_order():
+def test_lists_bundled_levels_in_order() -> None:
     names = LevelCatalog().file_names()
     assert len(names) >= 3
     assert names == sorted(names)
 
 
-def test_all_bundled_levels_parse_and_are_finishable_in_principle():
+def test_all_bundled_levels_parse_and_are_finishable_in_principle() -> None:
     for level in LevelCatalog().load_all():
         assert level.name
         assert level.track.row_count > 50
@@ -18,7 +21,7 @@ def test_all_bundled_levels_parse_and_are_finishable_in_principle():
         assert any(first_row), f"{level.name} has no tile to start on"
 
 
-def test_tunnel_vision_can_be_ridden_without_jumping():
+def test_tunnel_vision_can_be_ridden_without_jumping() -> None:
     """An autopilot holding full throttle and steering for the centre finishes the level."""
     levels = LevelCatalog().load_all()
     session = GameSession(levels)

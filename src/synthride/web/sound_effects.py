@@ -1,18 +1,29 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""Synthesised sound effects for game events."""
+
 from __future__ import annotations
 
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 from synthride.core.game_event import GameEvent
-from synthride.web.synth_voices import SynthVoices
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from synthride.web.synth_voices import SynthVoices
 
 
 class SoundEffects:
     """Synthesised sound effects, one recipe per game event."""
 
     def __init__(self, voices: SynthVoices) -> None:
+        """Play the effects on ``voices``."""
         self._voices = voices
         self._recipes = {
             GameEvent.JUMPED: self._jump,
+            GameEvent.DOUBLE_JUMPED: self._double_jump,
             GameEvent.LANDED: self._land,
             GameEvent.NUDGED: self._nudge,
             GameEvent.BOOSTED: self._boost,
@@ -34,6 +45,7 @@ class SoundEffects:
         }
 
     def play(self, events: Iterable[GameEvent]) -> None:
+        """Play the sound of each event that has one."""
         for event in dict.fromkeys(events):
             recipe = self._recipes.get(event)
             if recipe is not None:
@@ -41,6 +53,9 @@ class SoundEffects:
 
     def _jump(self, now: float) -> None:
         self._voices.tone("square", 220, now, 0.18, 0.12, end_hz=660, cutoff_hz=2500)
+
+    def _double_jump(self, now: float) -> None:
+        self._voices.tone("square", 440, now, 0.16, 0.1, end_hz=1320, cutoff_hz=3500)
 
     def _land(self, now: float) -> None:
         self._voices.tone("sine", 120, now, 0.12, 0.35, end_hz=50)

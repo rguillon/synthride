@@ -1,9 +1,17 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""Batching of boxes and quads into flat vertex lists."""
+
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
-from synthride.core.vector3 import Vector3
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from synthride.core.vector3 import Vector3
 
 Rgb = tuple[float, float, float]
 Corner = tuple[float, float, float]
@@ -19,6 +27,7 @@ class BoxGeometryBuffer:
     """
 
     def __init__(self) -> None:
+        """Start with empty vertex lists."""
         self.positions: list[float] = []
         self.normals: list[float] = []
         self.colors: list[float] = []
@@ -32,6 +41,7 @@ class BoxGeometryBuffer:
         wall_upper: Rgb = WHITE,
         wall_lower: Rgb = WHITE,
     ) -> None:
+        """Add the box from ``minimum`` to ``maximum``, minus its bottom face."""
         x0, y0, z0 = minimum.x, minimum.y, minimum.z
         x1, y1, z1 = maximum.x, maximum.y, maximum.z
         faces = (
@@ -52,7 +62,7 @@ class BoxGeometryBuffer:
         self.box_count += 1
 
     def add_quad(self, corners: Sequence[Corner], colors: Sequence[Rgb]) -> None:
-        """A flat quad, wound counter-clockwise seen from the side it faces. ``colors`` go with ``corners``."""
+        """Add a flat quad, wound counter-clockwise seen from the side it faces. ``colors`` go with ``corners``."""
         a, b, c, d = corners
         diagonal, other = [c[i] - a[i] for i in range(3)], [d[i] - b[i] for i in range(3)]
         normal = (
@@ -69,4 +79,5 @@ class BoxGeometryBuffer:
 
     @property
     def vertex_count(self) -> int:
+        """The number of vertices added so far."""
         return len(self.positions) // 3
