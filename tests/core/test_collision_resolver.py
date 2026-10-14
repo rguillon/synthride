@@ -8,20 +8,19 @@ from synthride.core.collision_outcome import CollisionOutcome
 from synthride.core.collision_report import CollisionReport
 from synthride.core.collision_resolver import CollisionResolver
 from synthride.core.game_config import GameConfig
-from synthride.core.level_parser import LevelParser
 from synthride.core.ship import Ship
 from synthride.core.solid import Solid
 from synthride.core.track import Track
 from synthride.core.tunnel_span import TunnelSpan
 from synthride.core.vector3 import Vector3
-from tests.level_json import level_json
+from tests.level_factory import make_level
 
 CONFIG = GameConfig()
 FLAT = "N1 N1 N1 N1 N1 N1 N1 N1"
 
 
 def make_track(*rows: str) -> Track:
-    return LevelParser().parse(level_json(*rows)).track
+    return make_level(*rows).track
 
 
 def make_ship(
@@ -170,3 +169,66 @@ def test_covered_width_counts_overlapping_blockers_once() -> None:
     wide = Solid(BoundingBox(Vector3(3.5, 0, 0), Vector3(4.6, 1, 1)))
     inside = Solid(BoundingBox(Vector3(4.2, 0, 0), Vector3(4.4, 1, 1)))
     assert CollisionResolver._covered_width(box, [wide, inside]) == pytest.approx(0.6)  # noqa: SLF001
+
+
+RAMP_UP = (FLAT, "N1f N1f N1f N1f N1f N1f N1f N1f", "N2 N2 N2 N2 N2 N2 N2 N2")
+RAMP_DOWN = ("N2 N2 N2 N2 N2 N2 N2 N2", "N1b N1b N1b N1b N1b N1b N1b N1b", FLAT)
+
+
+def drive(track: Track, ship: Ship, until_z: float) -> list[CollisionOutcome]:
+    resolver = CollisionResolver(track, CONFIG)
+    seen: list[CollisionOutcome] = []
+    while ship.position.z < until_z:
+        ship.velocity = Vector3(0, ship.velocity.y - 18 * CONFIG.fixed_step, CONFIG.max_speed)
+        seen += outcomes(resolver.move(ship, CONFIG.fixed_step))
+        assert ship.grounded, f"left the ground at z={ship.position.z}"
+    return seen
+
+
+def test_climbs_a_ramp_without_crashing_or_leaving_the_ground() -> None:
+    ship = make_ship(velocity=Vector3(0, 0, CONFIG.max_speed))
+    seen = drive(make_track(*RAMP_UP), ship, 2.6)
+    assert CollisionOutcome.CRASHED not in seen
+    assert ship.position.y == 1.0
+
+
+def test_sticks_to_a_ramp_going_down() -> None:
+    ship = make_ship(y=1.0, velocity=Vector3(0, 0, CONFIG.max_speed))
+    seen = drive(make_track(*RAMP_DOWN), ship, 2.6)
+    assert set(seen) == {CollisionOutcome.LANDED}
+    assert ship.position.y == 0.5
+
+
+def test_ground_slope_is_measured_under_the_ship() -> None:
+    ship = make_ship(z=1.5, y=1.0, velocity=Vector3(0, -1, 0))
+    reports = CollisionResolver(make_track(*RAMP_UP), CONFIG).move(ship, 0.01)
+    assert outcomes(reports) == [CollisionOutcome.LANDED]
+    assert ship.position.y == pytest.approx(0.5 + 0.5 * (0.5 + CONFIG.ship_length / 2))
+    assert ship.ground_slope == pytest.approx((0.0, 0.5))
+    ship.velocity = Vector3(0, 5, 0)
+    CollisionResolver(make_track(*RAMP_UP), CONFIG).move(ship, 0.01)
+    assert ship.ground_slope == (0.0, 0.0)
+
+
+def test_the_raised_side_of_a_slope_is_a_wall() -> None:
+    ship = make_ship(z=0.55, velocity=Vector3(0, 0, 10))
+    reports = CollisionResolver(make_track(FLAT, "N1b N1b N1b N1b N1b N1b N1b N1b"), CONFIG).move(ship, 0.02)
+    assert outcomes(reports) == [CollisionOutcome.CRASHED]
+
+
+def test_a_grounded_ship_still_drops_off_a_ledge() -> None:
+    ship = make_ship(y=1.0, z=0.5, velocity=Vector3(0, -0.1, 0))
+    track = make_track("N2 N2 N2 N2 .. N1 N1 N1")
+    ship.position = ship.position.with_x(5.5)
+    assert CollisionResolver(track, CONFIG).move(ship, 0.01) == []
+    assert not ship.grounded
+    assert ship.ground_slope == (0.0, 0.0)
+
+
+def test_leaving_the_top_of_a_ramp_launches_the_ship() -> None:
+    track = make_track(FLAT, "N1f N1f N1f N1f N1f N1f N1f N1f")
+    ship = make_ship(z=1.9, y=1.0, velocity=Vector3(0, -0.1, 10))
+    ship.ground_slope = (0.0, 0.5)
+    CollisionResolver(track, CONFIG).move(ship, 0.05)
+    assert not ship.grounded
+    assert ship.velocity.y == pytest.approx(-0.1 + 5)

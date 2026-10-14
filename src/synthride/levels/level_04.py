@@ -1,0 +1,98 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""Tunnel Vision."""
+
+from synthride.core.level import Level
+from synthride.core.track_parser import TrackParser
+
+LEVEL = Level(
+    name="Tunnel Vision",
+    gravity=18.0,
+    oxygen_seconds=35.0,
+    fuel_capacity=90.0,
+    track=TrackParser().parse([
+        # first row = start of the track
+        # warm up
+        (12, ".. N1 N1 N1 N1 N1 N1 .."),
+        # ice field: the ship keeps sliding, steer early
+        (10, ".. I1 I1 I1 I1 I1 I1 .."),
+        (4, ".. N1 N1 N1 N1 N1 N1 .."),
+        # square tunnel with a boost strip inside: keep low, the roof is close
+        (4, ".. .. N1T N1T N1T N1T .. .."),
+        (2, ".. .. N1T B1T B1T N1T .. .."),
+        (8, ".. .. N1T N1T N1T N1T .. .."),
+        (4, ".. .. N1 N1 N1 N1 .. .."),
+        # jump pad over a wide gap
+        (2, ".. .. J1 J1 J1 J1 .. .."),
+        (8, ".. .. .. .. .. .. .. .."),
+        (14, ".. N1 N1 N1 N1 N1 N1 .."),
+        # pushers: lean against the drift
+        (10, ".. .. >1 >1 >1 >1 .. .."),
+        (4, ".. .. N1 N1 N1 N1 .. .."),
+        (10, ".. .. <1 <1 <1 <1 .. .."),
+        (6, ".. .. N1 N1 N1 N1 .. .."),
+        # round tunnel with an air refill inside
+        (2, ".. .. S1 S1 S1 S1 .. .."),
+        (3, ".. .. N1 N1 N1 N1 .. .."),
+        (4, ".. .. .. N1A N1A .. .. .."),
+        (2, ".. .. .. O1A O1A .. .. .."),
+        (6, ".. .. .. N1A N1A .. .. .."),
+        (4, ".. .. N1 N1 N1 N1 .. .."),
+        # icy corridor between burning walls
+        (8, ".. K1 I1 I1 I1 I1 K1 .."),
+        (4, ".. .. N1 N1 N1 N1 .. .."),
+        # launch up to the high road
+        (2, ".. .. J1 J1 J1 J1 .. .."),
+        (4, ".. .. .. .. .. .. .. .."),
+        (24, ".. .. N3 N3 N3 N3 .. .."),
+        # wide round tunnel on the high road
+        (4, ".. N3A N3A N3A N3A N3A N3A .."),
+        (2, ".. N3A N3A B3A B3A N3A N3A .."),
+        (10, ".. N3A N3A N3A N3A N3A N3A .."),
+        # downhill: drop a level and thread the low tunnel
+        (6, ".. .. N3 N3 N3 N3 .. .."),
+        (2, ".. .. N3 O3 O3 N3 .. .."),
+        (5, ".. .. N3 N3 N3 N3 .. .."),
+        # ramp down
+        (1, ".. .. N2b N2b N2b N2b .. .."),
+        (8, ".. N2 N2 N2 N2 N2 N2 .."),
+        (6, ".. .. N2T N2T N2T N2T .. .."),
+        (2, ".. .. R2T R2T R2T R2T .. .."),
+        (6, ".. .. N2T N2T N2T N2T .. .."),
+        (4, ".. .. N2 N2 N2 N2 .. .."),
+        # icy slope
+        (7, ".. I2 I2 I2 I2 I2 I2 .."),
+        # icy ramp down
+        (1, ".. I1b I1b I1b I1b I1b I1b .."),
+        (8, ".. I1 I1 I1 I1 I1 I1 .."),
+        (4, ".. N1 N1 N1 N1 N1 N1 .."),
+        # pusher gauntlet between burning walls
+        (8, ".. K1 >1 >1 >1 >1 K1 .."),
+        (4, ".. K1 N1 N1 N1 N1 K1 .."),
+        (8, ".. K1 <1 <1 <1 <1 K1 .."),
+        (4, ".. N1 N1 N1 N1 N1 N1 .."),
+        # two jump pads back to back
+        (2, ".. .. J1 J1 J1 J1 .. .."),
+        (6, ".. .. .. .. .. .. .. .."),
+        (16, ".. .. N1 N1 N1 N1 .. .."),
+        (2, ".. .. J1 J1 J1 J1 .. .."),
+        (6, ".. .. .. .. .. .. .. .."),
+        (16, ".. .. N1 N1 N1 N1 .. .."),
+        # long round tunnel, air halfway
+        (6, ".. .. .. N1A N1A .. .. .."),
+        (2, ".. .. .. S1A S1A .. .. .."),
+        (8, ".. .. .. N1A N1A .. .. .."),
+        (2, ".. .. .. O1A O1A .. .. .."),
+        (12, ".. .. .. N1A N1A .. .. .."),
+        (4, ".. .. N1 N1 N1 N1 .. .."),
+        # square tunnel on ice
+        (12, ".. .. I1T I1T I1T I1T .. .."),
+        (4, ".. .. N1 N1 N1 N1 .. .."),
+        # launch back up to the high road
+        (2, ".. .. J1 J1 J1 J1 .. .."),
+        (4, ".. .. .. .. .. .. .. .."),
+        (18, ".. .. N3 N3 N3 N3 .. .."),
+        (3, ".. .. F3 F3 F3 F3 .. .."),
+    ]),
+)

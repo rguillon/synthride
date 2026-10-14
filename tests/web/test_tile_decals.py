@@ -3,11 +3,10 @@
 
 import pytest
 
-from synthride.core.level_parser import LevelParser
 from synthride.core.tile_type import TileType
 from synthride.web.palette import Palette
 from synthride.web.tile_decals import TileDecals
-from tests.level_json import level_json
+from tests.level_factory import make_level
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
 from tests.web.fakes.fake_js_object import FakeJsObject
 
@@ -15,7 +14,7 @@ from tests.web.fakes.fake_js_object import FakeJsObject
 def build(*rows: str) -> tuple[FakeJsObject, TileDecals, FakeJsObject]:
     bridge = FakeJsBridge()
     decals = TileDecals(bridge)
-    group = decals.build(LevelParser().parse(level_json(*rows)).track)
+    group = decals.build(make_level(*rows).track)
     return bridge.three, decals, group
 
 
@@ -67,6 +66,21 @@ def test_pulsing_layers_throb_in_opacity() -> None:
 
 def test_rebuilding_frees_the_old_textures() -> None:
     three, decals, _ = build(".. B1 .. .. .. .. .. ..")
-    decals.build(LevelParser().parse(level_json("N1 " * 8)).track)
+    decals.build(make_level("N1 " * 8).track)
     assert three.CanvasTexture.created[0].dispose.calls == [()]
     assert decals.layer_count == 0
+
+
+def test_markings_lie_on_slopes_and_fold_along_corner_creases() -> None:
+    three, _, _ = build(".. B1f B1fl .. .. .. .. ..")
+    positions = three.BufferAttribute.created[0].args[0]
+    lift = TileDecals.DECK_LIFT
+    assert set(positions[1::3]) == {0.5 + lift, 1.0 + lift}
+    corner = [tuple(positions[i : i + 3]) for i in range(6 * 3, len(positions), 3)]
+    assert corner[0] == corner[3] == (2.0, 1.0 + lift, -1.0)  # both triangles start at the raised corner
+
+
+def test_sheets_stand_on_the_slope() -> None:
+    three, _, _ = build(".. J1f .. .. .. .. .. ..")
+    sheet = three.BufferAttribute.created[3].args[0]
+    assert min(sheet[1::3]) == pytest.approx(0.75)

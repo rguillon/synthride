@@ -87,22 +87,26 @@ class TileDecals:
         return len(self._layers)
 
     def _deck_quad(self, tile: Tile) -> list[tuple[float, ...]]:
-        """Corners as (x, y, z, u, v, shade), in world coordinates, wound to face up."""
-        x0, x1 = tile.column * Tile.SIZE, (tile.column + 1) * Tile.SIZE
-        z0, z1 = tile.row * Tile.SIZE, (tile.row + 1) * Tile.SIZE
-        y = tile.top + self.DECK_LIFT
-        return [
-            (x0, y, -z0, x0, z0, 1.0),
-            (x1, y, -z0, x1, z0, 1.0),
-            (x1, y, -z1, x1, z1, 1.0),
-            (x0, y, -z1, x0, z1, 1.0),
-        ]
+        """Corners as (x, y, z, u, v, shade), in world coordinates, wound to face up and lying on the tile's top.
+
+        The quad is drawn as two triangles split along its first diagonal, so it starts at the highest corner
+        to fold along the crease of a corner slope.
+        """
+        corners = [(0, 0), (1, 0), (1, 1), (0, 1)]
+        apex = max(range(4), key=lambda index: tile.corner_height(*corners[index]))
+        quad = []
+        for cx, cz in corners[apex:] + corners[:apex]:
+            x, z = (tile.column + cx) * Tile.SIZE, (tile.row + cz) * Tile.SIZE
+            quad.append((x, tile.corner_height(cx, cz) + self.DECK_LIFT, -z, x, z, 1.0))
+        return quad
 
     def _curtain_quad(self, tile: Tile) -> list[tuple[float, ...]]:
         """Return a sheet standing across the middle of the tile, facing the camera, fading out toward its top."""
         x0, x1 = tile.column * Tile.SIZE, (tile.column + 1) * Tile.SIZE
-        z = -(tile.row + 0.5) * Tile.SIZE
-        y0, y1 = tile.top, tile.top + self.CURTAIN_HEIGHT
+        middle = (tile.row + 0.5) * Tile.SIZE
+        z = -middle
+        y0 = tile.height_at((x0 + x1) / 2, middle)
+        y1 = y0 + self.CURTAIN_HEIGHT
         height = self.CURTAIN_HEIGHT
         return [
             (x0, y0, z, x0, 0.0, 1.0),

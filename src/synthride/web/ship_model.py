@@ -116,6 +116,8 @@ class ShipModel:
     CONTACT_HALF_WIDTH = RUNNER_X + RUNNER_HALF_WIDTH
     CONTACT_HALF_LENGTH = 0.34
     FOOTPRINT = (0.33, 0.4)  # half width and half length of the body seen from above
+    SHADOW_LIFT = 0.002
+    GROUND_TILT_RATE = 14.0  # how fast the model settles onto a new slope
     SHADOW_LAYERS = (1.2, 1.05, 0.92)  # nested ellipses, relative to the footprint: darkest under the hull
     SHADOW_OPACITY = 0.28
     LINE_WIDTH = 3.0
@@ -166,6 +168,7 @@ class ShipModel:
         self.group.add(self.explosion)
         self._explosion_age = 0.0
         self._time = 0.0
+        self._ground_tilt: tuple[float, ...] = (0.0, 0.0)  # eased (roll, pitch) of the ground under the ship
 
     @staticmethod
     def _lofted(rings: Sequence[Ring]) -> list[Point]:
@@ -237,7 +240,7 @@ class ShipModel:
             )
         )
         shadow = three.Group.new()
-        shadow.position.y = 0.002
+        shadow.position.y = self.SHADOW_LIFT
         for scale in self.SHADOW_LAYERS:
             layer = three.Mesh.new(three.CircleGeometry.new(1, 24), material)
             layer.rotation.x = -math.pi / 2
@@ -273,11 +276,23 @@ class ShipModel:
         self._explosion_age = 0.0
         bank = -ship.velocity.x * (self.GROUND_BANK_PER_SPEED if ship.grounded else self.BANK_PER_SPEED)
         pitch = max(-0.3, min(0.3, ship.velocity.y * 0.04))
-        self.body.rotation.z = bank
-        self.body.rotation.x = pitch
+        # On a slope the model eases into lying along the ground. The ship rests on the highest point under it,
+        # which on a slope is above the ground under its centre, so the body comes down to meet it.
+        blend = 1 - math.exp(-self.GROUND_TILT_RATE * dt)
+        self._ground_tilt = tuple(
+            angle + (math.atan(slope) - angle) * blend
+            for angle, slope in zip(self._ground_tilt, ship.ground_slope, strict=True)
+        )
+        roll, rise = self._ground_tilt
+        self.body.rotation.z = bank + roll
+        self.body.rotation.x = pitch + rise
+        sink = abs(math.tan(roll)) * ship.width / 2 + abs(math.tan(rise)) * ship.length / 2
+        self.shadow.rotation.z = roll
+        self.shadow.rotation.x = rise
+        self.shadow.position.y = self.SHADOW_LIFT - sink
         # Lift by what the tilt would push the low runner below the ground, so it stays in contact.
-        self.body.position.y = self.CONTACT_HALF_WIDTH * abs(math.sin(bank)) + self.CONTACT_HALF_LENGTH * abs(
-            math.sin(pitch)
+        self.body.position.y = (
+            self.CONTACT_HALF_WIDTH * abs(math.sin(bank)) + self.CONTACT_HALF_LENGTH * abs(math.sin(pitch)) - sink
         )
         self.plume.scale.z = 1 + min(ship.speed, 20) / 20 + 0.15 * math.sin(self._time * 40)
 

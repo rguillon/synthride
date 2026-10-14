@@ -1,12 +1,11 @@
 # Copyright (c) 2026 Renaud Guillon
 # SPDX-License-Identifier: MIT
 
-from synthride.core.level_parser import LevelParser
 from synthride.core.tile_type import TileType
 from synthride.web.neon_lines import NeonLines
 from synthride.web.palette import Palette
 from synthride.web.track_mesh_builder import TrackMeshBuilder
-from tests.level_json import level_json
+from tests.level_factory import make_level
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
 from tests.web.fakes.fake_js_object import FakeJsObject
 
@@ -15,7 +14,7 @@ def build(rows: str) -> tuple[FakeJsObject, TrackMeshBuilder, FakeJsObject, Neon
     bridge = FakeJsBridge()
     lines = NeonLines(bridge)
     builder = TrackMeshBuilder(bridge, lines)
-    group = builder.build(LevelParser().parse(level_json(rows)).track)
+    group = builder.build(make_level(rows).track)
     return bridge.three, builder, group, lines
 
 
@@ -77,7 +76,7 @@ def test_animate_pulses_special_tiles_only() -> None:
 
 def test_rebuilding_releases_previous_outlines() -> None:
     _, builder, _, lines = build("N1 K1 .. .. .. .. .. ..")
-    builder.build(LevelParser().parse(level_json("N1 " * 8)).track)
+    builder.build(make_level("N1 " * 8).track)
     assert lines.count == 2  # one rail set and the seams
 
 
@@ -85,7 +84,7 @@ def test_tunnels_join_the_track_and_their_outlines_are_released_on_rebuild() -> 
     three, builder, _, lines = build("N1T N1T .. .. .. .. .. ..\nN1T N1T .. .. .. .. .. ..")
     assert len(three.MeshStandardMaterial.created) == 2  # tiles and tunnel shell
     assert lines.count == 4  # tile rails, seams, tunnel mouths and ribs
-    builder.build(LevelParser().parse(level_json("N1 " * 8)).track)
+    builder.build(make_level("N1 " * 8).track)
     assert lines.count == 2
 
 
@@ -99,3 +98,31 @@ def test_solids_are_pushed_behind_their_lines() -> None:
     three, _, _, _ = build("N1T K1 .. .. .. .. .. ..")
     assert all(material.args[0]["polygonOffset"] for material in three.MeshStandardMaterial.created)
     assert all(material.args[0]["polygonOffsetFactor"] > 0 for material in three.MeshStandardMaterial.created)
+
+
+def test_a_ramp_joins_the_tiles_it_links_without_rails() -> None:
+    three, _, _, _ = build(".. .. .. N1 .. .. .. ..\n.. .. .. N1f .. .. .. ..\n.. .. .. N2 .. .. .. ..")
+    lift = TrackMeshBuilder.LINE_LIFT
+    seams = rails_of(three, TrackMeshBuilder.SEAM_COLOR)
+    assert ((3.0, 0.5 + lift, -1.0), (4.0, 0.5 + lift, -1.0)) in seams
+    assert ((3.0, 1.0 + lift, -2.0), (4.0, 1.0 + lift, -2.0)) in seams
+    rails = rails_of(three, Palette.tile_color(TileType.NORMAL))
+    assert ((3.0, 0.5 + lift, -1.0), (3.0, 1.0 + lift, -2.0)) in rails  # the ramp's slanted side
+
+
+def test_a_ramp_drops_away_from_the_flat_tile_beside_its_low_end() -> None:
+    three, _, _, _ = build(".. .. .. N1 N1f .. .. ..")
+    lift = TrackMeshBuilder.LINE_LIFT
+    rails = rails_of(three, Palette.tile_color(TileType.NORMAL))
+    assert ((4.0, 1.0 + lift, -1.0), (4.0, 0.5 + lift, 0.0)) not in rails
+    assert ((4.0, 0.5 + lift, 0.0), (4.0, 1.0 + lift, -1.0)) in rails
+
+
+def test_corner_slopes_are_sloped_and_marked_along_their_crease() -> None:
+    three, _, _, _ = build(".. .. .. N1fr N1fl .. .. ..")
+    positions = three.BufferAttribute.created[0].args[0]
+    assert max(positions[1::3]) == 1.0
+    lift = TrackMeshBuilder.LINE_LIFT
+    seams = rails_of(three, TrackMeshBuilder.SEAM_COLOR)
+    assert ((3.0, 0.5 + lift, 0.0), (4.0, 1.0 + lift, -1.0)) in seams
+    assert ((5.0, 0.5 + lift, 0.0), (4.0, 1.0 + lift, -1.0)) in seams

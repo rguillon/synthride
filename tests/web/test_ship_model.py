@@ -129,3 +129,16 @@ def test_a_grounded_ship_rests_still() -> None:
         model.sync(ship, GamePhase.PLAYING, 0.013)
         assert model.body.rotation.x == 0
         assert model.body.position.y == 0
+
+
+def test_eases_onto_a_slope_with_its_shadow() -> None:
+    model = make_model()
+    ship = Ship(Vector3(), velocity=Vector3(0, 0, 10), grounded=True, ground_slope=(0.0, 0.5))
+    model.sync(ship, GamePhase.PLAYING, 0.016)
+    assert 0 < model.body.rotation.x < math.atan(0.5)
+    for _ in range(100):
+        model.sync(ship, GamePhase.PLAYING, 0.016)
+    assert model.body.rotation.x == pytest.approx(math.atan(0.5))
+    assert model.shadow.rotation.x == pytest.approx(math.atan(0.5))
+    assert model.body.position.y == pytest.approx(-0.5 * ship.length / 2)
+    assert model.shadow.position.y == pytest.approx(ShipModel.SHADOW_LIFT - 0.5 * ship.length / 2)

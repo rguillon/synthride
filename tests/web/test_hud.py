@@ -3,18 +3,17 @@
 
 from synthride.core.game_event import GameEvent
 from synthride.core.game_session import GameSession
-from synthride.core.level_parser import LevelParser
 from synthride.core.tile_type import TileType
 from synthride.web.hud import Hud
 from synthride.web.palette import Palette
-from tests.level_json import level_json
+from tests.level_factory import make_level
 from tests.web.fakes.fake_document import FakeDocument
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
 
 
 def make_hud() -> tuple[FakeDocument, Hud, GameSession]:
     bridge = FakeJsBridge()
-    session = GameSession([LevelParser().parse(level_json("N1 " * 8, "N1 " * 8, name="Grid Zero"))])
+    session = GameSession([make_level("N1 " * 8, "N1 " * 8, name="Grid Zero")])
     return bridge.document, Hud(bridge), session
 
 

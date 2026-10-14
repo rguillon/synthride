@@ -7,7 +7,6 @@ import pytest
 
 from synthride.core.game_phase import GamePhase
 from synthride.core.game_session import GameSession
-from synthride.core.level_parser import LevelParser
 from synthride.web.browser_keyboard import BrowserKeyboard
 from synthride.web.game_loop import GameLoop
 from synthride.web.hud import Hud
@@ -21,7 +20,7 @@ from synthride.web.space_backdrop import SpaceBackdrop
 from synthride.web.synth_music import SynthMusic
 from synthride.web.synth_voices import SynthVoices
 from synthride.web.track_mesh_builder import TrackMeshBuilder
-from tests.level_json import level_json
+from tests.level_factory import make_level
 from tests.web.fakes.fake_audio_context import FakeAudioContext
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
 from tests.web.fakes.fake_js_object import FakeJsObject
@@ -33,7 +32,7 @@ FLAT = "N1 N1 N1 N1 N1 N1 N1 N1"
 @pytest.fixture
 def game() -> SimpleNamespace:
     bridge = FakeJsBridge()
-    levels = [LevelParser().parse(level_json(*[FLAT] * 5, name=f"L{n}")) for n in (1, 2)]
+    levels = [make_level(*[FLAT] * 5, name=f"L{n}") for n in (1, 2)]
     context = FakeAudioContext()
     voices = SynthVoices(bridge, context, FakeJsObject("destination"))
     lines = NeonLines(bridge)

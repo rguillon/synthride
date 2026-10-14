@@ -79,13 +79,21 @@ class TrackMeshBuilder:
         for tile in track.tiles():
             box = tile.bounding_box
             color = Palette.tile_color(tile.tile_type)
-            buffers.setdefault(tile.tile_type, BoxGeometryBuffer()).add_box(
-                Vector3(box.minimum.x, 0.0, -box.maximum.z),
-                Vector3(box.maximum.x, box.maximum.y, -box.minimum.z),
-                top_color=Palette.linear_rgb(Palette.mix(Palette.TILE_BODY, color, self.DECK_TINT)),
-                wall_upper=Palette.linear_rgb(Palette.mix(Palette.TILE_BODY, color, self.WALL_TINT)),
-                wall_lower=Palette.linear_rgb(self.WALL_FOOT),
-            )
+            minimum = Vector3(box.minimum.x, 0.0, -box.maximum.z)
+            maximum = Vector3(box.maximum.x, box.maximum.y, -box.minimum.z)
+            colors = {
+                "top_color": Palette.linear_rgb(Palette.mix(Palette.TILE_BODY, color, self.DECK_TINT)),
+                "wall_upper": Palette.linear_rgb(Palette.mix(Palette.TILE_BODY, color, self.WALL_TINT)),
+                "wall_lower": Palette.linear_rgb(self.WALL_FOOT),
+            }
+            buffer = buffers.setdefault(tile.tile_type, BoxGeometryBuffer())
+            if tile.slope is None:
+                buffer.add_box(minimum, maximum, **colors)
+            else:
+                # World z runs backward, so the world corners (x0, z0)... are the game corners (0, 1), (1, 1)...
+                corner = tile.corner_height
+                heights = (corner(0, 1), corner(1, 1), corner(1, 0), corner(0, 0))
+                buffer.add_sloped_box(minimum, maximum, heights, **colors)
             self._trace_edges(track, tile, rails.setdefault(tile.tile_type, []), seams)
         group = three.Group.new()
         self._materials = {}
@@ -125,18 +133,30 @@ class TrackMeshBuilder:
         return group
 
     def _trace_edges(self, track: Track, tile: Tile, rails: list[float], seams: list[float]) -> None:
-        """Add a rail on each top edge that drops away, and a seam (owned by one side) toward an equal neighbour."""
-        y = tile.top + self.LINE_LIFT
+        """Add a rail on each top edge that drops away, and a seam (owned by one side) toward an equal neighbour.
+
+        Edges are compared corner by corner, so slopes join flat tiles and other slopes seamlessly. A corner
+        slope also gets a seam along its crease.
+        """
         for (dc, dr), corners in self.SIDES:
             neighbour = track.tile_at(tile.column + dc, tile.row + dr)
-            if neighbour is None or neighbour.top < tile.top:
+            mine = [tile.corner_height(cx, cz) for cx, cz in corners]
+            theirs = None if neighbour is None else [neighbour.corner_height(cx - dc, cz - dr) for cx, cz in corners]
+            if theirs is None or any(t < m for t, m in zip(theirs, mine, strict=True)):
                 target = rails
-            elif neighbour.top == tile.top and dc + dr > 0:
+            elif theirs == mine and dc + dr > 0:
                 target = seams
             else:
                 continue
-            for cx, cz in corners:
-                target.extend(((tile.column + cx) * Tile.SIZE, y, -(tile.row + cz) * Tile.SIZE))
+            self._add_edge(tile, corners, target)
+        if tile.slope is not None and all(tile.slope.direction):
+            dx, dz = tile.slope.direction
+            self._add_edge(tile, ((0, 0), (1, 1)) if dx == dz else ((1, 0), (0, 1)), seams)
+
+    def _add_edge(self, tile: Tile, corners: tuple[tuple[int, int], ...], target: list[float]) -> None:
+        for cx, cz in corners:
+            y = tile.corner_height(cx, cz) + self.LINE_LIFT
+            target.extend(((tile.column + cx) * Tile.SIZE, y, -(tile.row + cz) * Tile.SIZE))
 
     def _add_lines(self, group: JsObject, positions: list[float], color: int, width: float) -> None:
         line = self._lines.segments(positions, color, width)

@@ -8,20 +8,15 @@ from synthride.core.game_event import GameEvent
 from synthride.core.game_phase import GamePhase
 from synthride.core.game_session import GameSession
 from synthride.core.level import Level
-from synthride.core.level_parser import LevelParser
 from synthride.core.ship_input import ShipInput
 from synthride.core.tile_type import TileType
 from synthride.core.tunnel_span import TunnelSpan
 from synthride.core.vector3 import Vector3
-from tests.level_json import level_json
+from tests.level_factory import make_level
 
 FLAT = "N1 N1 N1 N1 N1 N1 N1 N1"
 FORWARD = ShipInput(accelerate=True)
 CONFIG = GameConfig()
-
-
-def make_level(*rows: str, **settings: object) -> Level:
-    return LevelParser().parse(level_json(*rows, **settings))
 
 
 def started(*levels: Level) -> GameSession:
@@ -179,12 +174,12 @@ def test_jump_and_land() -> None:
 
 
 def test_running_out_of_oxygen() -> None:
-    session = started(make_level(FLAT, oxygen=0.5))
+    session = started(make_level(FLAT, oxygen_seconds=0.5))
     assert GameEvent.OUT_OF_OXYGEN in run(session, 1, ShipInput())
 
 
 def test_running_out_of_fuel() -> None:
-    session = started(make_level(*[FLAT] * 50, fuel=0.5))
+    session = started(make_level(*[FLAT] * 50, fuel_capacity=0.5))
     assert GameEvent.OUT_OF_FUEL in run(session, 3)
 
 

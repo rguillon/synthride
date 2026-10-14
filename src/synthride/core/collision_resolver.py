@@ -27,6 +27,10 @@ class CollisionResolver:
     by walls. Forward motion into a wall is a crash when a large part of the ship's nose hits it, otherwise
     the ship is nudged sideways around the corner. Vertical motion lands the ship on tops and bumps it
     against ceilings. Dropping below the fall limit means the ship fell off the track.
+
+    Oblique tiles are solids whose top is the slope under the ship, so climbing one is a series of small
+    steps. Going down, a grounded ship sticks to the slope instead of hopping off it. A ship leaving a slope
+    keeps the climb (or dive) it had along it, so the top of a ramp is a kicker.
     """
 
     EPSILON = 1e-6
@@ -53,7 +57,7 @@ class CollisionResolver:
         return [
             solid
             for solid in self._track.solids_under(box)
-            if solid.box.maximum.y > floor and solid.box.minimum.y < box.maximum.y - self.EPSILON
+            if solid.top_over(box) > floor and solid.box.minimum.y < box.maximum.y - self.EPSILON
         ]
 
     def _move_laterally(self, ship: Ship, dt: float) -> list[CollisionReport]:
@@ -121,24 +125,29 @@ class CollisionResolver:
         if new_y > old_y:
             return self._move_up(ship, old_y, new_y)
         box = ship.box_at(ship.position.with_y(new_y))
-        supports = [
-            solid
-            for solid in self._track.solids_under(box)
-            if solid.box.maximum.y <= old_y + self._config.step_tolerance
-        ]
-        surface = max((solid.box.maximum.y for solid in supports), default=None)
-        if surface is None or new_y > surface:
+        tops = [(solid, solid.top_over(box)) for solid in self._track.solids_under(box)]
+        supports = [(solid, top) for solid, top in tops if top <= old_y + self._config.step_tolerance]
+        surface = max((top for _, top in supports), default=None)
+        if surface is None or new_y > surface + (self._config.step_tolerance if ship.grounded else 0.0):
+            if ship.grounded:
+                across, along = ship.ground_slope
+                climb = ship.velocity.x * across + ship.velocity.z * along
+                ship.velocity = ship.velocity.with_y(ship.velocity.y + climb)
             ship.position = ship.position.with_y(new_y)
             ship.grounded = False
+            ship.ground_slope = (0.0, 0.0)
             return []
         ship.position = ship.position.with_y(surface)
         ship.velocity = ship.velocity.with_y(0.0)
         ship.grounded = True
-        return [CollisionReport(CollisionOutcome.LANDED, self._tile_beneath(ship, supports, surface))]
+        tile = self._tile_beneath(ship, supports, surface)
+        ship.ground_slope = self._slope_under(ship, tile)
+        return [CollisionReport(CollisionOutcome.LANDED, tile)]
 
     def _move_up(self, ship: Ship, old_y: float, new_y: float) -> list[CollisionReport]:
         """Rises toward ``new_y``, stopping under any ceiling in the way."""
         ship.grounded = False
+        ship.ground_slope = (0.0, 0.0)
         old_top = old_y + ship.height
         box = ship.box_at(ship.position.with_y(new_y))
         ceilings = [
@@ -154,15 +163,20 @@ class CollisionResolver:
         ship.velocity = ship.velocity.with_y(0.0)
         return [CollisionReport(CollisionOutcome.BUMPED)]
 
-    def _tile_beneath(self, ship: Ship, supports: list[Solid], surface: float) -> Tile | None:
+    def _tile_beneath(self, ship: Ship, supports: list[tuple[Solid, float]], surface: float) -> Tile | None:
         """Return the tile of the highest solid under the ship's centre, else of any highest support.
 
         None when the ship rests on a tunnel's shell, which has no effect.
         """
-        highest = [solid for solid in supports if solid.box.maximum.y == surface]
+        highest = [solid for solid, top in supports if top == surface]
         position = ship.position
         for solid in highest:
             minimum, maximum = solid.box.minimum, solid.box.maximum
             if minimum.x <= position.x < maximum.x and minimum.z <= position.z < maximum.z:
                 return solid.tile
         return highest[0].tile
+
+    @staticmethod
+    def _slope_under(ship: Ship, tile: Tile | None) -> tuple[float, float]:
+        """Return how steeply ``tile`` rises under the ship, as height gained per unit along x and along z."""
+        return (0.0, 0.0) if tile is None else tile.gradient(ship.position.x, ship.position.z)

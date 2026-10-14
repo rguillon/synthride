@@ -1,0 +1,97 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""Chrome Canyon."""
+
+from synthride.core.level import Level
+from synthride.core.track_parser import TrackParser
+
+LEVEL = Level(
+    name="Chrome Canyon",
+    gravity=18.0,
+    oxygen_seconds=75.0,
+    fuel_capacity=70.0,
+    track=TrackParser().parse([
+        # first row = start of the track
+        (14, ".. .. N1 N1 N1 N1 .. .."),
+        (2, ".. .. N1 B1 B1 N1 .. .."),
+        (8, ".. .. N1 N1 N1 N1 .. .."),
+        (4, ".. .. .. .. .. .. .. .."),
+        (8, ".. N1 N1 N1 N1 N1 N1 .."),
+        (10, "N1 N1 K1 K1 K1 K1 N1 N1"),
+        (10, "N1 N1 .. .. .. .. N1 N1"),
+        (6, "N1 N1 N1 N1 N1 N1 N1 N1"),
+        # two ramps up the canyon
+        (1, ".. .. N1f N1f N1f N1f .. .."),
+        (9, ".. .. N2 N2 N2 N2 .. .."),
+        (1, ".. .. N2f N2f N2f N2f .. .."),
+        (9, ".. .. N3 N3 N3 N3 .. .."),
+        (2, ".. .. N3 R3 R3 N3 .. .."),
+        (6, ".. .. N3 N3 N3 N3 .. .."),
+        (4, ".. .. .. .. .. .. .. .."),
+        (8, ".. .. N2 N2 N2 N2 .. .."),
+        (12, ".. N4 N2 N2 N2 N2 N4 .."),
+        (2, ".. .. N2 N4 N2 N2 .. .."),
+        (10, ".. .. N2 N2 N2 N2 .. .."),
+        (3, ".. .. S2 S2 S2 S2 .. .."),
+        (6, ".. .. N2 N2 N2 N2 .. .."),
+        (2, ".. .. B2 B2 B2 B2 .. .."),
+        (10, ".. .. N2 N2 N2 N2 .. .."),
+        (6, ".. .. .. .. .. .. .. .."),
+        (10, ".. N1 N1 N1 N1 N1 N1 .."),
+        (14, ".. K1 K1 N1 N1 K1 K1 .."),
+        (6, ".. N1 N1 N1 N1 N1 N1 .."),
+        (2, ".. N1 N1 R1 R1 N1 N1 .."),
+        (10, ".. .. .. N1 N1 N1 N1 N1"),
+        (10, ".. .. .. .. .. N1 N1 N1"),
+        (6, ".. .. .. N1 N1 N1 N1 N1"),
+        (10, "N1 N1 N1 N1 N1 .. .. .."),
+        (10, "N1 N1 N1 .. .. .. .. .."),
+        (6, "N1 N1 N1 N1 N1 N1 .. .."),
+        # the canyon floor
+        (10, ".. N1 N1 N1 N1 N1 N1 .."),
+        (2, ".. N1 N1 R1 R1 N1 N1 .."),
+        (8, ".. N1 N1 N1 N1 N1 N1 .."),
+        (1, "N2 N2 N1fl N1 N1 N1fr N2 N2"),
+        (9, "N2 N2 N1l N1 N1 N1r N2 N2"),
+        (1, "N3 N2fl N1l N1 N1 N1r N2fr N3"),
+        (9, "N3 N2l N1l N1 N1 N1r N2r N3"),
+        (9, "N3 N2l K1l N1 N1 K1r N2r N3"),
+        (1, "N3 N2bl K1l N1 N1 K1r N2br N3"),
+        (9, "N2 N2 N1l N1 N1 N1r N2 N2"),
+        (1, "N2 N2 N1bl N1 N1 N1br N2 N2"),
+        # terraces up the canyon wall
+        (10, ".. .. N2 N2 N2 N2 .. .."),
+        (10, ".. .. N3 N3 N3 N3 .. .."),
+        (10, ".. .. N4 N4 N4 N4 .. .."),
+        (2, ".. .. B4 B4 B4 B4 .. .."),
+        (8, ".. .. N4 N4 N4 N4 .. .."),
+        (6, ".. .. .. .. .. .. .. .."),
+        (10, ".. N2 N2 N2 N2 N2 N2 .."),
+        # narrow ridge
+        (12, ".. .. .. N2 N2 .. .. .."),
+        (2, ".. .. .. R2 R2 .. .. .."),
+        (10, ".. .. .. N2 N2 .. .. .."),
+        (8, ".. N2 N2 N2 N2 N2 N2 .."),
+        (12, ".. K2 K2 N2 N2 K2 K2 .."),
+        (6, ".. N2 N2 N2 N2 N2 N2 .."),
+        (3, ".. S2 S2 S2 S2 S2 S2 .."),
+        # chicane
+        (8, ".. N2 N2 N2 .. .. .. .."),
+        (8, ".. .. .. N2 N2 N2 .. .."),
+        (8, ".. .. .. .. .. N2 N2 N2"),
+        (8, ".. .. .. N2 N2 N2 .. .."),
+        (8, ".. N2 N2 N2 N2 N2 N2 .."),
+        (4, ".. .. .. .. .. .. .. .."),
+        (2, ".. N1 N1 N1 N1 N1 N1 .."),
+        # a dune before the last step
+        (1, ".. N1 N1fr N1f N1f N1fl N1 .."),
+        (8, ".. N1 N1r N2 N2 N1l N1 .."),
+        (1, ".. N1 N1br N1b N1b N1bl N1 .."),
+        (4, ".. N1 N1 N1 N1 N1 N1 .."),
+        (8, ".. .. N2 N2 N2 N2 .. .."),
+        (3, ".. .. .. .. .. .. .. .."),
+        (10, ".. .. N2 N2 N2 N2 .. .."),
+        (3, ".. .. F2 F2 F2 F2 .. .."),
+    ]),
+)

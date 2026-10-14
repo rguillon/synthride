@@ -3,12 +3,11 @@
 
 import pytest
 
-from synthride.core.level_parser import LevelParser
 from synthride.core.tunnel_span import TunnelSpan
 from synthride.web.neon_lines import NeonLines
 from synthride.web.palette import Palette
 from synthride.web.tunnel_mesh_builder import TunnelMeshBuilder
-from tests.level_json import level_json
+from tests.level_factory import make_level
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
 from tests.web.fakes.fake_js_object import FakeJsObject
 
@@ -16,7 +15,7 @@ from tests.web.fakes.fake_js_object import FakeJsObject
 def build(*rows: str) -> tuple[FakeJsObject, TunnelMeshBuilder, list[FakeJsObject]]:
     bridge = FakeJsBridge()
     builder = TunnelMeshBuilder(bridge, NeonLines(bridge))
-    parts = builder.build(LevelParser().parse(level_json(*rows)).track)
+    parts = builder.build(make_level(*rows).track)
     return bridge.three, builder, parts
 
 

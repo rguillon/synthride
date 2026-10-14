@@ -22,7 +22,8 @@ class Ship:
 
     ``surface`` is the type of tile the ship rode on during the last step, None while airborne.
     ``air_jump_ready`` is whether the one jump allowed in mid-air is still available; ``jump_held`` is
-    whether jump was held during the last step, so a mid-air jump needs a fresh press.
+    whether jump was held during the last step, so a mid-air jump needs a fresh press. ``ground_slope`` is how
+    steeply the ground under the ship rises, as height gained per unit along x and along z.
     """
 
     position: Vector3
@@ -34,6 +35,7 @@ class Ship:
     surface: TileType | None = None
     air_jump_ready: bool = False
     jump_held: bool = False
+    ground_slope: tuple[float, float] = (0.0, 0.0)
 
     @classmethod
     def from_config(cls, position: Vector3, config: GameConfig) -> Ship:

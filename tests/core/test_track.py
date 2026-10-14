@@ -4,14 +4,13 @@
 import pytest
 
 from synthride.core.bounding_box import BoundingBox
-from synthride.core.level_parser import LevelParser
 from synthride.core.tile import Tile
 from synthride.core.tile_type import TileType
 from synthride.core.track import Track
 from synthride.core.tunnel_kind import TunnelKind
 from synthride.core.tunnel_span import TunnelSpan
 from synthride.core.vector3 import Vector3
-from tests.level_json import level_json
+from tests.level_factory import make_level
 
 
 def make_track() -> Track:
@@ -57,8 +56,13 @@ def test_surface_height_at() -> None:
     assert track.surface_height_at(0.5, 0.5) is None
 
 
+def test_surface_height_follows_a_slope() -> None:
+    track = make_level("N1 N1 N1 N1 N1f N1 N1 N1").track
+    assert track.surface_height_at(4.5, 0.25) == 0.625
+
+
 def test_neighbouring_tunnel_tiles_merge_into_spans() -> None:
-    track = LevelParser().parse(level_json("N1T N1T N2T N1A N1A .. N1T N1")).track
+    track = make_level("N1T N1T N2T N1A N1A .. N1T N1").track
     spans = [(span.kind, span.first_column, span.last_column, span.deck) for span in track.tunnels]
     assert spans == [
         (TunnelKind.SQUARE, 0, 1, 0.5),
@@ -69,7 +73,7 @@ def test_neighbouring_tunnel_tiles_merge_into_spans() -> None:
 
 
 def test_solids_under_include_tunnel_shells_once() -> None:
-    track = LevelParser().parse(level_json(".. .. N1T N1T .. .. .. ..")).track
+    track = make_level(".. .. N1T N1T .. .. .. ..").track
     box = BoundingBox(Vector3(2.5, 0, 0.2), Vector3(3.5, 1, 0.8))
     solids = track.solids_under(box)
     assert len([solid for solid in solids if solid.tile is not None]) == 2
@@ -78,7 +82,7 @@ def test_solids_under_include_tunnel_shells_once() -> None:
 
 
 def test_ceiling_over_finds_the_lowest_tunnel_roof_in_range() -> None:
-    track = LevelParser().parse(level_json("N1 " * 8, "N1T " * 8, "N2T " * 8)).track
+    track = make_level("N1 " * 8, "N1T " * 8, "N2T " * 8).track
     assert track.ceiling_over(4, 0.0, 0.9) is None
     assert track.ceiling_over(4, 0.0, 1.5) == 0.5 + TunnelSpan.CLEARANCE
     assert track.ceiling_over(4, 2.0, 2.5) == 1.0 + TunnelSpan.CLEARANCE

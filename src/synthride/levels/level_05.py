@@ -1,0 +1,87 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""Glacier Drift."""
+
+from synthride.core.level import Level
+from synthride.core.track_parser import TrackParser
+
+LEVEL = Level(
+    name="Glacier Drift",
+    gravity=18.0,
+    oxygen_seconds=70.0,
+    fuel_capacity=80.0,
+    track=TrackParser().parse([
+        # first row = start of the track
+        (12, ".. .. N1 N1 N1 N1 .. .."),
+        # first ice: steer early, the ship keeps sliding
+        (10, ".. I1 I1 I1 I1 I1 I1 .."),
+        (6, ".. N1 N1 N1 N1 N1 N1 .."),
+        # ice bends: the lane moves while you slide
+        (8, ".. I1 I1 I1 I1 .. .. .."),
+        (8, "I1 I1 I1 I1 .. .. .. .."),
+        (8, ".. I1 I1 I1 I1 .. .. .."),
+        (8, ".. .. .. I1 I1 I1 I1 .."),
+        (8, ".. .. .. .. I1 I1 I1 I1"),
+        (8, ".. .. .. I1 I1 I1 I1 .."),
+        (6, ".. N1 N1 N1 N1 N1 N1 .."),
+        (2, ".. N1 R1 R1 R1 R1 N1 .."),
+        (6, ".. N1 N1 N1 N1 N1 N1 .."),
+        # crosswinds
+        (10, ".. >1 >1 >1 >1 >1 >1 .."),
+        (4, ".. N1 N1 N1 N1 N1 N1 .."),
+        (10, ".. <1 <1 <1 <1 <1 <1 .."),
+        (4, ".. N1 N1 N1 N1 N1 N1 .."),
+        (10, ".. K1 >1 >1 >1 >1 K1 .."),
+        (10, ".. K1 <1 <1 <1 <1 K1 .."),
+        (6, ".. N1 N1 N1 N1 N1 N1 .."),
+        # frozen steps
+        (1, ".. .. N1f N1f N1f N1f .. .."),
+        (9, ".. .. N2 N2 N2 N2 .. .."),
+        (8, ".. .. I2 I2 I2 I2 .. .."),
+        (3, ".. .. .. .. .. .. .. .."),
+        (10, ".. .. I2 I2 I2 I2 .. .."),
+        (1, ".. .. N2f N2f N2f N2f .. .."),
+        (9, ".. .. N3 N3 N3 N3 .. .."),
+        (2, ".. .. O3 O3 O3 O3 .. .."),
+        (8, ".. .. N3 N3 N3 N3 .. .."),
+        (4, ".. .. .. .. .. .. .. .."),
+        (12, ".. N2 N2 N2 N2 N2 N2 .."),
+        # glacier field: ice with burning cracks
+        # up onto the glacier
+        (1, ".. I2f I2f I2f I2f I2f I2f .."),
+        (7, ".. I3 I3 I3 I3 I3 I3 .."),
+        (8, ".. K3 I3 I3 I3 I3 K3 .."),
+        (6, ".. I3 I3 I3 I3 I3 I3 .."),
+        (8, ".. I3 I3 K3 K3 I3 I3 .."),
+        (5, ".. I3 I3 I3 I3 I3 I3 .."),
+        (1, ".. I2b I2b I2b I2b I2b I2b .."),
+        (6, ".. N2 N2 N2 N2 N2 N2 .."),
+        (2, ".. N2 R2 R2 R2 R2 N2 .."),
+        (6, ".. N2 N2 N2 N2 N2 N2 .."),
+        # boost onto the ice and over the gap
+        (2, ".. .. B2 B2 B2 B2 .. .."),
+        (9, ".. .. I2 I2 I2 I2 .. .."),
+        # kick
+        (1, ".. .. I2f I2f I2f I2f .. .."),
+        (5, ".. .. .. .. .. .. .. .."),
+        (12, ".. .. N2 N2 N2 N2 .. .."),
+        # drift lanes
+        (10, ".. .. >2 >2 >2 >2 .. .."),
+        (4, ".. .. N2 N2 N2 N2 .. .."),
+        (10, ".. .. <2 <2 <2 <2 .. .."),
+        (4, ".. .. N2 N2 N2 N2 .. .."),
+        (10, ".. .. .. >2 >2 .. .. .."),
+        (4, ".. .. N2 N2 N2 N2 .. .."),
+        (10, ".. .. .. <2 <2 .. .. .."),
+        (6, ".. .. N2 N2 N2 N2 .. .."),
+        # final slide
+        (3, ".. S2 S2 S2 S2 S2 S2 .."),
+        # ice half-pipe
+        (1, ".. I2fl I2 I2 I2 I2 I2fr .."),
+        (12, ".. I2l I2 I2 I2 I2 I2r .."),
+        (1, ".. I2bl I2 I2 I2 I2 I2br .."),
+        (8, ".. .. N2 N2 N2 N2 .. .."),
+        (3, ".. .. F2 F2 F2 F2 .. .."),
+    ]),
+)

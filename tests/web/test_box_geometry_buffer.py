@@ -62,3 +62,30 @@ def test_quad_normal_follows_its_winding() -> None:
     assert buffer.vertex_count == 6
     assert buffer.normals[:3] == [0.0, 0.0, 1.0]
     assert buffer.colors[:3] == list(red)
+
+
+def test_sloped_box_has_four_walls_and_a_top_folded_along_its_highest_corner() -> None:
+    buffer = BoxGeometryBuffer()
+    buffer.add_sloped_box(Vector3(0, 0, 0), Vector3(1, 0, 1), (1.0, 1.0, 2.0, 1.0))
+    assert buffer.vertex_count == 4 * 6 + 2 * 3
+    assert buffer.box_count == 1
+    top = [tuple(buffer.positions[i : i + 3]) for i in range(24 * 3, 30 * 3, 3)]
+    assert top[0] == top[3] == (1, 2.0, 1)  # both triangles start at the raised corner
+    for (a, b, c), normal in triangles(buffer):
+        face_normal = cross(
+            tuple(q - p for p, q in zip(a, b, strict=True)), tuple(q - p for p, q in zip(a, c, strict=True))
+        )
+        assert sum(n * f for n, f in zip(normal, face_normal, strict=True)) > 0
+    assert all(normal[1] > 0 for _, normal in list(triangles(buffer))[-2:])
+
+
+def test_sloped_walls_fade_from_their_top_edge_to_their_foot() -> None:
+    buffer = BoxGeometryBuffer()
+    top, upper, lower = (1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)
+    buffer.add_sloped_box(
+        Vector3(0, 0, 0), Vector3(1, 0, 1), (1.0, 1.5, 1.5, 1.0), top_color=top, wall_upper=upper, wall_lower=lower
+    )
+    for index in range(buffer.vertex_count):
+        y, normal_y = buffer.positions[index * 3 + 1], buffer.normals[index * 3 + 1]
+        expected = top if normal_y > 0 else (lower if y == 0 else upper)
+        assert tuple(buffer.colors[index * 3 : index * 3 + 3]) == expected

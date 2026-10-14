@@ -118,6 +118,6 @@ class Track:
         return min(ceilings, default=None)
 
     def surface_height_at(self, x: float, z: float) -> float | None:
-        """Return the top of the tile under ``(x, z)``, or None over a gap."""
+        """Return the height of the tile's top face at ``(x, z)``, or None over a gap."""
         tile = self.tile_at(math.floor(x / Tile.SIZE), math.floor(z / Tile.SIZE))
-        return None if tile is None else tile.top
+        return None if tile is None else tile.height_at(x, z)

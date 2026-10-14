@@ -1,0 +1,109 @@
+# Copyright (c) 2026 Renaud Guillon
+# SPDX-License-Identifier: MIT
+
+"""Burnout Grid."""
+
+from synthride.core.level import Level
+from synthride.core.track_parser import TrackParser
+
+LEVEL = Level(
+    name="Burnout Grid",
+    gravity=20.0,
+    oxygen_seconds=60.0,
+    fuel_capacity=85.0,
+    track=TrackParser().parse([
+        # first row = start of the track
+        (12, ".. .. N1 N1 N1 N1 .. .."),
+        (2, ".. .. B1 B1 B1 B1 .. .."),
+        (8, ".. N1 N1 N1 N1 N1 N1 .."),
+        # checkerboard of fire
+        (6, ".. K1 N1 N1 N1 N1 K1 .."),
+        (6, ".. N1 K1 N1 N1 K1 N1 .."),
+        (6, ".. N1 N1 K1 K1 N1 N1 .."),
+        (6, ".. N1 K1 N1 N1 K1 N1 .."),
+        (6, ".. K1 N1 N1 N1 N1 K1 .."),
+        (2, ".. N1 N1 N1 N1 N1 N1 .."),
+        # the gates stand on a plateau
+        (1, ".. N1f N1f N1f N1f N1f N1f .."),
+        (5, ".. N2 N2 N2 N2 N2 N2 .."),
+        # gates: one open lane at a time
+        (2, "K2 K2 K2 N2 N2 K2 K2 K2"),
+        (8, "N2 N2 N2 N2 N2 N2 N2 N2"),
+        (2, "K2 N2 N2 K2 K2 K2 K2 K2"),
+        (8, "N2 N2 N2 N2 N2 N2 N2 N2"),
+        (2, "K2 K2 K2 K2 K2 N2 N2 K2"),
+        (8, "N2 N2 N2 N2 N2 N2 N2 N2"),
+        (2, "K2 K2 K2 N2 N2 K2 K2 K2"),
+        (7, ".. N2 N2 N2 N2 N2 N2 .."),
+        (1, ".. N1b N1b N1b N1b N1b N1b .."),
+        (2, ".. N1 R1 R1 R1 R1 N1 .."),
+        (6, ".. N1 N1 N1 N1 N1 N1 .."),
+        # hot rails: burning centre, jump the crossings
+        (10, ".. N1 N1 K1 K1 N1 N1 .."),
+        (8, ".. N1 .. K1 K1 .. N1 .."),
+        (10, ".. N1 N1 K1 K1 N1 N1 .."),
+        (2, ".. K1 K1 K1 K1 K1 K1 .."),
+        (8, ".. N1 N1 N1 N1 N1 N1 .."),
+        # boost lanes between flames
+        (2, ".. K1 B1 B1 B1 B1 K1 .."),
+        (10, ".. K1 N1 N1 N1 N1 K1 .."),
+        (5, ".. .. .. .. .. .. .. .."),
+        (10, ".. K1 N1 N1 N1 N1 K1 .."),
+        (3, ".. K1 S1 S1 S1 S1 K1 .."),
+        (6, ".. N1 N1 N1 N1 N1 N1 .."),
+        # raised furnace
+        (1, ".. .. N1f N1f N1f N1f .. .."),
+        (9, ".. .. N2 N2 N2 N2 .. .."),
+        (8, ".. K2 N2 K2 K2 N2 K2 .."),
+        (6, ".. .. N2 N2 N2 N2 .. .."),
+        (8, ".. K2 K2 N2 N2 K2 K2 .."),
+        (6, ".. .. N2 N2 N2 N2 .. .."),
+        (2, ".. .. O2 O2 O2 O2 .. .."),
+        (8, ".. .. N2 N2 N2 N2 .. .."),
+        (4, ".. .. .. .. .. .. .. .."),
+        (10, ".. N1 N1 N1 N1 N1 N1 .."),
+        # zigzag through the embers
+        (8, ".. N1 N1 N1 K1 K1 K1 .."),
+        (8, ".. K1 K1 N1 N1 N1 K1 .."),
+        (8, ".. K1 K1 K1 K1 N1 N1 .."),
+        (8, ".. K1 K1 N1 N1 N1 K1 .."),
+        (8, ".. N1 N1 N1 K1 K1 K1 .."),
+        (8, ".. N1 N1 N1 N1 N1 N1 .."),
+        (2, ".. N1 R1 R1 R1 R1 N1 .."),
+        (6, ".. N1 N1 N1 N1 N1 N1 .."),
+        # overdrive strip
+        (2, ".. .. B1 B1 B1 B1 .. .."),
+        (2, ".. .. N1 N1 N1 N1 .. .."),
+        # rollers
+        (1, ".. .. N1f N1f N1f N1f .. .."),
+        (1, ".. .. N1b N1b N1b N1b .. .."),
+        (1, ".. .. N1f N1f N1f N1f .. .."),
+        (1, ".. .. N1b N1b N1b N1b .. .."),
+        (1, ".. .. N1f N1f N1f N1f .. .."),
+        (1, ".. .. N1b N1b N1b N1b .. .."),
+        (2, ".. .. N1 N1 N1 N1 .. .."),
+        (1, ".. .. K1 K1 K1 K1 .. .."),
+        (14, ".. .. N1 N1 N1 N1 .. .."),
+        (1, ".. .. K1 K1 K1 K1 .. .."),
+        (14, ".. .. N1 N1 N1 N1 .. .."),
+        (5, ".. .. .. .. .. .. .. .."),
+        (2, ".. .. N1 N1 N1 N1 .. .."),
+        (1, ".. .. N1f N1f N1f N1f .. .."),
+        (1, ".. .. N1b N1b N1b N1b .. .."),
+        (1, ".. .. N1f N1f N1f N1f .. .."),
+        (1, ".. .. N1b N1b N1b N1b .. .."),
+        (1, ".. .. N1f N1f N1f N1f .. .."),
+        (1, ".. .. N1b N1b N1b N1b .. .."),
+        (1, ".. .. N1f N1f N1f N1f .. .."),
+        (1, ".. .. N1b N1b N1b N1b .. .."),
+        (4, ".. .. N1 N1 N1 N1 .. .."),
+        (3, ".. .. S1 S1 S1 S1 .. .."),
+        # last firewall
+        (10, ".. K1 N1 N1 N1 N1 K1 .."),
+        (8, ".. K1 K1 N1 N1 K1 K1 .."),
+        (8, ".. K1 K1 K1 N1 N1 K1 .."),
+        (8, ".. K1 K1 N1 N1 K1 K1 .."),
+        (10, ".. .. N1 N1 N1 N1 .. .."),
+        (3, ".. .. F1 F1 F1 F1 .. .."),
+    ]),
+)
