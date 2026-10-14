@@ -1,0 +1,75 @@
+from synthride.core.level_parser import LevelParser
+from synthride.core.tile_type import TileType
+from synthride.web.neon_lines import NeonLines
+from synthride.web.palette import Palette
+from synthride.web.track_mesh_builder import TrackMeshBuilder
+from tests.web.fakes.fake_js_bridge import FakeJsBridge
+
+
+def build(rows: str):
+    bridge = FakeJsBridge()
+    lines = NeonLines(bridge)
+    builder = TrackMeshBuilder(bridge, lines)
+    group = builder.build(LevelParser().parse("---\n" + rows).track)
+    return bridge.three, builder, group, lines
+
+
+def rails_of(three, color):
+    """Segments (start, end) of the line set drawn in ``color``."""
+    for line, material in zip(three.LineSegments2.created, three.LineMaterial.created, strict=True):
+        if material.args[0]["color"] == color:
+            positions = line.args[0].setPositions.calls[0][0]
+            return {(tuple(positions[i : i + 3]), tuple(positions[i + 3 : i + 6])) for i in range(0, len(positions), 6)}
+    return set()
+
+
+def test_one_mesh_and_one_rail_set_per_tile_type_plus_seams():
+    three, _, group, _ = build("N1 N1 K1 .. .. .. .. ..\nN2 B1 .. .. .. .. .. ..")
+    assert len(three.Mesh.created) == 3
+    assert len(three.LineSegments2.created) == 4
+    assert len(group.add.calls) == 7
+    widths = sorted(m.args[0]["linewidth"] for m in three.LineMaterial.created)
+    assert widths == [TrackMeshBuilder.SEAM_WIDTH] + [TrackMeshBuilder.LINE_WIDTH] * 3
+    emissive = sorted(material.args[0]["emissive"] for material in three.MeshStandardMaterial.created)
+    assert emissive == sorted(Palette.tile_color(t) for t in (TileType.NORMAL, TileType.KILL, TileType.BOOST))
+    assert all(material.args[0]["vertexColors"] for material in three.MeshStandardMaterial.created)
+
+
+def test_rails_only_trace_edges_that_drop_away():
+    three, _, _, _ = build("N1 N1 .. .. .. .. .. ..")
+    y = 0.5 + TrackMeshBuilder.LINE_LIFT
+    rails = rails_of(three, Palette.tile_color(TileType.NORMAL))
+    assert len(rails) == 6  # the perimeter of a 2x1 strip, not the shared edge
+    assert ((1.0, y, 0.0), (1.0, y, -1.0)) not in rails
+    assert rails_of(three, TrackMeshBuilder.SEAM_COLOR) == {((1.0, y, 0.0), (1.0, y, -1.0))}
+
+
+def test_step_up_rails_belong_to_the_higher_tile():
+    three, _, _, _ = build("N1 N2 .. .. .. .. .. ..")
+    rails = rails_of(three, Palette.tile_color(TileType.NORMAL))
+    assert ((1.0, 1.0 + TrackMeshBuilder.LINE_LIFT, 0.0), (1.0, 1.0 + TrackMeshBuilder.LINE_LIFT, -1.0)) in rails
+    assert len(rails) == 7
+    assert rails_of(three, TrackMeshBuilder.SEAM_COLOR) == set()
+
+
+def test_geometry_is_mirrored_along_z():
+    three, _, _, _ = build("N1 .. .. .. .. .. .. ..")
+    positions = three.BufferAttribute.created[0].args[0]
+    zs = positions[2::3]
+    assert max(zs) == 0
+    assert min(zs) == -1
+
+
+def test_animate_pulses_special_tiles_only():
+    three, builder, _, _ = build("N1 K1 .. .. .. .. .. ..")
+    builder.animate(0.3)
+    normal, kill = three.MeshStandardMaterial.created
+    assert isinstance(kill.emissiveIntensity, float)
+    assert kill.emissiveIntensity >= TrackMeshBuilder.BODY_GLOW
+    assert not isinstance(normal.emissiveIntensity, float)
+
+
+def test_rebuilding_releases_previous_outlines():
+    _, builder, _, lines = build("N1 K1 .. .. .. .. .. ..")
+    builder.build(LevelParser().parse("---\n" + "N1 " * 8).track)
+    assert lines.count == 2  # one rail set and the seams

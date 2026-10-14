@@ -1,0 +1,58 @@
+from __future__ import annotations
+
+from synthride.core.game_session import GameSession
+from synthride.core.level_catalog import LevelCatalog
+from synthride.web.browser_keyboard import BrowserKeyboard
+from synthride.web.game_loop import GameLoop
+from synthride.web.hud import Hud
+from synthride.web.js_bridge import JsBridge
+from synthride.web.menu_screen import MenuScreen
+from synthride.web.neon_lines import NeonLines
+from synthride.web.scene_renderer import SceneRenderer
+from synthride.web.ship_model import ShipModel
+from synthride.web.sound_effects import SoundEffects
+from synthride.web.synth_music import SynthMusic
+from synthride.web.synth_voices import SynthVoices
+from synthride.web.synthwave_backdrop import SynthwaveBackdrop
+from synthride.web.track_mesh_builder import TrackMeshBuilder
+
+
+class Main:
+    """Composition root: wires the game together from a browser bridge."""
+
+    MASTER_VOLUME = 0.6
+
+    def __init__(self, bridge: JsBridge, catalog: LevelCatalog | None = None) -> None:
+        self._bridge = bridge
+        self._catalog = catalog or LevelCatalog()
+
+    def build(self) -> GameLoop:
+        bridge = self._bridge
+        context = bridge.window.AudioContext.new()
+        master = context.createGain()
+        master.gain.value = self.MASTER_VOLUME
+        master.connect(context.destination)
+        lines = NeonLines(bridge)
+        return GameLoop(
+            bridge,
+            session=GameSession(self._catalog.load_all()),
+            keyboard=BrowserKeyboard(bridge),
+            renderer=SceneRenderer(bridge, bridge.document.getElementById("stage"), lines),
+            track_builder=TrackMeshBuilder(bridge, lines),
+            ship_model=ShipModel(bridge, lines),
+            backdrop=SynthwaveBackdrop(bridge, lines),
+            hud=Hud(bridge),
+            menu=MenuScreen(bridge),
+            music=SynthMusic(SynthVoices(bridge, context, master)),
+            sound_effects=SoundEffects(SynthVoices(bridge, context, master)),
+        )
+
+
+def main() -> GameLoop:
+    """Browser entry point, called by the page once Pyodide has unpacked the bundle."""
+    import js  # ty: ignore[unresolved-import]  (these modules only exist inside Pyodide)
+    from pyodide.ffi import create_proxy, to_js  # ty: ignore[unresolved-import]
+
+    loop = Main(JsBridge(js.window, js.THREE, create_proxy, to_js)).build()
+    loop.start()
+    return loop

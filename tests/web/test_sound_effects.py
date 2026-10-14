@@ -1,0 +1,25 @@
+from synthride.core.game_event import GameEvent
+from synthride.web.sound_effects import SoundEffects
+from synthride.web.synth_voices import SynthVoices
+from tests.web.fakes.fake_audio_context import FakeAudioContext
+from tests.web.fakes.fake_js_bridge import FakeJsBridge
+from tests.web.fakes.fake_js_object import FakeJsObject
+
+
+def make_effects():
+    context = FakeAudioContext()
+    return context, SoundEffects(SynthVoices(FakeJsBridge(), context, FakeJsObject("destination")))
+
+
+def test_every_audible_event_makes_a_sound():
+    for event in GameEvent:
+        context, effects = make_effects()
+        effects.play([event])
+        silent = {GameEvent.LEVEL_STARTED, GameEvent.LIFE_LOST}
+        assert bool(context.oscillators or context.noise_sources) == (event not in silent), event
+
+
+def test_duplicate_events_play_once():
+    context, effects = make_effects()
+    effects.play([GameEvent.JUMPED, GameEvent.JUMPED])
+    assert len(context.oscillators) == 1

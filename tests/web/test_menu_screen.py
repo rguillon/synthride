@@ -1,0 +1,41 @@
+from synthride.web.menu_screen import MenuScreen
+from tests.web.fakes.fake_js_bridge import FakeJsBridge
+
+
+def make_menu():
+    bridge = FakeJsBridge()
+    return bridge.document.getElementById("menu"), MenuScreen(bridge)
+
+
+def test_title():
+    container, menu = make_menu()
+    menu.show_title()
+    assert "SYNTHRIDE" in container.innerHTML
+    assert not container.hidden
+    assert menu.current == "title"
+
+
+def test_level_select_highlights_and_escapes_names():
+    container, menu = make_menu()
+    menu.show_level_select(["One", "<b>Two</b>"], selected=1)
+    assert '<li class="selected">02 · &lt;B&gt;TWO&lt;/B&gt;</li>' in container.innerHTML
+    assert '<li class="">01 · ONE</li>' in container.innerHTML
+
+
+def test_does_not_rewrite_unchanged_screen():
+    container, menu = make_menu()
+    menu.show_game_over()
+    container.innerHTML = "sentinel"
+    menu.show_game_over()
+    assert container.innerHTML == "sentinel"
+
+
+def test_other_screens_and_hide():
+    container, menu = make_menu()
+    menu.show_level_won("Neon")
+    assert "LEVEL CLEAR" in container.innerHTML
+    menu.show_victory()
+    assert "YOU WIN" in container.innerHTML
+    menu.hide()
+    assert container.hidden
+    assert menu.current is None
