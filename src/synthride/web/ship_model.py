@@ -36,6 +36,21 @@ def _slab(z: float, half_bottom: float, half_top: float, bottom: float, top: flo
     return ((x - half_bottom, bottom, z), (x + half_bottom, bottom, z), (x + half_top, top, z), (x - half_top, top, z))
 
 
+def _scaled(ring: Ring, factor: float, z: float) -> Ring:
+    """``ring`` shrunk or grown by ``factor`` about its centre, moved to depth ``z``."""
+    cx, cy = (sum(axis) / len(ring) for axis in tuple(zip(*ring, strict=True))[:2])
+    return tuple((cx + (x - cx) * factor, cy + (y - cy) * factor, z) for x, y, _ in ring)
+
+
+def _fan(ring: Ring) -> list[Point]:
+    """Triangles filling a convex ring from its centre."""
+    center = tuple(sum(axis) / len(ring) for axis in zip(*ring, strict=True))
+    triangles: list[Point] = []
+    for i in range(len(ring)):
+        triangles += (center, ring[i], ring[(i + 1) % len(ring)])
+    return triangles
+
+
 def _runner(x: float, half_width: float) -> tuple[Ring, ...]:
     """A runner centred on ``x``: curled up at its tip, then lying flat on the ground under the body."""
     return (
@@ -46,7 +61,7 @@ def _runner(x: float, half_width: float) -> tuple[Ring, ...]:
 
 
 class ShipModel:
-    """The low-poly wedge sled, its tail lights, contact shadow and explosion, kept in sync with the simulated ship.
+    """The low-poly wedge sled, its glowing reactor, contact shadow and explosion, kept in sync with the simulated ship.
 
     An 80s supercar wedge riding two runners on the deck. Banking lifts the body just enough that the low
     runner stays on the surface instead of sinking into it.
@@ -77,7 +92,15 @@ class ShipModel:
         )
         for x in (-0.2, 0.2)
     )
-    TAIL_LIGHT = (0.5, 0.035, 0.12, 0.384)  # width, height, centre y, z just behind the tail
+    # The whole tail is the reactor nozzle: its face glows edge to edge, a hot core sits in the middle, and
+    # nested translucent shells trail behind as the plume, stretching with speed.
+    REACTOR_Z = 0.384  # just behind the tail
+    REACTOR_FACE = 0.88  # of the tail section, leaving the outline visible
+    REACTOR_CORE = 0.5
+    PLUME_LAYERS = ((0.95, 0.12, 0.22), (0.8, 0.25, 0.12), (0.6, 0.4, 0.06))  # exit size, length, opacity
+    PLUME_TIP = 0.6  # of the exit size, at the far end of each shell
+    REACTOR_LIGHTS_X = (-0.22, 0.0, 0.22)  # a row of lights so the deck glows across the whole width
+    REACTOR_LIGHT_INTENSITY = 0.6
     BANK_PER_SPEED = 0.07  # in the air
     GROUND_BANK_PER_SPEED = 0.025  # a grounded sled only leans on its runners
     CONTACT_HALF_WIDTH = RUNNER_X + RUNNER_HALF_WIDTH
@@ -121,15 +144,7 @@ class ShipModel:
         self._add_solid(self._lofted(self.CANOPY), canopy_material, self.body)
         for part in (*self.RUNNERS, self.SPOILER, *self.STRUTS):
             self._add_solid(self._lofted(part), hull_material, self.body)
-        width, height, y, z = self.TAIL_LIGHT
-        self.tail_light = three.Mesh.new(
-            three.PlaneGeometry.new(width, height), three.MeshBasicMaterial.new(bridge.obj(color=Palette.SHIP_GLOW))
-        )
-        self.tail_light.position.set(0, y, z)
-        self.body.add(self.tail_light)
-        self._light = three.PointLight.new(Palette.SHIP_GLOW, 1.2, 3.0)
-        self._light.position.set(0, y, 0.6)
-        self.body.add(self._light)
+        self.plume = self._reactor()
         self.shadow = self._contact_shadow()
         self.group.add(self.shadow)
         self._explosion_material = three.MeshBasicMaterial.new(
@@ -149,11 +164,53 @@ class ShipModel:
             for i in range(len(lower)):
                 j = (i + 1) % len(lower)
                 triangles += (lower[i], lower[j], upper[j], lower[i], upper[j], upper[i])
-        for cap in (rings[0], rings[-1]):
-            center = tuple(sum(axis) / len(cap) for axis in zip(*cap, strict=True))
-            for i in range(len(cap)):
-                triangles += (center, cap[i], cap[(i + 1) % len(cap)])
-        return triangles
+        return triangles + _fan(rings[0]) + _fan(rings[-1])
+
+    def _glow_material(self, color: int, opacity: float = 1.0) -> Any:
+        three = self._bridge.three
+        return three.MeshBasicMaterial.new(
+            self._bridge.obj(
+                color=color,
+                transparent=True,
+                opacity=opacity,
+                blending=three.AdditiveBlending,
+                depthWrite=False,
+                side=three.DoubleSide,
+            )
+        )
+
+    def _glow_mesh(self, triangles: list[Point], material: Any) -> Any:
+        three = self._bridge.three
+        geometry = three.BufferGeometry.new()
+        geometry.setAttribute(
+            "position", three.BufferAttribute.new(self._bridge.float32_array([c for v in triangles for c in v]), 3)
+        )
+        return three.Mesh.new(geometry, material)
+
+    def _reactor(self) -> Any:
+        """Light the whole tail: a glowing nozzle face, a hot core, a plume of shells and a row of lights.
+
+        Returns the plume group, which ``sync`` stretches backwards with speed.
+        """
+        three = self._bridge.three
+        tail = self.BODY[-1]
+        face = _scaled(tail, self.REACTOR_FACE, self.REACTOR_Z)
+        core = _scaled(tail, self.REACTOR_CORE, self.REACTOR_Z + 0.001)
+        self.body.add(self._glow_mesh(_fan(face), self._glow_material(Palette.SHIP_GLOW)))
+        self.body.add(self._glow_mesh(_fan(core), self._glow_material(Palette.mix(Palette.SHIP_GLOW, 0xFFFFFF, 0.6))))
+        plume = three.Group.new()
+        plume.position.z = self.REACTOR_Z
+        for size, length, opacity in self.PLUME_LAYERS:
+            exit_ring = _scaled(tail, size, 0.0)
+            shell = (exit_ring, _scaled(exit_ring, self.PLUME_TIP, length))
+            plume.add(self._glow_mesh(self._lofted(shell), self._glow_material(Palette.SHIP_GLOW, opacity)))
+        self.body.add(plume)
+        _, centre_y, _ = (sum(axis) / len(tail) for axis in zip(*tail, strict=True))
+        for x in self.REACTOR_LIGHTS_X:
+            light = three.PointLight.new(Palette.SHIP_GLOW, self.REACTOR_LIGHT_INTENSITY, 2.5)
+            light.position.set(x, centre_y, self.REACTOR_Z + 0.15)
+            self.body.add(light)
+        return plume
 
     def _contact_shadow(self) -> Any:
         """Soft darkening of the deck under the hull: stacked translucent ellipses, darkest at the centre."""
@@ -210,7 +267,7 @@ class ShipModel:
         self.body.position.y = self.CONTACT_HALF_WIDTH * abs(math.sin(bank)) + self.CONTACT_HALF_LENGTH * abs(
             math.sin(pitch)
         )
-        self.tail_light.scale.y = 1 + min(ship.speed, 20) / 20 + 0.2 * math.sin(self._time * 40)
+        self.plume.scale.z = 1 + min(ship.speed, 20) / 20 + 0.15 * math.sin(self._time * 40)
 
     def _explode(self, dt: float) -> None:
         self._explosion_age += dt

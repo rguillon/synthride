@@ -52,7 +52,7 @@ def test_every_part_is_a_triangle_soup():
     ShipModel(bridge, NeonLines(bridge))
     expected = [ShipModel._lofted(rings) for rings in PARTS]
     positions = [attribute.args[0] for attribute in bridge.three.BufferAttribute.created]
-    assert [len(p) for p in positions] == [len(triangles) * 3 for triangles in expected]
+    assert [len(p) for p in positions[: len(expected)]] == [len(triangles) * 3 for triangles in expected]
 
 
 def test_lofted_skins_and_caps_rings():
@@ -64,9 +64,7 @@ def test_lofted_skins_and_caps_rings():
 
 def test_sled_fits_inside_its_collision_box():
     points = [v for rings in PARTS for ring in rings for v in ring]
-    width, _, _, _ = ShipModel.TAIL_LIGHT
     assert max(abs(x) for x, _, _ in points) <= Ship.width / 2
-    assert width / 2 <= Ship.width / 2
     assert max(abs(z) for _, _, z in points) <= Ship.length / 2
     assert max(y for _, y, _ in points) <= Ship.height
     assert min(y for _, y, _ in points) == 0
@@ -82,10 +80,19 @@ def test_runners_rest_on_the_ground_under_the_body():
     assert body_bottom == runner_top
 
 
-def test_tail_light_stretches_with_speed():
+def test_plume_stretches_with_speed():
     model = make_model()
     model.sync(Ship(Vector3(), velocity=Vector3(0, 0, 20)), GamePhase.PLAYING, 0.0)
-    assert model.tail_light.scale.y == 2
+    assert model.plume.scale.z == 2
+
+
+def test_reactor_lights_span_the_whole_tail():
+    bridge = FakeJsBridge()
+    ShipModel(bridge, NeonLines(bridge))
+    lights = bridge.three.PointLight.created
+    xs = [light.position.set.calls[-1][0] for light in lights]
+    assert len(lights) == len(ShipModel.REACTOR_LIGHTS_X)
+    assert min(xs) < 0 < max(xs)
 
 
 def test_contact_shadow_only_under_a_grounded_ship():
