@@ -96,14 +96,14 @@ class TileDecals:
         apex = max(range(4), key=lambda index: tile.corner_height(*corners[index]))
         quad = []
         for cx, cz in corners[apex:] + corners[:apex]:
-            x, z = (tile.column + cx) * Tile.SIZE, (tile.row + cz) * Tile.SIZE
+            x, z = (tile.column + cx) * Tile.WIDTH, (tile.row + cz) * Tile.LENGTH
             quad.append((x, tile.corner_height(cx, cz) + self.DECK_LIFT, -z, x, z, 1.0))
         return quad
 
     def _curtain_quad(self, tile: Tile) -> list[tuple[float, ...]]:
         """Return a sheet standing across the middle of the tile, facing the camera, fading out toward its top."""
-        x0, x1 = tile.column * Tile.SIZE, (tile.column + 1) * Tile.SIZE
-        middle = (tile.row + 0.5) * Tile.SIZE
+        x0, x1 = tile.column * Tile.WIDTH, (tile.column + 1) * Tile.WIDTH
+        middle = (tile.row + 0.5) * Tile.LENGTH
         z = -middle
         y0 = tile.height_at((x0 + x1) / 2, middle)
         y1 = y0 + self.CURTAIN_HEIGHT

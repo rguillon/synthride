@@ -213,7 +213,7 @@ def test_jumping_in_a_tunnel_bumps_its_roof() -> None:
 def test_landing_on_a_tunnel_roof_has_no_tile_effect() -> None:
     session = started(make_level(*[FLAT] * 3, ".. .. N1T N1T N1T N1T .. ..", *[FLAT] * 3))
     roof = 0.5 + TunnelSpan.CLEARANCE + TunnelSpan.ROOF
-    session.ship.position = Vector3(4, roof + 0.2, 3.5)
+    session.ship.position = Vector3(4, roof + 0.2, 7.0)
     session.ship.grounded = False
     events = run(session, 0.5, ShipInput())
     assert events == [GameEvent.LANDED]

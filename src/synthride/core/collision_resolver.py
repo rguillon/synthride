@@ -30,7 +30,11 @@ class CollisionResolver:
 
     Oblique tiles are solids whose top is the slope under the ship, so climbing one is a series of small
     steps. Going down, a grounded ship sticks to the slope instead of hopping off it. A ship leaving a slope
-    keeps the climb (or dive) it had along it, so the top of a ramp is a kicker.
+    keeps the climb (or dive) it had along it, so the top of a ramp is a kicker. Cresting a ramp onto flatter
+    ground keeps part of the climb lost, for a little hop.
+
+    A grounded ship whose centre is on the edge of its support, or past it, drifts sideways toward the hole
+    until it falls in.
     """
 
     EPSILON = 1e-6
@@ -137,12 +141,36 @@ class CollisionResolver:
             ship.grounded = False
             ship.ground_slope = (0.0, 0.0)
             return []
-        ship.position = ship.position.with_y(surface)
-        ship.velocity = ship.velocity.with_y(0.0)
-        ship.grounded = True
         tile = self._tile_beneath(ship, supports, surface)
-        ship.ground_slope = self._slope_under(ship, tile)
+        slope = self._slope_under(ship, tile)
+        kick = self._crest_kick(ship, slope) if ship.grounded else 0.0
+        ship.position = ship.position.with_y(surface)
+        ship.velocity = ship.velocity.with_y(kick)
+        ship.grounded = kick == 0.0
+        ship.ground_slope = slope if ship.grounded else (0.0, 0.0)
+        self._drift_off_edge(ship, [solid for solid, _ in supports], dt)
         return [CollisionReport(CollisionOutcome.LANDED, tile)]
+
+    def _crest_kick(self, ship: Ship, slope: tuple[float, float]) -> float:
+        """Return the upward speed a ship climbing onto the flatter ``slope`` keeps, or 0 when too small to hop."""
+        velocity = ship.velocity
+        was_climbing = velocity.x * ship.ground_slope[0] + velocity.z * ship.ground_slope[1]
+        climbing = velocity.x * slope[0] + velocity.z * slope[1]
+        kick = self._config.crest_kick_ratio * (was_climbing - max(climbing, 0.0))
+        return kick if kick >= self._config.min_crest_kick else 0.0
+
+    def _drift_off_edge(self, ship: Ship, supports: list[Solid], dt: float) -> None:
+        """Slides the ship toward the hole when its centre is on or past the side edge of its supports."""
+        x, z = ship.position.x, ship.position.z
+        beside = [solid for solid in supports if solid.box.minimum.z <= z <= solid.box.maximum.z]
+        held_left = any(solid.box.minimum.x < x for solid in beside)
+        held_right = any(solid.box.maximum.x > x for solid in beside)
+        if held_left == held_right:
+            return
+        direction = 1.0 if held_left else -1.0
+        target = ship.position.with_x(x + direction * self._config.edge_drift_speed * dt)
+        if not self._blockers(ship.box_at(target)):
+            ship.position = target
 
     def _move_up(self, ship: Ship, old_y: float, new_y: float) -> list[CollisionReport]:
         """Rises toward ``new_y``, stopping under any ceiling in the way."""

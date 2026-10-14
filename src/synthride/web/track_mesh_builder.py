@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from synthride.core.track import Track
     from synthride.web.js_bridge import JsBridge, JsObject
     from synthride.web.neon_lines import NeonLines
+    from synthride.web.ship_reflection import ShipReflection
 
 
 class TrackMeshBuilder:
@@ -61,9 +62,11 @@ class TrackMeshBuilder:
         lines: NeonLines,
         tunnels: TunnelMeshBuilder | None = None,
         decals: TileDecals | None = None,
+        reflection: ShipReflection | None = None,
     ) -> None:
-        """Build tunnels with ``tunnels`` and markings with ``decals``."""
+        """Build tunnels with ``tunnels`` and markings with ``decals``; decks show ``reflection``, if any."""
         self._bridge = bridge
+        self._reflection = reflection
         self._lines = lines
         self._tunnels = tunnels or TunnelMeshBuilder(bridge, lines)
         self._decals = decals or TileDecals(bridge)
@@ -115,6 +118,8 @@ class TrackMeshBuilder:
                     polygonOffsetUnits=4,
                 )
             )
+            if self._reflection is not None:
+                self._reflection.patch(material)
             self._materials[tile_type] = material
             surfaces = three.BufferGeometry.new()
             surfaces.setAttribute("position", self._attribute(buffer.positions))
@@ -123,8 +128,7 @@ class TrackMeshBuilder:
             group.add(three.Mesh.new(surfaces, material))
             if rails[tile_type]:
                 self._add_lines(group, rails[tile_type], color, self.LINE_WIDTH)
-        if seams:
-            self._add_lines(group, seams, self.SEAM_COLOR, self.SEAM_WIDTH)
+        self._add_lines(group, seams, self.SEAM_COLOR, self.SEAM_WIDTH)  # never empty: every tile has a middle seam
         group.add(self._decals.build(track))
         for part in self._tunnels.build(track):
             if part in self._lines:
@@ -135,8 +139,8 @@ class TrackMeshBuilder:
     def _trace_edges(self, track: Track, tile: Tile, rails: list[float], seams: list[float]) -> None:
         """Add a rail on each top edge that drops away, and a seam (owned by one side) toward an equal neighbour.
 
-        Edges are compared corner by corner, so slopes join flat tiles and other slopes seamlessly. A corner
-        slope also gets a seam along its crease.
+        Edges are compared corner by corner, so slopes join flat tiles and other slopes seamlessly. A seam also
+        splits each tile into two squares across its middle, and a corner slope gets one along its crease.
         """
         for (dc, dr), corners in self.SIDES:
             neighbour = track.tile_at(tile.column + dc, tile.row + dr)
@@ -149,14 +153,18 @@ class TrackMeshBuilder:
             else:
                 continue
             self._add_edge(tile, corners, target)
-        if tile.slope is not None and all(tile.slope.direction):
+        corner_slope = tile.slope is not None and all(tile.slope.direction)
+        # A corner slope folds in the middle of that seam.
+        middle = ((0, 0.5), (0.5, 0.5), (0.5, 0.5), (1, 0.5)) if corner_slope else ((0, 0.5), (1, 0.5))
+        self._add_edge(tile, middle, seams)
+        if corner_slope:
             dx, dz = tile.slope.direction
             self._add_edge(tile, ((0, 0), (1, 1)) if dx == dz else ((1, 0), (0, 1)), seams)
 
-    def _add_edge(self, tile: Tile, corners: tuple[tuple[int, int], ...], target: list[float]) -> None:
+    def _add_edge(self, tile: Tile, corners: tuple[tuple[float, float], ...], target: list[float]) -> None:
         for cx, cz in corners:
             y = tile.corner_height(cx, cz) + self.LINE_LIFT
-            target.extend(((tile.column + cx) * Tile.SIZE, y, -(tile.row + cz) * Tile.SIZE))
+            target.extend(((tile.column + cx) * Tile.WIDTH, y, -(tile.row + cz) * Tile.LENGTH))
 
     def _add_lines(self, group: JsObject, positions: list[float], color: int, width: float) -> None:
         line = self._lines.segments(positions, color, width)

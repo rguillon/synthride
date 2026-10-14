@@ -294,7 +294,7 @@ class ShipModel:
         self.body.position.y = (
             self.CONTACT_HALF_WIDTH * abs(math.sin(bank)) + self.CONTACT_HALF_LENGTH * abs(math.sin(pitch)) - sink
         )
-        self.plume.scale.z = 1 + min(ship.speed, 20) / 20 + 0.15 * math.sin(self._time * 40)
+        self.plume.scale.z = 1 + min(ship.speed, 40) / 40 + 0.15 * math.sin(self._time * 40)
 
     def _explode(self, dt: float) -> None:
         self._explosion_age += dt

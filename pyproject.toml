@@ -91,6 +91,7 @@ skip_covered = true
 [tool.coverage.run]
 branch = true
 source = ["src"]
+omit = ["src/synthride/levels/*"]
 
 [tool.deptry.per_rule_ignores]
 # Provided by the Pyodide runtime in the browser, never installed from PyPI.

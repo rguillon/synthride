@@ -4,6 +4,7 @@
 from synthride.core.tile_type import TileType
 from synthride.web.neon_lines import NeonLines
 from synthride.web.palette import Palette
+from synthride.web.ship_reflection import ShipReflection
 from synthride.web.track_mesh_builder import TrackMeshBuilder
 from tests.level_factory import make_level
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
@@ -45,16 +46,24 @@ def test_rails_only_trace_edges_that_drop_away() -> None:
     y = 0.5 + TrackMeshBuilder.LINE_LIFT
     rails = rails_of(three, Palette.tile_color(TileType.NORMAL))
     assert len(rails) == 6  # the perimeter of a 2x1 strip, not the shared edge
-    assert ((1.0, y, 0.0), (1.0, y, -1.0)) not in rails
-    assert rails_of(three, TrackMeshBuilder.SEAM_COLOR) == {((1.0, y, 0.0), (1.0, y, -1.0))}
+    assert ((1.0, y, 0.0), (1.0, y, -2.0)) not in rails
+    assert rails_of(three, TrackMeshBuilder.SEAM_COLOR) == {
+        ((1.0, y, 0.0), (1.0, y, -2.0)),
+        ((0.0, y, -1.0), (1.0, y, -1.0)),  # each tile is drawn as two squares
+        ((1.0, y, -1.0), (2.0, y, -1.0)),
+    }
 
 
 def test_step_up_rails_belong_to_the_higher_tile() -> None:
     three, _, _, _ = build("N1 N2 .. .. .. .. .. ..")
     rails = rails_of(three, Palette.tile_color(TileType.NORMAL))
-    assert ((1.0, 1.0 + TrackMeshBuilder.LINE_LIFT, 0.0), (1.0, 1.0 + TrackMeshBuilder.LINE_LIFT, -1.0)) in rails
+    low, high = 0.5 + TrackMeshBuilder.LINE_LIFT, 1.0 + TrackMeshBuilder.LINE_LIFT
+    assert ((1.0, high, 0.0), (1.0, high, -2.0)) in rails
     assert len(rails) == 7
-    assert rails_of(three, TrackMeshBuilder.SEAM_COLOR) == set()
+    assert rails_of(three, TrackMeshBuilder.SEAM_COLOR) == {
+        ((0.0, low, -1.0), (1.0, low, -1.0)),
+        ((1.0, high, -1.0), (2.0, high, -1.0)),
+    }
 
 
 def test_geometry_is_mirrored_along_z() -> None:
@@ -62,7 +71,7 @@ def test_geometry_is_mirrored_along_z() -> None:
     positions = three.BufferAttribute.created[0].args[0]
     zs = positions[2::3]
     assert max(zs) == 0
-    assert min(zs) == -1
+    assert min(zs) == -2
 
 
 def test_animate_pulses_special_tiles_only() -> None:
@@ -104,18 +113,19 @@ def test_a_ramp_joins_the_tiles_it_links_without_rails() -> None:
     three, _, _, _ = build(".. .. .. N1 .. .. .. ..\n.. .. .. N1f .. .. .. ..\n.. .. .. N2 .. .. .. ..")
     lift = TrackMeshBuilder.LINE_LIFT
     seams = rails_of(three, TrackMeshBuilder.SEAM_COLOR)
-    assert ((3.0, 0.5 + lift, -1.0), (4.0, 0.5 + lift, -1.0)) in seams
-    assert ((3.0, 1.0 + lift, -2.0), (4.0, 1.0 + lift, -2.0)) in seams
+    assert ((3.0, 0.5 + lift, -2.0), (4.0, 0.5 + lift, -2.0)) in seams
+    assert ((3.0, 1.0 + lift, -4.0), (4.0, 1.0 + lift, -4.0)) in seams
+    assert ((3.0, 0.75 + lift, -3.0), (4.0, 0.75 + lift, -3.0)) in seams  # halfway up the ramp
     rails = rails_of(three, Palette.tile_color(TileType.NORMAL))
-    assert ((3.0, 0.5 + lift, -1.0), (3.0, 1.0 + lift, -2.0)) in rails  # the ramp's slanted side
+    assert ((3.0, 0.5 + lift, -2.0), (3.0, 1.0 + lift, -4.0)) in rails  # the ramp's slanted side
 
 
 def test_a_ramp_drops_away_from_the_flat_tile_beside_its_low_end() -> None:
     three, _, _, _ = build(".. .. .. N1 N1f .. .. ..")
     lift = TrackMeshBuilder.LINE_LIFT
     rails = rails_of(three, Palette.tile_color(TileType.NORMAL))
-    assert ((4.0, 1.0 + lift, -1.0), (4.0, 0.5 + lift, 0.0)) not in rails
-    assert ((4.0, 0.5 + lift, 0.0), (4.0, 1.0 + lift, -1.0)) in rails
+    assert ((4.0, 1.0 + lift, -2.0), (4.0, 0.5 + lift, 0.0)) not in rails
+    assert ((4.0, 0.5 + lift, 0.0), (4.0, 1.0 + lift, -2.0)) in rails
 
 
 def test_corner_slopes_are_sloped_and_marked_along_their_crease() -> None:
@@ -124,5 +134,19 @@ def test_corner_slopes_are_sloped_and_marked_along_their_crease() -> None:
     assert max(positions[1::3]) == 1.0
     lift = TrackMeshBuilder.LINE_LIFT
     seams = rails_of(three, TrackMeshBuilder.SEAM_COLOR)
-    assert ((3.0, 0.5 + lift, 0.0), (4.0, 1.0 + lift, -1.0)) in seams
-    assert ((5.0, 0.5 + lift, 0.0), (4.0, 1.0 + lift, -1.0)) in seams
+    assert ((3.0, 0.5 + lift, 0.0), (4.0, 1.0 + lift, -2.0)) in seams
+    assert ((5.0, 0.5 + lift, 0.0), (4.0, 1.0 + lift, -2.0)) in seams
+    # The middle seam folds where it crosses the crease.
+    assert ((3.0, 0.5 + lift, -1.0), (3.5, 0.75 + lift, -1.0)) in seams
+    assert ((3.5, 0.75 + lift, -1.0), (4.0, 0.75 + lift, -1.0)) in seams
+
+
+def test_deck_materials_show_the_ship_reflection() -> None:
+    bridge = FakeJsBridge()
+    reflection = ShipReflection(bridge)
+    TrackMeshBuilder(bridge, NeonLines(bridge), reflection=reflection).build(
+        make_level("N1 K1 .. .. .. .. .. ..").track
+    )
+    materials = bridge.three.MeshStandardMaterial.created
+    assert len(materials) == 2
+    assert all(callable(material.onBeforeCompile) for material in materials)

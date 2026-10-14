@@ -22,7 +22,7 @@ def make_track() -> Track:
 def test_dimensions() -> None:
     track = make_track()
     assert track.row_count == 2
-    assert track.length == 2
+    assert track.length == 4
     assert track.width == 8
 
 
@@ -58,7 +58,7 @@ def test_surface_height_at() -> None:
 
 def test_surface_height_follows_a_slope() -> None:
     track = make_level("N1 N1 N1 N1 N1f N1 N1 N1").track
-    assert track.surface_height_at(4.5, 0.25) == 0.625
+    assert track.surface_height_at(4.5, 0.5) == 0.625
 
 
 def test_neighbouring_tunnel_tiles_merge_into_spans() -> None:
@@ -83,7 +83,7 @@ def test_solids_under_include_tunnel_shells_once() -> None:
 
 def test_ceiling_over_finds_the_lowest_tunnel_roof_in_range() -> None:
     track = make_level("N1 " * 8, "N1T " * 8, "N2T " * 8).track
-    assert track.ceiling_over(4, 0.0, 0.9) is None
-    assert track.ceiling_over(4, 0.0, 1.5) == 0.5 + TunnelSpan.CLEARANCE
-    assert track.ceiling_over(4, 2.0, 2.5) == 1.0 + TunnelSpan.CLEARANCE
-    assert track.ceiling_over(-1, 0.0, 3.0) is None
+    assert track.ceiling_over(4, 0.0, 1.9) is None
+    assert track.ceiling_over(4, 0.0, 3.0) == 0.5 + TunnelSpan.CLEARANCE
+    assert track.ceiling_over(4, 4.0, 5.0) == 1.0 + TunnelSpan.CLEARANCE
+    assert track.ceiling_over(-1, 0.0, 6.0) is None

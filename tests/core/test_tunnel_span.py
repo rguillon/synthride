@@ -43,7 +43,7 @@ def test_square_solids_are_two_walls_and_a_roof() -> None:
     assert len(walls_and_roof) == 3
     roof = walls_and_roof[2].box
     assert roof.minimum.y == pytest.approx(0.5 + TunnelSpan.CLEARANCE)
-    assert (roof.minimum.z, roof.maximum.z) == (3, 4)
+    assert (roof.minimum.z, roof.maximum.z) == (6, 8)
     assert all(solid.tile is None for solid in walls_and_roof)
 
 

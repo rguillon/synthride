@@ -46,12 +46,22 @@ class TunnelSpan:
     @property
     def left(self) -> float:
         """The x coordinate of the shell's left side."""
-        return self.first_column * Tile.SIZE
+        return self.first_column * Tile.WIDTH
 
     @property
     def right(self) -> float:
         """The x coordinate of the shell's right side."""
-        return (self.last_column + 1) * Tile.SIZE
+        return (self.last_column + 1) * Tile.WIDTH
+
+    @property
+    def start(self) -> float:
+        """The z coordinate of the shell's near end."""
+        return self.row * Tile.LENGTH
+
+    @property
+    def end(self) -> float:
+        """The z coordinate of the shell's far end."""
+        return (self.row + 1) * Tile.LENGTH
 
     @property
     def center(self) -> float:
@@ -113,10 +123,7 @@ class TunnelSpan:
             parts.append((self.left + self.WALL, self.right - self.WALL, self.deck + self.CLEARANCE, wall_top))
         else:
             parts.extend(self._roof_slices())
-        return [
-            Solid(BoundingBox(Vector3(x0, y0, self.row * Tile.SIZE), Vector3(x1, y1, (self.row + 1) * Tile.SIZE)))
-            for x0, x1, y0, y1 in parts
-        ]
+        return [Solid(BoundingBox(Vector3(x0, y0, self.start), Vector3(x1, y1, self.end))) for x0, x1, y0, y1 in parts]
 
     def _roof_slices(self) -> list[tuple[float, float, float, float]]:
         start, end = self.left + self.WALL, self.right - self.WALL

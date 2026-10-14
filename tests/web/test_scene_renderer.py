@@ -34,9 +34,8 @@ def test_bloom_threshold_ramps_softly() -> None:
 
 def test_post_processing_target_is_multisampled() -> None:
     bridge, _, _ = make_renderer()
-    (target,) = bridge.three.WebGLRenderTarget.created
+    target = bridge.three.EffectComposer.created[0].args[1]
     assert target.args[2]["samples"] == SceneRenderer.MSAA_SAMPLES
-    assert bridge.three.EffectComposer.created[0].args[1] is target
 
 
 def test_resize_updates_line_resolution() -> None:
@@ -103,3 +102,20 @@ def test_camera_never_rolls_when_strafing() -> None:
     _, _, renderer = make_renderer()
     renderer.follow(Ship(Vector3(4, 0.5, 10), velocity=Vector3(5, 0, 10)), 0.5, 0.016)
     assert renderer.camera.rotateZ.calls == []
+
+
+def test_follow_places_the_reflection_on_the_deck_under_the_ship() -> None:
+    _, _, renderer = make_renderer()
+    ship = Ship(Vector3(4, 0.5 + 0.3, 10))
+    renderer.follow(ship, 0, 0.016, snap=True)
+    renderer.reflect_on(ship, 0.5)
+    assert renderer.reflection.strength > 0
+    renderer.render()
+    eye = renderer.camera.position.set.calls[-1]
+    assert renderer.reflection.camera.position.set.calls[-1] == pytest.approx((eye[0], 1.0 - eye[1], eye[2]))
+
+
+def test_no_reflection_over_a_gap() -> None:
+    _, _, renderer = make_renderer()
+    renderer.reflect_on(Ship(Vector3(4, 0.5, 10)), None)
+    assert renderer.reflection.strength == 0

@@ -42,7 +42,7 @@ class Track:
             self._solids.setdefault((tile.column, tile.row), []).append(Solid(tile.bounding_box, tile))
         for span in self._tunnels:
             for solid in span.solids():
-                first, last = math.floor(solid.box.minimum.x / Tile.SIZE), math.ceil(solid.box.maximum.x / Tile.SIZE)
+                first, last = math.floor(solid.box.minimum.x / Tile.WIDTH), math.ceil(solid.box.maximum.x / Tile.WIDTH)
                 for column in range(first, last):
                     self._solids.setdefault((column, span.row), []).append(solid)
 
@@ -65,12 +65,12 @@ class Track:
     @property
     def length(self) -> float:
         """The length of the track along the z axis."""
-        return self.row_count * Tile.SIZE
+        return self.row_count * Tile.LENGTH
 
     @property
     def width(self) -> float:
         """The width of the track along the x axis."""
-        return self.COLUMNS * Tile.SIZE
+        return self.COLUMNS * Tile.WIDTH
 
     @property
     def tunnels(self) -> tuple[TunnelSpan, ...]:
@@ -94,10 +94,10 @@ class Track:
 
     def solids_under(self, box: BoundingBox) -> list[Solid]:
         """Tile blocks and tunnel pieces whose footprint overlaps the footprint of ``box``."""
-        first_column = math.floor(box.minimum.x / Tile.SIZE)
-        last_column = math.ceil(box.maximum.x / Tile.SIZE)
-        first_row = math.floor(box.minimum.z / Tile.SIZE)
-        last_row = math.ceil(box.maximum.z / Tile.SIZE)
+        first_column = math.floor(box.minimum.x / Tile.WIDTH)
+        last_column = math.ceil(box.maximum.x / Tile.WIDTH)
+        first_row = math.floor(box.minimum.z / Tile.LENGTH)
+        last_row = math.ceil(box.maximum.z / Tile.LENGTH)
         found: dict[int, Solid] = {}
         for row in range(first_row, last_row):
             for column in range(first_column, last_column):
@@ -108,7 +108,7 @@ class Track:
 
     def ceiling_over(self, x: float, first_z: float, last_z: float) -> float | None:
         """Return the lowest tunnel ceiling above ``x`` from ``first_z`` to ``last_z``, or None outside tunnels."""
-        first_row, last_row = math.floor(first_z / Tile.SIZE), math.floor(last_z / Tile.SIZE)
+        first_row, last_row = math.floor(first_z / Tile.LENGTH), math.floor(last_z / Tile.LENGTH)
         ceilings = [
             span.inner_height(x)
             for row in range(first_row, last_row + 1)
@@ -119,5 +119,5 @@ class Track:
 
     def surface_height_at(self, x: float, z: float) -> float | None:
         """Return the height of the tile's top face at ``(x, z)``, or None over a gap."""
-        tile = self.tile_at(math.floor(x / Tile.SIZE), math.floor(z / Tile.SIZE))
+        tile = self.tile_at(math.floor(x / Tile.WIDTH), math.floor(z / Tile.LENGTH))
         return None if tile is None else tile.height_at(x, z)

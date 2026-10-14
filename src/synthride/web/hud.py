@@ -64,7 +64,7 @@ class Hud:
         GameEvent.BUMPED: ("MIND THE ROOF", Palette.TUNNEL),
     }
     LIFE_ICON = "▲"
-    KMH_PER_UNIT = 20
+    KMH_PER_UNIT = 10  # speeds are doubled along the long tiles: keep the readout where it was
 
     def __init__(self, bridge: JsBridge) -> None:
         """Fill the ``hud`` element with the display's layout."""

@@ -37,7 +37,7 @@ def test_uvs_follow_the_track_so_patterns_run_across_tiles() -> None:
     three, _, _ = build(".. B1 .. .. .. .. .. ..")
     uvs = three.BufferAttribute.created[1].args[0]
     assert set(uvs[0::2]) == {1.0, 2.0}
-    assert set(uvs[1::2]) == {0.0, 1.0}
+    assert set(uvs[1::2]) == {0.0, 2.0}  # a long tile repeats the pattern twice, one per square
 
 
 def test_jump_pads_raise_one_sheet_at_the_front_of_each_patch() -> None:
@@ -45,7 +45,7 @@ def test_jump_pads_raise_one_sheet_at_the_front_of_each_patch() -> None:
     assert decals.layer_count == 2  # deck target and the rising arrows sheet
     sheet = three.BufferAttribute.created[3].args[0]
     assert len(sheet) == 2 * 6 * 3  # two tiles wide, only the first row
-    assert set(sheet[2::3]) == {-0.5}
+    assert set(sheet[2::3]) == {-1.0}
     assert max(sheet[1::3]) == pytest.approx(0.5 + TileDecals.CURTAIN_HEIGHT)
 
 
@@ -77,7 +77,7 @@ def test_markings_lie_on_slopes_and_fold_along_corner_creases() -> None:
     lift = TileDecals.DECK_LIFT
     assert set(positions[1::3]) == {0.5 + lift, 1.0 + lift}
     corner = [tuple(positions[i : i + 3]) for i in range(6 * 3, len(positions), 3)]
-    assert corner[0] == corner[3] == (2.0, 1.0 + lift, -1.0)  # both triangles start at the raised corner
+    assert corner[0] == corner[3] == (2.0, 1.0 + lift, -2.0)  # both triangles start at the raised corner
 
 
 def test_sheets_stand_on_the_slope() -> None:

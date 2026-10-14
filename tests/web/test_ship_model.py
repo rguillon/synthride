@@ -85,7 +85,7 @@ def test_runners_rest_on_the_ground_under_the_body() -> None:
 
 def test_plume_stretches_with_speed() -> None:
     model = make_model()
-    model.sync(Ship(Vector3(), velocity=Vector3(0, 0, 20)), GamePhase.PLAYING, 0.0)
+    model.sync(Ship(Vector3(), velocity=Vector3(0, 0, 40)), GamePhase.PLAYING, 0.0)
     assert model.plume.scale.z == 2
 
 

@@ -16,26 +16,30 @@ class GameConfig:
     ship_height: float = 0.3
     ship_length: float = 0.8
 
-    max_speed: float = 14.0
-    acceleration: float = 7.0
-    brake_deceleration: float = 14.0
+    # Tiles are twice as long as wide: forward speeds are doubled to cross them at the same pace.
+    max_speed: float = 28.0
+    acceleration: float = 14.0
+    brake_deceleration: float = 28.0
     boost_factor: float = 1.35
-    boost_decay: float = 2.5
+    boost_decay: float = 5.0
     slow_factor: float = 0.45
     launch_velocity: float = 10.0
     ice_grip: float = 1.8
     push_speed: float = 3.0
 
     min_strafe_speed: float = 2.5
-    strafe_ratio: float = 0.3
+    strafe_ratio: float = 0.15
     jump_velocity: float = 6.5
     double_jump_velocity: float = 5.5
 
     step_tolerance: float = 0.12
     crash_overlap_ratio: float = 0.35
+    edge_drift_speed: float = 1.5
+    crest_kick_ratio: float = 0.35
+    min_crest_kick: float = 1.0
     fall_limit_y: float = -4.0
 
-    fuel_per_unit: float = 0.25
+    fuel_per_unit: float = 0.125
     lives: int = 3
     dying_seconds: float = 1.6
     level_won_seconds: float = 2.5

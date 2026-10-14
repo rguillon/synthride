@@ -16,6 +16,7 @@ from synthride.web.neon_lines import NeonLines
 from synthride.web.neon_sparks import NeonSparks
 from synthride.web.scene_renderer import SceneRenderer
 from synthride.web.ship_model import ShipModel
+from synthride.web.ship_reflection import ShipReflection
 from synthride.web.sound_effects import SoundEffects
 from synthride.web.space_backdrop import SpaceBackdrop
 from synthride.web.synth_music import SynthMusic
@@ -41,12 +42,13 @@ class Main:
         master.gain.value = self.MASTER_VOLUME
         master.connect(context.destination)
         lines = NeonLines(bridge)
+        reflection = ShipReflection(bridge)
         return GameLoop(
             bridge,
             session=GameSession(self._catalog.load_all()),
             keyboard=BrowserKeyboard(bridge),
-            renderer=SceneRenderer(bridge, bridge.document.getElementById("stage"), lines),
-            track_builder=TrackMeshBuilder(bridge, lines),
+            renderer=SceneRenderer(bridge, bridge.document.getElementById("stage"), lines, reflection=reflection),
+            track_builder=TrackMeshBuilder(bridge, lines, reflection=reflection),
             ship_model=ShipModel(bridge, lines),
             sparks=NeonSparks(bridge),
             backdrop=SpaceBackdrop(bridge),

@@ -38,8 +38,9 @@ def test_one_shell_mesh_with_mouths_and_ribs() -> None:
     assert builder.material.args[0]["emissive"] == Palette.TUNNEL
     mouths, ribs = (segments(line) for line in three.LineSegments2.created)
     zs = {round(point[2], 2) for segment in mouths for point in segment}
-    assert zs == {0.0, -1.0, -2.0}  # near mouth, ridge seam, far mouth
-    assert {point[2] for segment in ribs for point in segment} == {-1.0}  # one ring between the two rows
+    assert zs == {0.0, -2.0, -4.0}  # near mouth, ridge seam, far mouth
+    # One ring in the middle of each row, like the deck's seams, and one between the two rows.
+    assert {point[2] for segment in ribs for point in segment} == {-1.0, -2.0, -3.0}
 
 
 def test_shell_is_closed_and_shaded_toward_the_outside() -> None:

@@ -19,13 +19,14 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class Tile:
-    """One solid block of the track, occupying a 1x1 cell and rising from the abyss to its top.
+    """One solid block of the track, occupying a ``WIDTH`` x ``LENGTH`` cell and rising from the abyss to its top.
 
     A tile may carry a tunnel, whose shell stands on its top. An oblique tile has a ``slope``: its top
     rises from ``level`` on its low side to one height unit more on its raised side or corner.
     """
 
-    SIZE: ClassVar[float] = 1.0
+    WIDTH: ClassVar[float] = 1.0  # across the track, along x
+    LENGTH: ClassVar[float] = 2.0  # along the track, along z
     HEIGHT_UNIT: ClassVar[float] = 0.5
     BOTTOM: ClassVar[float] = -10.0
 
@@ -56,17 +57,16 @@ class Tile:
         """Return how steeply the top face rises at ``(x, z)``, clamped to the tile, as height per unit along x, z."""
         if self.slope is None:
             return 0.0, 0.0
-        steepness = self.HEIGHT_UNIT / self.SIZE
         x_sign, z_sign = self.slope.gradient(*self._local(x, z))
-        return x_sign * steepness, z_sign * steepness
+        return x_sign * self.HEIGHT_UNIT / self.WIDTH, z_sign * self.HEIGHT_UNIT / self.LENGTH
 
     def _local(self, x: float, z: float) -> tuple[float, float]:
         """Return ``(x, z)`` relative to the tile, from 0 to 1 along each axis, clamped to the tile."""
-        return min(1.0, max(0.0, x / self.SIZE - self.column)), min(1.0, max(0.0, z / self.SIZE - self.row))
+        return min(1.0, max(0.0, x / self.WIDTH - self.column)), min(1.0, max(0.0, z / self.LENGTH - self.row))
 
-    def corner_height(self, corner_x: int, corner_z: int) -> float:
-        """Return the height of the top face at one of its corners, given as 0 or 1 along each axis."""
-        return self.height_at((self.column + corner_x) * self.SIZE, (self.row + corner_z) * self.SIZE)
+    def corner_height(self, corner_x: float, corner_z: float) -> float:
+        """Return the height of the top face at a point given as 0 to 1 along each axis (0 or 1 for a corner)."""
+        return self.height_at((self.column + corner_x) * self.WIDTH, (self.row + corner_z) * self.LENGTH)
 
     def top_over(self, box: BoundingBox) -> float:
         """Return the highest point of the top face over the part of the tile covered by the footprint of ``box``.
@@ -81,6 +81,6 @@ class Tile:
     def bounding_box(self) -> BoundingBox:
         """The tile's solid block, from the abyss to its top."""
         return BoundingBox(
-            Vector3(self.column * self.SIZE, self.BOTTOM, self.row * self.SIZE),
-            Vector3((self.column + 1) * self.SIZE, self.top, (self.row + 1) * self.SIZE),
+            Vector3(self.column * self.WIDTH, self.BOTTOM, self.row * self.LENGTH),
+            Vector3((self.column + 1) * self.WIDTH, self.top, (self.row + 1) * self.LENGTH),
         )

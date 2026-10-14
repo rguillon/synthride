@@ -75,6 +75,7 @@ class GameLoop:
         self._frame_proxy = bridge.proxy(self.on_frame)
         backdrop.add_to(renderer.scene)
         renderer.add(ship_model.group)
+        renderer.mirror(ship_model.body, ship_model.explosion)  # not the shadow: it would hide the mirror image
         renderer.add(sparks.points)
 
     def start(self) -> None:
@@ -112,6 +113,7 @@ class GameLoop:
                 ship.position.x, ship.position.z - self.CAMERA_REACH_BEHIND, ship.position.z + self.CAMERA_REACH_AHEAD
             )
             self._renderer.follow(ship, min(speed_fraction, 1.3), dt, snap=snap, ceiling=ceiling)
+            self._renderer.reflect_on(ship, session.level.track.surface_height_at(ship.position.x, ship.position.z))
         self._backdrop.update(self._renderer.camera_z, self._time)
         self._track_builder.animate(self._time)
         self._update_overlays()
