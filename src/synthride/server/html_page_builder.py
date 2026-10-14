@@ -50,8 +50,9 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
 .prompt { animation: blink 1.1s steps(2, start) infinite; color: var(--text); text-shadow: 0 0 8px var(--pink); }
 .keys { font-size: 0.75rem; opacity: 0.75; line-height: 1.8; }
 .level-list { list-style: none; padding: 0; margin: 0; min-width: min(420px, 90vw); }
-.level-list li { padding: 0.7rem 1rem; margin: 0.4rem 0; border: 1px solid rgba(0,240,255,0.25);
-  letter-spacing: 0.15em; }
+.level-list li { padding: 0.7rem 1rem; margin: 0 0 0.6rem; border: 1px solid rgba(0,240,255,0.25);
+  letter-spacing: 0.15em; break-inside: avoid; }
+@media (min-width: 900px) { .level-list { columns: 2; column-gap: 1.2rem; min-width: 820px; } }
 .level-list li.selected { border-color: var(--pink); color: var(--pink); box-shadow: 0 0 16px var(--pink);
   text-shadow: 0 0 8px var(--pink); }
 .headline { font-size: clamp(1.8rem, 7vw, 4rem); margin: 0; color: var(--pink); text-shadow: 0 0 20px var(--pink); }
