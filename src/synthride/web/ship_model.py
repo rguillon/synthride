@@ -46,10 +46,12 @@ def _slab(  # noqa: PLR0913
     return ((x - half_bottom, bottom, z), (x + half_bottom, bottom, z), (x + half_top, top, z), (x - half_top, top, z))
 
 
-def _scaled(ring: Ring, factor: float, z: float) -> Ring:
-    """``ring`` shrunk or grown by ``factor`` about its centre, moved to depth ``z``."""
-    cx, cy = (sum(axis) / len(ring) for axis in tuple(zip(*ring, strict=True))[:2])
-    return tuple((cx + (x - cx) * factor, cy + (y - cy) * factor, z) for x, y, _ in ring)
+def _circle(x: float, y: float, radius: float, z: float, sides: int) -> Ring:
+    """Return a regular polygon of ``sides`` around (``x``, ``y``) at depth ``z``, standing in for a circle."""
+    return tuple(
+        (x + radius * math.cos(2 * math.pi * i / sides), y + radius * math.sin(2 * math.pi * i / sides), z)
+        for i in range(sides)
+    )
 
 
 def _fan(ring: Ring) -> list[Point]:
@@ -102,15 +104,21 @@ class ShipModel:
         )
         for x in (-0.2, 0.2)
     )
-    # The whole tail is the reactor nozzle: its face glows edge to edge, a hot core sits in the middle, and
-    # nested translucent shells trail behind as the plume, stretching with speed.
-    REACTOR_Z = 0.384  # just behind the tail
-    REACTOR_FACE = 0.88  # of the tail section, leaving the outline visible
-    REACTOR_CORE = 0.5
-    PLUME_LAYERS = ((0.95, 0.12, 0.22), (0.8, 0.25, 0.12), (0.6, 0.4, 0.06))  # exit size, length, opacity
-    PLUME_TIP = 0.6  # of the exit size, at the far end of each shell
-    REACTOR_LIGHTS_X = (-0.22, 0.0, 0.22)  # a row of lights so the deck glows across the whole width
-    REACTOR_LIGHT_INTENSITY = 0.6
+    # Twin round thrusters sit in the tail, each pushing out a slim flame: nested cones, hot white inside and
+    # glow-coloured outside, fading to nothing at their tips and stretching with speed. A thin light bar runs
+    # across the tail above them.
+    NOZZLE_X = (-0.17, 0.17)
+    NOZZLE_Y = 0.115
+    NOZZLE_RADIUS = 0.048
+    NOZZLE_DEPTH = (0.33, 0.395)  # front and back of the housing, the back just behind the tail
+    NOZZLE_SIDES = 10
+    FLAME_LAYERS = ((1.3, 0.75, 0.35), (0.95, 0.45, 0.7), (0.55, 0.2, 1.0))  # radius factor, length, brightness
+    FLAME_STATIONS = 6  # rings along each cone; brightness falls off towards the tip
+    FLAME_CORE_WHITENESS = 0.6  # how much the innermost cone is mixed towards white
+    FLAME_FLICKER = 0.12
+    TAIL_BAR = (0.27, 0.152, 0.165)  # half width, bottom, top
+    REACTOR_LIGHTS_X = NOZZLE_X  # one light per thruster to wash the deck behind
+    REACTOR_LIGHT_INTENSITY = 0.45
     BANK_PER_SPEED = 0.07  # in the air
     GROUND_BANK_PER_SPEED = 0.025  # a grounded sled only leans on its runners
     CONTACT_HALF_WIDTH = RUNNER_X + RUNNER_HALF_WIDTH
@@ -157,7 +165,7 @@ class ShipModel:
         self._add_solid(self._lofted(self.CANOPY), canopy_material, self.body)
         for part in (*self.RUNNERS, self.SPOILER, *self.STRUTS):
             self._add_solid(self._lofted(part), hull_material, self.body)
-        self.plume = self._reactor()
+        self.plume = self._reactor(hull_material)
         self.shadow = self._contact_shadow()
         self.group.add(self.shadow)
         self._explosion_material = three.MeshBasicMaterial.new(
@@ -180,11 +188,12 @@ class ShipModel:
                 triangles += (lower[i], lower[j], upper[j], lower[i], upper[j], upper[i])
         return triangles + _fan(rings[0]) + _fan(rings[-1])
 
-    def _glow_material(self, color: int, opacity: float = 1.0) -> JsObject:
+    def _glow_material(self, color: int, opacity: float = 1.0, *, vertex_colors: bool = False) -> JsObject:
         three = self._bridge.three
         return three.MeshBasicMaterial.new(
             self._bridge.obj(
                 color=color,
+                vertexColors=vertex_colors,
                 transparent=True,
                 opacity=opacity,
                 blending=three.AdditiveBlending,
@@ -201,30 +210,58 @@ class ShipModel:
         )
         return three.Mesh.new(geometry, material)
 
-    def _reactor(self) -> JsObject:
-        """Light the whole tail: a glowing nozzle face, a hot core, a plume of shells and a row of lights.
+    def _reactor(self, housing_material: JsObject) -> JsObject:
+        """Fit the thrusters, their glowing throats and flames, the tail light bar and the deck lights.
 
-        Returns the plume group, which ``sync`` stretches backwards with speed.
+        Returns the plume group holding the flames, which ``sync`` stretches backwards with speed.
         """
         three = self._bridge.three
-        tail = self.BODY[-1]
-        face = _scaled(tail, self.REACTOR_FACE, self.REACTOR_Z)
-        core = _scaled(tail, self.REACTOR_CORE, self.REACTOR_Z + 0.001)
-        self.body.add(self._glow_mesh(_fan(face), self._glow_material(Palette.SHIP_GLOW)))
-        self.body.add(self._glow_mesh(_fan(core), self._glow_material(Palette.mix(Palette.SHIP_GLOW, 0xFFFFFF, 0.6))))
+        front, back = self.NOZZLE_DEPTH
+        bar_half, bar_bottom, bar_top = self.TAIL_BAR
+        bar = _slab(back + 0.001, bar_half, bar_half, bar_bottom, bar_top)
+        self.body.add(self._glow_mesh(_fan(bar), self._glow_material(Palette.SHIP_GLOW, 0.9)))
+        throat_material = self._glow_material(Palette.mix(Palette.SHIP_GLOW, 0xFFFFFF, 0.45))
         plume = three.Group.new()
-        plume.position.z = self.REACTOR_Z
-        for size, length, opacity in self.PLUME_LAYERS:
-            exit_ring = _scaled(tail, size, 0.0)
-            shell = (exit_ring, _scaled(exit_ring, self.PLUME_TIP, length))
-            plume.add(self._glow_mesh(self._lofted(shell), self._glow_material(Palette.SHIP_GLOW, opacity)))
+        plume.position.z = back
+        for x in self.NOZZLE_X:
+            housing = (
+                _circle(x, self.NOZZLE_Y, self.NOZZLE_RADIUS * 1.1, front, self.NOZZLE_SIDES),
+                _circle(x, self.NOZZLE_Y, self.NOZZLE_RADIUS * 1.25, back, self.NOZZLE_SIDES),
+            )
+            self._add_solid(self._lofted(housing), housing_material, self.body)
+            throat = _circle(x, self.NOZZLE_Y, self.NOZZLE_RADIUS, back + 0.002, self.NOZZLE_SIDES)
+            self.body.add(self._glow_mesh(_fan(throat), throat_material))
+            for i, (factor, length, brightness) in enumerate(self.FLAME_LAYERS):
+                whiteness = self.FLAME_CORE_WHITENESS * i / (len(self.FLAME_LAYERS) - 1)
+                color = Palette.mix(Palette.SHIP_GLOW, 0xFFFFFF, whiteness)
+                plume.add(self._flame(x, self.NOZZLE_RADIUS * factor, length, color, brightness))
         self.body.add(plume)
-        _, centre_y, _ = (sum(axis) / len(tail) for axis in zip(*tail, strict=True))
         for x in self.REACTOR_LIGHTS_X:
             light = three.PointLight.new(Palette.SHIP_GLOW, self.REACTOR_LIGHT_INTENSITY, 2.5)
-            light.position.set(x, centre_y, self.REACTOR_Z + 0.15)
+            light.position.set(x, self.NOZZLE_Y, back + 0.15)
             self.body.add(light)
         return plume
+
+    def _flame(self, x: float, radius: float, length: float, color: int, brightness: float) -> JsObject:
+        """Return a cone streaming back from the nozzle at ``x``, fading to black (so to nothing, added) at its tip."""
+        three = self._bridge.three
+        stations = [i / self.FLAME_STATIONS for i in range(self.FLAME_STATIONS + 1)]
+        rings = [_circle(x, self.NOZZLE_Y, radius * (1 - t) ** 0.7, length * t, self.NOZZLE_SIDES) for t in stations]
+        fades = [brightness * (1 - t) ** 2 for t in stations]
+        triangles: list[Point] = []
+        shades: list[float] = []
+        for (lower, upper), (near, far) in zip(pairwise(rings), pairwise(fades), strict=True):
+            for i in range(self.NOZZLE_SIDES):
+                j = (i + 1) % self.NOZZLE_SIDES
+                triangles += (lower[i], lower[j], upper[j], lower[i], upper[j], upper[i])
+                shades += (near, near, far, near, far, far)
+        rgb = [((color >> shift) & 0xFF) / 255 for shift in (16, 8, 0)]
+        mesh = self._glow_mesh(triangles, self._glow_material(0xFFFFFF, vertex_colors=True))
+        mesh.geometry.setAttribute(
+            "color",
+            three.BufferAttribute.new(self._bridge.float32_array([c * shade for shade in shades for c in rgb]), 3),
+        )
+        return mesh
 
     def _contact_shadow(self) -> JsObject:
         """Soft darkening of the deck under the hull: stacked translucent ellipses, darkest at the centre."""
@@ -294,7 +331,8 @@ class ShipModel:
         self.body.position.y = (
             self.CONTACT_HALF_WIDTH * abs(math.sin(bank)) + self.CONTACT_HALF_LENGTH * abs(math.sin(pitch)) - sink
         )
-        self.plume.scale.z = 1 + min(ship.speed, 40) / 40 + 0.15 * math.sin(self._time * 40)
+        flicker = self.FLAME_FLICKER * (math.sin(self._time * 47) + 0.5 * math.sin(self._time * 83))
+        self.plume.scale.z = 0.5 + 1.5 * min(ship.speed, 40) / 40 + flicker
 
     def _explode(self, dt: float) -> None:
         self._explosion_age += dt

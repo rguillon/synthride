@@ -142,3 +142,16 @@ def test_eases_onto_a_slope_with_its_shadow() -> None:
     assert model.shadow.rotation.x == pytest.approx(math.atan(0.5))
     assert model.body.position.y == pytest.approx(-0.5 * ship.length / 2)
     assert model.shadow.position.y == pytest.approx(ShipModel.SHADOW_LIFT - 0.5 * ship.length / 2)
+
+
+def test_each_thruster_flame_fades_out_towards_its_tip() -> None:
+    model = make_model()
+    flames = model.plume.add.calls
+    assert len(flames) == len(ShipModel.NOZZLE_X) * len(ShipModel.FLAME_LAYERS)
+    for (flame,) in flames:
+        positions = flame.args[0].setAttribute.calls[0][1].args[0]
+        colors = flame.geometry.setAttribute.calls[-1][1].args[0]
+        brightness = [sum(colors[i : i + 3]) for i in range(0, len(colors), 3)]
+        depths = positions[2::3]
+        assert brightness[depths.index(max(depths))] == 0
+        assert max(brightness) > 0
