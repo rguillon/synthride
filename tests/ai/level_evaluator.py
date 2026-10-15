@@ -9,16 +9,16 @@ import multiprocessing
 import signal
 from typing import TYPE_CHECKING, Any
 
-from synthride.ai.episode_runner import EpisodeRunner
-from synthride.ai.neural_network import NeuralNetwork
-from synthride.ai.pilot import Pilot
 from synthride.core.level_catalog import LevelCatalog
+from tests.ai.episode_runner import EpisodeRunner
+from tests.ai.neural_network import NeuralNetwork
+from tests.ai.pilot import Pilot
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
     from types import TracebackType
 
-    from synthride.ai.episode_result import EpisodeResult
+    from tests.ai.episode_result import EpisodeResult
 
 _runner: EpisodeRunner | None = None
 
@@ -37,7 +37,7 @@ def _start_worker() -> None:
 
 def _play(task: tuple[tuple[int, ...], list[float], int, int]) -> EpisodeResult:
     layer_sizes, weights, level_index, seed = task
-    assert _runner is not None  # noqa: S101
+    assert _runner is not None
     return _runner.run(Pilot(NeuralNetwork(layer_sizes, weights)), level_index, seed)
 
 

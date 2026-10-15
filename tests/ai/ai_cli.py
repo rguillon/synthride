@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Renaud Guillon
 # SPDX-License-Identifier: MIT
 
-"""The ``python -m synthride.ai`` command line."""
+"""The ``python -m tests.ai`` command line."""
 
 from __future__ import annotations
 
@@ -11,16 +11,16 @@ import random
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from synthride.ai.brain_store import BrainStore
-from synthride.ai.evolution import Evolution
-from synthride.ai.level_evaluator import LevelEvaluator
-from synthride.ai.trainer import Trainer
 from synthride.core.level_catalog import LevelCatalog
+from tests.ai.brain_store import BrainStore
+from tests.ai.evolution import Evolution
+from tests.ai.level_evaluator import LevelEvaluator
+from tests.ai.trainer import Trainer
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from synthride.ai.brain import Brain
+    from tests.ai.brain import Brain
 
 
 class AiCli:
@@ -30,7 +30,7 @@ class AiCli:
 
     def parser(self) -> argparse.ArgumentParser:
         """Return the argument parser."""
-        parser = argparse.ArgumentParser(prog="synthride.ai", description="A neural network that plays SynthRide.")
+        parser = argparse.ArgumentParser(prog="tests.ai", description="A neural network that plays SynthRide.")
         parser.add_argument("--brain", type=Path, default=self.DEFAULT_BRAIN, help="the network file")
         parser.add_argument("--workers", type=int, default=os.cpu_count() or 1, help="parallel processes")
         commands = parser.add_subparsers(dest="command", required=True)
@@ -51,7 +51,7 @@ class AiCli:
         arguments = parser.parse_args(argv)
         store = BrainStore(arguments.brain)
         if arguments.command == "learn":
-            evolution = Evolution(arguments.population, arguments.elites, arguments.sigma, random.Random())  # noqa: S311
+            evolution = Evolution(arguments.population, arguments.elites, arguments.sigma, random.Random())
             levels = None
             if arguments.levels is not None:
                 count = len(LevelCatalog().file_names())

@@ -8,17 +8,17 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING, ClassVar
 
-from synthride.ai.episode_result import EpisodeResult
 from synthride.core.game_event import GameEvent
 from synthride.core.game_phase import GamePhase
 from synthride.core.game_session import GameSession
 from synthride.core.vector3 import Vector3
+from tests.ai.episode_result import EpisodeResult
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from synthride.ai.pilot import Pilot
     from synthride.core.level import Level
+    from tests.ai.pilot import Pilot
 
 
 class EpisodeRunner:
@@ -40,7 +40,7 @@ class EpisodeRunner:
     def run(self, pilot: Pilot, level_index: int, seed: int) -> EpisodeResult:
         """Play the level at ``level_index`` with ``pilot`` and return how it went."""
         session = self._session
-        rng = random.Random(seed)  # noqa: S311
+        rng = random.Random(seed)
         session.selected_level = level_index
         session.start()
         ship = session.ship

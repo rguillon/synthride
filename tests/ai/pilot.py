@@ -7,12 +7,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar
 
-from synthride.ai.ship_observer import ShipObserver
 from synthride.core.ship_input import ShipInput
+from tests.ai.ship_observer import ShipObserver
 
 if TYPE_CHECKING:
-    from synthride.ai.neural_network import NeuralNetwork
     from synthride.core.game_session import GameSession
+    from tests.ai.neural_network import NeuralNetwork
 
 
 class Pilot:

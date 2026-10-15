@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from synthride.ai.neural_network import NeuralNetwork
+from tests.ai.neural_network import NeuralNetwork
 
 
 @dataclass(frozen=True)

@@ -1,3 +1,4 @@
 # Copyright (c) 2026 Renaud Guillon
 # SPDX-License-Identifier: MIT
-"""Tests for the neural network player."""
+
+"""A neural network that learns to play SynthRide by neuroevolution."""

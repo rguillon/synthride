@@ -24,8 +24,8 @@
 
 ## AI
 
-::: synthride.ai.trainer
-::: synthride.ai.evolution
-::: synthride.ai.neural_network
-::: synthride.ai.ship_observer
-::: synthride.ai.episode_runner
+::: tests.ai.trainer
+::: tests.ai.evolution
+::: tests.ai.neural_network
+::: tests.ai.ship_observer
+::: tests.ai.episode_runner

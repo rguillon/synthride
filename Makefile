@@ -30,15 +30,15 @@ site: ## Build a static site of the game into dist/web
 
 .PHONY: learn
 learn: ## Train the neural network player in a loop (Ctrl+C to stop), saving it to data/brain.json
-	@uv run python -m synthride.ai learn
+	@uv run python -m tests.ai learn
 
 .PHONY: learn-level1
 learn-level1: ## Train the neural network player on level 1 only, in a loop (Ctrl+C to stop)
-	@uv run python -m synthride.ai learn --levels 1
+	@uv run python -m tests.ai learn --levels 1
 
 .PHONY: play
 play: ## Let the neural network play every level and show its win rate per level
-	@uv run python -m synthride.ai play
+	@uv run python -m tests.ai play
 
 .PHONY: build
 build: clean-build ## Build wheel file

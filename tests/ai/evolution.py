@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from synthride.ai.neural_network import NeuralNetwork
+from tests.ai.neural_network import NeuralNetwork
 
 if TYPE_CHECKING:
     import random

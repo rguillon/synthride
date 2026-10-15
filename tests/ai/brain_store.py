@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
-from synthride.ai.brain import Brain
+from tests.ai.brain import Brain
 
 if TYPE_CHECKING:
     from pathlib import Path

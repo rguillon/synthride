@@ -123,7 +123,7 @@ unchanged and fills the rest of the population with mutated copies of them. Each
 fitness, the win rate of the best network over its own attempts, and the win rate of all networks, which stays lower
 because most of the population are fresh mutants. The start position and the decision rhythm are jittered by a
 per-generation seed, so the network has to cope with slightly different runs, and `make play` gets a meaningful win
-rate. Options are listed by `uv run python -m synthride.ai learn --help`.
+rate. Options are listed by `uv run python -m tests.ai learn --help`.
 
 ## Architecture
 
@@ -131,7 +131,7 @@ rate. Options are listed by `uv run python -m synthride.ai learn --help`.
 | --- | --- |
 | `synthride.core` | Pure Python game logic: tracks, physics, collisions, tile effects, lives, phases. No browser code. |
 | `synthride.web` | Browser adapters: Three.js rendering, keyboard, HUD/menus, procedural WebAudio music and SFX. Every browser object is injected through `JsBridge`, so it is unit-tested with fakes. |
-| `synthride.ai` | Desktop tooling: the neural network player, its genetic training loop and win-rate report. Not bundled into the browser game. |
+| `tests.ai` | Desktop tooling kept under `tests` (no unit tests of its own): the neural network player, its genetic training loop and win-rate report. Not part of the `synthride` package nor the browser game. |
 | `synthride.server` | Desktop tooling: zips `core` + `web` + `levels`, generates the HTML5 page, serves both. |
 
 The code has one class per file, and each source file has a matching test file under `tests/`.

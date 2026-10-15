@@ -9,17 +9,17 @@ import random
 import time
 from typing import TYPE_CHECKING, ClassVar
 
-from synthride.ai.brain import Brain
-from synthride.ai.pilot import Pilot
-from synthride.ai.ship_observer import ShipObserver
+from tests.ai.brain import Brain
+from tests.ai.pilot import Pilot
+from tests.ai.ship_observer import ShipObserver
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
-    from synthride.ai.brain_store import BrainStore
-    from synthride.ai.episode_result import EpisodeResult
-    from synthride.ai.evolution import Evolution
-    from synthride.ai.level_evaluator import LevelEvaluator
+    from tests.ai.brain_store import BrainStore
+    from tests.ai.episode_result import EpisodeResult
+    from tests.ai.evolution import Evolution
+    from tests.ai.level_evaluator import LevelEvaluator
 
 
 class Trainer:
@@ -51,7 +51,7 @@ class Trainer:
         self._store = store
         self._evaluator = evaluator
         self._evolution = evolution
-        self._rng = rng or random.Random()  # noqa: S311
+        self._rng = rng or random.Random()
         self._report = report
         self._levels = levels
         self._attempts = attempts
@@ -63,6 +63,12 @@ class Trainer:
             population = self._evolution.seed(self.LAYER_SIZES)
             generation = 0
             self._report(f"Starting from scratch: {len(population)} random networks of {self.LAYER_SIZES}")
+        elif brain.network.layer_sizes != self.LAYER_SIZES:
+            msg = (
+                f"{self._store.path} holds a network of {brain.network.layer_sizes}, but the trainer now builds "
+                f"{self.LAYER_SIZES}: move that file away to start afresh"
+            )
+            raise ValueError(msg)
         else:
             population = self._evolution.seed(brain.network.layer_sizes, brain.network)
             generation = brain.generation
