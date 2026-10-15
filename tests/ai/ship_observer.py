@@ -64,7 +64,7 @@ class ShipObserver:
 
     COLUMNS: ClassVar[int] = 5
     ROWS: ClassVar[int] = 12
-    SAMPLES: ClassVar[int] = 4
+    SAMPLES: ClassVar[int] = 2
     SHIP_FEATURES: ClassVar[int] = 10
     CELL_FEATURES: ClassVar[int] = 7
     SIZE: ClassVar[int] = SHIP_FEATURES + COLUMNS * ROWS * SAMPLES * SAMPLES * CELL_FEATURES

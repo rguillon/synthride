@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, ClassVar
 
 from tests.ai.brain import Brain
 from tests.ai.pilot import Pilot
-from tests.ai.ship_observer import ShipObserver
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -31,7 +30,7 @@ class Trainer:
     reliably beats one that won by luck.
     """
 
-    LAYER_SIZES: ClassVar[tuple[int, ...]] = (ShipObserver.SIZE, 16, Pilot.OUTPUTS)
+    LAYER_SIZES: ClassVar[tuple[int, ...]] = (Pilot.INPUTS, 16, Pilot.OUTPUTS)
 
     def __init__(  # noqa: PLR0913
         self,
