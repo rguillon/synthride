@@ -70,9 +70,12 @@ class Trainer:
             brain = Brain(population[best], generation, fitness[best])
             self._store.save(brain)
             wins = sum(result.won for result in results[best])
+            runs = [result for by_level in results for result in by_level]
+            win_rate = sum(result.won for result in runs) / len(runs)
             self._report(
                 f"generation {generation:5d}  best {fitness[best]:7.2f}  mean {sum(fitness) / len(fitness):7.2f}  "
-                f"levels won {wins:2d}/{len(results[best])}  ({time.perf_counter() - started:.1f}s)"
+                f"levels won {wins:2d}/{len(results[best])}  wins {win_rate:6.1%} of {len(runs)} runs  "
+                f"({time.perf_counter() - started:.1f}s)"
             )
             population = self._evolution.next_generation(population, fitness)
         return brain

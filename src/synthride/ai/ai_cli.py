@@ -36,7 +36,7 @@ class AiCli:
         commands = parser.add_subparsers(dest="command", required=True)
         learn = commands.add_parser("learn", help="train the network, until interrupted by default")
         learn.add_argument("--generations", type=int, default=None, help="stop after this many generations")
-        learn.add_argument("--population", type=int, default=64, help="networks per generation")
+        learn.add_argument("--population", type=int, default=128, help="networks per generation")
         learn.add_argument("--elites", type=int, default=8, help="best networks kept in each generation")
         learn.add_argument("--sigma", type=float, default=0.05, help="mutation strength")
         learn.add_argument("--levels", type=int, nargs="+", default=None, help="train only on these level numbers")

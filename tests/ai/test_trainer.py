@@ -40,6 +40,7 @@ def test_trains_on_chosen_levels(tmp_path: Path) -> None:
         trainer = Trainer(store, evaluator, evolution, rng=random.Random(2), report=messages.append, levels=[0])
         trainer.run(1)
     assert "levels won  0/1" in messages[-1] or "levels won  1/1" in messages[-1]
+    assert "% of 3 runs" in messages[-1]
 
 
 def test_does_nothing_without_generations(tmp_path: Path) -> None:
