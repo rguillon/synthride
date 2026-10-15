@@ -18,6 +18,8 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
     from types import TracebackType
 
+    import numpy as np
+
     from tests.ai.episode_result import EpisodeResult
 
 _runner: EpisodeRunner | None = None
@@ -35,7 +37,7 @@ def _start_worker() -> None:
     _load_levels()
 
 
-def _play(task: tuple[tuple[int, ...], list[float], int, int]) -> EpisodeResult:
+def _play(task: tuple[tuple[int, ...], np.ndarray, int, int]) -> EpisodeResult:
     layer_sizes, weights, level_index, seed = task
     assert _runner is not None
     return _runner.run(Pilot(NeuralNetwork(layer_sizes, weights)), level_index, seed)

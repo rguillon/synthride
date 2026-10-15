@@ -8,11 +8,49 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, ClassVar
 
+import numpy as np
+
 from synthride.core.tile import Tile
 from synthride.core.tile_type import TileType
 
 if TYPE_CHECKING:
     from synthride.core.game_session import GameSession
+    from synthride.core.track import Track
+
+
+class _TrackMap:
+    """A track's tiles as arrays, so that many points of it can be looked up at once."""
+
+    def __init__(self, track: Track, features: int) -> None:
+        self.rows, self.columns = track.row_count, track.COLUMNS
+        self.cells = np.zeros((self.rows, self.columns, features))
+        self.base = np.zeros((self.rows, self.columns))
+        self.slope_x = np.zeros((self.rows, self.columns))
+        self.slope_z = np.zeros((self.rows, self.columns))
+        for tile in track.tiles():
+            self.cells[tile.row, tile.column] = ShipObserver.cell(tile)
+            self.base[tile.row, tile.column] = tile.base
+            if tile.slope is not None:
+                self.slope_x[tile.row, tile.column], self.slope_z[tile.row, tile.column] = tile.slope.direction
+
+    def look(self, x: np.ndarray, z: np.ndarray, height: float) -> np.ndarray:
+        """Return the features of the points ``(x, z)``, with heights relative to ``height``, zero off the track."""
+        u, v = x / Tile.WIDTH, z / Tile.LENGTH
+        column, row = np.floor(u).astype(int), np.floor(v).astype(int)
+        u, v = u - column, v - row
+        inside = (column >= 0) & (column < self.columns) & (row >= 0) & (row < self.rows)
+        column, row = np.where(inside, column, 0), np.where(inside, row, 0)
+        cells = self.cells[row, column] * inside[..., np.newaxis]
+        slope_x, slope_z = self.slope_x[row, column], self.slope_z[row, column]
+        rise = np.minimum(self._ramp(slope_x, u), self._ramp(slope_z, v))
+        top = self.base[row, column] + Tile.HEIGHT_UNIT * np.where(np.isinf(rise), 0.0, rise)
+        cells[..., 1] = np.clip((top - height) / 2, -1.0, 1.0) * cells[..., 0]
+        return cells
+
+    @staticmethod
+    def _ramp(sign: np.ndarray, t: np.ndarray) -> np.ndarray:
+        """Return how far up a slope rising toward ``sign`` the points ``t`` are, infinite where it is flat."""
+        return np.where(sign > 0, t, np.where(sign < 0, 1 - t, np.inf))
 
 
 class ShipObserver:
@@ -31,14 +69,21 @@ class ShipObserver:
     CELL_FEATURES: ClassVar[int] = 7
     SIZE: ClassVar[int] = SHIP_FEATURES + COLUMNS * ROWS * SAMPLES * SAMPLES * CELL_FEATURES
     PUSH: ClassVar[dict[TileType, float]] = {TileType.PUSH_LEFT: -1.0, TileType.PUSH_RIGHT: 1.0}
-    EMPTY: ClassVar[tuple[float, ...]] = (0.0,) * CELL_FEATURES
+    # The arrays of every track seen so far, shared by all observers since a track never changes.
+    _maps: ClassVar[dict[int, tuple[Track, _TrackMap]]] = {}
+    # Where the sample points are relative to the ship: one row of points across per step ahead.
+    OFFSETS: ClassVar[tuple[np.ndarray, np.ndarray]] = np.meshgrid(
+        (np.arange(COLUMNS * SAMPLES) - (COLUMNS * SAMPLES - 1) / 2) * Tile.WIDTH / SAMPLES,
+        np.arange(ROWS * SAMPLES) * Tile.LENGTH / SAMPLES,
+    )
 
-    def observe(self, session: GameSession) -> list[float]:
+    def observe(self, session: GameSession) -> np.ndarray:
         """Return the ``SIZE`` inputs describing the session's current state."""
         ship, track, config = session.ship, session.level.track, session.config
         position, velocity = ship.position, ship.velocity
         column, row = math.floor(position.x / Tile.WIDTH), math.floor(position.z / Tile.LENGTH)
-        inputs = [
+        inputs = np.empty(self.SIZE)
+        inputs[: self.SHIP_FEATURES] = (
             position.x / track.width * 2 - 1,
             position.x / Tile.WIDTH - column - 0.5,
             position.z / Tile.LENGTH - row - 0.5,
@@ -49,27 +94,29 @@ class ShipObserver:
             float(ship.air_jump_ready),
             session.fuel.fraction,
             session.oxygen.fraction,
-        ]
-        across, step_x, step_z = self.COLUMNS * self.SAMPLES, Tile.WIDTH / self.SAMPLES, Tile.LENGTH / self.SAMPLES
-        for ahead in range(self.ROWS * self.SAMPLES):
-            z = position.z + ahead * step_z
-            for side in range(across):
-                x = position.x + (side - (across - 1) / 2) * step_x
-                tile = track.tile_at(math.floor(x / Tile.WIDTH), math.floor(z / Tile.LENGTH))
-                inputs.extend(self._cell(tile, x, z, position.y))
+        )
+        across, ahead = self.OFFSETS
+        points = self._map(track).look(position.x + across, position.z + ahead, position.y)
+        inputs[self.SHIP_FEATURES :] = points.ravel()
         return inputs
 
-    def _cell(self, tile: Tile | None, x: float, z: float, height: float) -> tuple[float, ...]:
-        if tile is None:
-            return self.EMPTY
+    def _map(self, track: Track) -> _TrackMap:
+        """Return the arrays of ``track``, built the first time it is seen."""
+        if id(track) not in self._maps:
+            self._maps[id(track)] = (track, _TrackMap(track, self.CELL_FEATURES))
+        return self._maps[id(track)][1]
+
+    @classmethod
+    def cell(cls, tile: Tile) -> tuple[float, ...]:
+        """Return the features of a point on ``tile``, its height left at 0."""
         kind = tile.tile_type
         return (
             1.0,
-            max(-1.0, min(1.0, (tile.height_at(x, z) - height) / 2)),
+            0.0,
             float(kind is TileType.KILL),
             float(tile.tunnel is not None),
             float(kind is TileType.JUMP),
-            self.PUSH.get(kind, 0.0),
+            cls.PUSH.get(kind, 0.0),
             float(kind in (TileType.REFUEL, TileType.AIR, TileType.BOOST))
             - float(kind in (TileType.SLOW, TileType.ICE)),
         )
