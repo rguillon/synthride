@@ -25,11 +25,36 @@ jobs:
       - name: Run checks
         run: make check
 
+  python-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.read.outputs.versions }}
+      oldest: ${{ steps.read.outputs.oldest }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Read Python versions from tox.ini
+        id: read
+        shell: python
+        run: |
+          import configparser, json, os
+          tox = configparser.ConfigParser()
+          tox.read("tox.ini")
+          versions = sorted(
+              (line.split(":")[0].strip() for line in tox["gh-actions"]["python"].strip().splitlines()),
+              key=lambda v: tuple(map(int, v.split("."))),
+          )
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write(f"versions={json.dumps(versions)}\n")
+              out.write(f"oldest={versions[0]}\n")
+
   tests-and-type-check:
+    needs: python-versions
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ${{ fromJSON(needs.python-versions.outputs.versions) }}
       fail-fast: false
     defaults:
       run:
@@ -50,9 +75,9 @@ jobs:
         run: uv run ty check
 
 
-      - name: Upload coverage reports to Codecov with GitHub Action on Python 3.11
+      - name: Upload coverage reports to Codecov on the oldest supported Python
         uses: codecov/codecov-action@v4
-        if: ${{ matrix.python-version == '3.11' }}
+        if: ${{ matrix.python-version == needs.python-versions.outputs.oldest }}
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
