@@ -28,6 +28,14 @@ serve: ## Serve the game at http://127.0.0.1:8000
 site: ## Build a static site of the game into dist/web
 	@uv run synthride build --out dist/web
 
+.PHONY: learn
+learn: ## Train the neural network player in a loop (Ctrl+C to stop), saving it to data/brain.json
+	@uv run python -m synthride.ai learn
+
+.PHONY: play
+play: ## Let the neural network play every level and show its win rate per level
+	@uv run python -m synthride.ai play
+
 .PHONY: build
 build: clean-build ## Build wheel file
 	@echo "🚀 Creating wheel file"

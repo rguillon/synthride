@@ -77,6 +77,7 @@ ignore = [  "COM812",   # cause incompatibility with the formatter
               "D103",     # No docstring in tests
               "D105",     # No docstring in tests
               "D107",     # No docstring in tests
+              "S311",     # Seeded pseudo-random generators make reproducible tests
               ]
 
 [tool.ruff.format]

@@ -101,12 +101,33 @@ corner of a raised plateau:
 
 A ship leaving the top of a ramp keeps its climb, so a ramp that ends over a gap is a kicker.
 
+## AI player
+
+A small neural network learns to play by neuroevolution, using the same `synthride.core` simulation as the game.
+
+```bash
+make learn   # train in a loop (Ctrl+C to stop); resumes from and saves to data/brain.json after every generation
+make play    # play every level 20 times with the trained network and print the win rate per level
+```
+
+The network (430 inputs, 16 hidden tanh neurons, 3 outputs) sees the ship's state (position, speed, ground contact,
+jump readiness, fuel, oxygen) and a 5 x 12 window of the track around and ahead of the ship (tile present, relative
+height, kill, tunnel, jump pad, pusher direction, helpful or hindering surface). Its outputs drive throttle,
+steering and jump about 20 times a second.
+
+Each generation, a genetic algorithm plays every network on every level with one life, scores it by the distance
+covered plus a bonus for each level won (bigger when faster), keeps the best 8 networks unchanged and fills the
+rest of the population with mutated copies of them. The start position and the decision rhythm are jittered by a
+per-generation seed, so the network has to cope with slightly different runs, and `make play` gets a meaningful win
+rate. Options are listed by `uv run python -m synthride.ai learn --help`.
+
 ## Architecture
 
 | Package | Role |
 | --- | --- |
 | `synthride.core` | Pure Python game logic: tracks, physics, collisions, tile effects, lives, phases. No browser code. |
 | `synthride.web` | Browser adapters: Three.js rendering, keyboard, HUD/menus, procedural WebAudio music and SFX. Every browser object is injected through `JsBridge`, so it is unit-tested with fakes. |
+| `synthride.ai` | Desktop tooling: the neural network player, its genetic training loop and win-rate report. Not bundled into the browser game. |
 | `synthride.server` | Desktop tooling: zips `core` + `web` + `levels`, generates the HTML5 page, serves both. |
 
 The code has one class per file, and each source file has a matching test file under `tests/`.

@@ -14,7 +14,7 @@ from tests.web.fakes.fake_js_bridge import FakeJsBridge
 
 
 def make_sparks() -> NeonSparks:
-    return NeonSparks(FakeJsBridge(), rng=random.Random(7))  # noqa: S311
+    return NeonSparks(FakeJsBridge(), rng=random.Random(7))
 
 
 def writes(sparks: NeonSparks, name: str) -> list[tuple]:

@@ -17,7 +17,7 @@ def make_backdrop(seed: int = 1984) -> tuple[FakeJsBridge, SpaceBackdrop]:
 
 def test_stars_surround_the_camera_on_a_sphere() -> None:
     _, backdrop = make_backdrop()
-    positions = backdrop.star_positions(random.Random(1))  # noqa: S311
+    positions = backdrop.star_positions(random.Random(1))
     assert len(positions) == SpaceBackdrop.STAR_COUNT * 3
     for index in range(0, len(positions), 3):
         x, y, z = positions[index : index + 3]

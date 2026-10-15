@@ -17,7 +17,7 @@ from tests.web.fakes.fake_js_bridge import FakeJsBridge
 def make_renderer() -> tuple[FakeJsBridge, FakeElement, SceneRenderer]:
     bridge = FakeJsBridge()
     container = FakeElement("stage")
-    return bridge, container, SceneRenderer(bridge, container, NeonLines(bridge), rng=random.Random(1))  # noqa: S311
+    return bridge, container, SceneRenderer(bridge, container, NeonLines(bridge), rng=random.Random(1))
 
 
 def test_sets_up_canvas_and_bloom_pipeline() -> None:
