@@ -28,6 +28,18 @@ def test_learn_then_play(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> 
     assert "overall" in out
 
 
+def test_learn_on_chosen_levels(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    options = ["--brain", str(tmp_path / "brain.json"), "--workers", "1", "learn", "--generations", "1"]
+    assert AiCli().run([*options, "--population", "2", "--elites", "1", "--levels", "1", "3"]) == 0
+    assert "/2  (" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("number", ["0", "99"])
+def test_learn_rejects_unknown_levels(tmp_path: Path, number: str) -> None:
+    with pytest.raises(SystemExit):
+        AiCli().run(["--brain", str(tmp_path / "brain.json"), "learn", "--levels", number])
+
+
 def test_play_needs_a_brain(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert AiCli().run(["--brain", str(tmp_path / "none.json"), "play"]) == 1
     assert "make learn" in capsys.readouterr().out

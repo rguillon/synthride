@@ -107,6 +107,7 @@ A small neural network learns to play by neuroevolution, using the same `synthri
 
 ```bash
 make learn   # train in a loop (Ctrl+C to stop); resumes from and saves to data/brain.json after every generation
+make learn-level1  # the same, training on level 1 only (any levels: learn --levels 1 2 3)
 make play    # play every level 20 times with the trained network and print the win rate per level
 ```
 

@@ -32,6 +32,10 @@ site: ## Build a static site of the game into dist/web
 learn: ## Train the neural network player in a loop (Ctrl+C to stop), saving it to data/brain.json
 	@uv run python -m synthride.ai learn
 
+.PHONY: learn-level1
+learn-level1: ## Train the neural network player on level 1 only, in a loop (Ctrl+C to stop)
+	@uv run python -m synthride.ai learn --levels 1
+
 .PHONY: play
 play: ## Let the neural network play every level and show its win rate per level
 	@uv run python -m synthride.ai play
@@ -57,6 +61,6 @@ docs: ## Build and serve the documentation
 .PHONY: help
 help:
 	@uv run python -c "import re; \
-	[[print(f'\033[36m{m[0]:<20}\033[0m {m[1]}') for m in re.findall(r'^([a-zA-Z_-]+):.*?## (.*)$$', open(makefile).read(), re.M)] for makefile in ('$(MAKEFILE_LIST)').strip().split()]"
+	[[print(f'\033[36m{m[0]:<20}\033[0m {m[1]}') for m in re.findall(r'^([a-zA-Z0-9_-]+):.*?## (.*)$$', open(makefile).read(), re.M)] for makefile in ('$(MAKEFILE_LIST)').strip().split()]"
 
 .DEFAULT_GOAL := help

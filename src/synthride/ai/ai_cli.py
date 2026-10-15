@@ -39,26 +39,43 @@ class AiCli:
         learn.add_argument("--population", type=int, default=64, help="networks per generation")
         learn.add_argument("--elites", type=int, default=8, help="best networks kept in each generation")
         learn.add_argument("--sigma", type=float, default=0.05, help="mutation strength")
+        learn.add_argument("--levels", type=int, nargs="+", default=None, help="train only on these level numbers")
         play = commands.add_parser("play", help="show the network's win rate on each level")
         play.add_argument("--attempts", type=int, default=20, help="attempts per level")
         return parser
 
     def run(self, argv: Sequence[str] | None = None) -> int:
         """Run the command given in ``argv`` and return the exit code."""
-        arguments = self.parser().parse_args(argv)
+        parser = self.parser()
+        arguments = parser.parse_args(argv)
         store = BrainStore(arguments.brain)
         if arguments.command == "learn":
             evolution = Evolution(arguments.population, arguments.elites, arguments.sigma, random.Random())  # noqa: S311
-            return self.learn(store, evolution, arguments.workers, arguments.generations)
+            levels = None
+            if arguments.levels is not None:
+                count = len(LevelCatalog().file_names())
+                if not all(1 <= number <= count for number in arguments.levels):
+                    parser.error(f"level numbers go from 1 to {count}")
+                levels = [number - 1 for number in arguments.levels]
+            return self.learn(store, evolution, arguments.workers, arguments.generations, levels)
         return self.play(store, arguments.workers, arguments.attempts)
 
     @staticmethod
-    def learn(store: BrainStore, evolution: Evolution, workers: int, generations: int | None) -> int:
-        """Train the network in ``store``, until interrupted unless ``generations`` is given."""
+    def learn(
+        store: BrainStore,
+        evolution: Evolution,
+        workers: int,
+        generations: int | None,
+        levels: Sequence[int] | None = None,
+    ) -> int:
+        """Train the network in ``store`` on the levels at ``levels`` (all by default).
+
+        Training goes on until interrupted unless ``generations`` is given.
+        """
         print(f"Learning with {workers} workers, saving to {store.path} (Ctrl+C to stop)")  # noqa: T201
         try:
             with LevelEvaluator(workers) as evaluator:
-                Trainer(store, evaluator, evolution).run(generations)
+                Trainer(store, evaluator, evolution, levels=levels).run(generations)
         except KeyboardInterrupt:
             print("Stopped.")  # noqa: T201
         return 0

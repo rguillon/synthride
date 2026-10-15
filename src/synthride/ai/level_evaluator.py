@@ -77,8 +77,13 @@ class LevelEvaluator:
             return [_play(task) for task in work]
         return self._pool.map(_play, work, chunksize=4)
 
-    def score(self, networks: Sequence[NeuralNetwork], seed: int) -> list[list[EpisodeResult]]:
-        """Play every level once with each network, all with the same ``seed``, and return the results by network."""
-        levels = range(self.level_count)
+    def score(
+        self, networks: Sequence[NeuralNetwork], seed: int, levels: Sequence[int] | None = None
+    ) -> list[list[EpisodeResult]]:
+        """Play the levels at ``levels`` (all by default) once with each network, all with the same ``seed``.
+
+        Return the results by network, then by level.
+        """
+        levels = range(self.level_count) if levels is None else levels
         results = self.play((network, level, seed) for network in networks for level in levels)
-        return [results[index : index + self.level_count] for index in range(0, len(results), self.level_count)]
+        return [results[index : index + len(levels)] for index in range(0, len(results), len(levels))]

@@ -14,7 +14,7 @@ from synthride.ai.pilot import Pilot
 from synthride.ai.ship_observer import ShipObserver
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
 
     from synthride.ai.brain_store import BrainStore
     from synthride.ai.evolution import Evolution
@@ -24,26 +24,30 @@ if TYPE_CHECKING:
 class Trainer:
     """Evolves networks generation after generation, saving the best one to the store after each generation.
 
-    Every generation plays all the levels with a fresh seed, the same for every network, so networks are
-    compared fairly within a generation but must cope with changing conditions across generations.
+    Every generation plays the training levels (all of them by default) with a fresh seed, the same for every
+    network, so networks are compared fairly within a generation but must cope with changing conditions across
+    generations.
     """
 
     LAYER_SIZES: ClassVar[tuple[int, ...]] = (ShipObserver.SIZE, 16, Pilot.OUTPUTS)
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         store: BrainStore,
         evaluator: LevelEvaluator,
         evolution: Evolution,
+        *,
         rng: random.Random | None = None,
         report: Callable[[str], None] = print,
+        levels: Sequence[int] | None = None,
     ) -> None:
-        """Train with ``evaluator`` and ``evolution``, keeping the best network in ``store``."""
+        """Train with ``evaluator`` and ``evolution`` on the levels at ``levels``, keeping the best one in ``store``."""
         self._store = store
         self._evaluator = evaluator
         self._evolution = evolution
         self._rng = rng or random.Random()  # noqa: S311
         self._report = report
+        self._levels = levels
 
     def run(self, generations: int | None = None) -> Brain | None:
         """Train for ``generations`` generations, or forever if None, and return the last brain saved, if any."""
@@ -60,7 +64,7 @@ class Trainer:
         while last is None or generation < last:
             generation += 1
             started = time.perf_counter()
-            results = self._evaluator.score(population, self._rng.randrange(2**31))
+            results = self._evaluator.score(population, self._rng.randrange(2**31), self._levels)
             fitness = [sum(result.score for result in by_level) for by_level in results]
             best = max(range(len(population)), key=fitness.__getitem__)
             brain = Brain(population[best], generation, fitness[best])
