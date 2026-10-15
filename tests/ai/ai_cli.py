@@ -12,6 +12,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from synthride.core.level_catalog import LevelCatalog
+from synthride.server.game_server import GameServer
+from synthride.server.html_page_builder import HtmlPageBuilder
+from synthride.server.server_cli import ServerCli
+from tests.ai.ai_bundle_builder import AiBundleBuilder
 from tests.ai.brain_store import BrainStore
 from tests.ai.evolution import Evolution
 from tests.ai.evolution_strategy import EvolutionStrategy
@@ -26,7 +30,10 @@ if TYPE_CHECKING:
 
 
 class AiCli:
-    """Command line entry point: ``learn`` to train the network, ``play`` to measure its win rate on each level."""
+    """Command line entry point: ``learn`` to train the network, ``play`` to measure its win rate on each level.
+
+    ``serve`` serves the game in the browser with the network at the ship's controls.
+    """
 
     DEFAULT_BRAIN = Path("data/brain.json")
 
@@ -52,6 +59,9 @@ class AiCli:
         learn.add_argument("--levels", type=int, nargs="+", default=None, help="train only on these level numbers")
         play = commands.add_parser("play", help="show the network's win rate on each level")
         play.add_argument("--attempts", type=int, default=20, help="attempts per level")
+        serve = commands.add_parser("serve", help="serve the game in the browser, played by the network")
+        serve.add_argument("--host", default="127.0.0.1")
+        serve.add_argument("--port", type=int, default=8000)
         return parser
 
     def run(self, argv: Sequence[str] | None = None) -> int:
@@ -76,6 +86,8 @@ class AiCli:
             return self.learn(
                 store, evolution, arguments.workers, arguments.generations, levels=levels, attempts=arguments.attempts
             )
+        if arguments.command == "serve":
+            return self.serve(store, arguments.host, arguments.port)
         return self.play(store, arguments.workers, arguments.attempts)
 
     @staticmethod
@@ -114,6 +126,16 @@ class AiCli:
             )
         print(AiCli.report(brain, names, [results[i : i + attempts] for i in range(0, len(results), attempts)]))  # noqa: T201
         return 0
+
+    @staticmethod
+    def serve(store: BrainStore, host: str, port: int) -> int:
+        """Serve the game on ``host:port``, the stored network steering the ship, until interrupted."""
+        if not store.path.exists():
+            print(f"No network in {store.path}: run 'make learn' first.")  # noqa: T201
+            return 1
+        page = HtmlPageBuilder(packages=("numpy",), entry="from tests.ai.ai_main import main; main()")
+        bundle = AiBundleBuilder(store.path)
+        return ServerCli(lambda host, port: GameServer(host, port, page, bundle)).serve(host, port)
 
     @staticmethod
     def report(brain: Brain, names: Sequence[str], results: Sequence[Sequence]) -> str:

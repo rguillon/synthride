@@ -37,3 +37,8 @@ def test_default_root_bundles_the_real_game() -> None:
     assert "synthride/web/main.py" in names
     assert "synthride/levels/level_01.json" in names
     assert not any(name.startswith("synthride/server") for name in names)
+
+
+def test_entries_pair_each_file_with_its_content(tmp_path: Path) -> None:
+    entries = BundleBuilder(make_package(tmp_path)).entries()
+    assert entries[1] == ("synthride/core/a.py", b"core/a.py")

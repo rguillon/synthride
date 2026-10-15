@@ -40,6 +40,10 @@ learn-level1: ## Train the neural network player on level 1 only, in a loop (Ctr
 play: ## Let the neural network play every level and show its win rate per level
 	@uv run python -m tests.ai play
 
+.PHONY: test-serve
+test-serve: ## Serve the game at http://127.0.0.1:8000 with the neural network playing the level you select
+	@uv run python -m tests.ai serve
+
 .PHONY: build
 build: clean-build ## Build wheel file
 	@echo "🚀 Creating wheel file"

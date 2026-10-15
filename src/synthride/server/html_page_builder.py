@@ -5,7 +5,12 @@
 
 from __future__ import annotations
 
+import json
 from string import Template
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class HtmlPageBuilder:
@@ -13,6 +18,7 @@ class HtmlPageBuilder:
 
     PYODIDE_VERSION = "0.29.5"
     THREE_VERSION = "0.170.0"
+    ENTRY = "from synthride.web.main import main; main()"
 
     TEMPLATE = Template("""\
 <!doctype html>
@@ -117,7 +123,8 @@ try {
   status.textContent = "Loading the cyberspace\\u2026";
   const response = await fetch("$bundle_url", { cache: "no-store" });
   pyodide.unpackArchive(await response.arrayBuffer(), "zip");
-  pyodide.runPython("from synthride.web.main import main; main()");
+  await pyodide.loadPackage($packages);
+  pyodide.runPython($entry);
   document.getElementById("loading").remove();
 } catch (error) {
   status.textContent = "Failed to start: " + error.message;
@@ -133,11 +140,18 @@ try {
         pyodide_version: str = PYODIDE_VERSION,
         three_version: str = THREE_VERSION,
         bundle_url: str = "synthride.zip",
+        packages: Sequence[str] = (),
+        entry: str = ENTRY,
     ) -> None:
-        """Use the given library versions and load the bundle from ``bundle_url``."""
+        """Use the given library versions and load the bundle from ``bundle_url``.
+
+        The page also loads the Pyodide ``packages`` the bundle needs, then runs the Python statement ``entry``.
+        """
         self._pyodide_version = pyodide_version
         self._three_version = three_version
         self._bundle_url = bundle_url
+        self._packages = tuple(packages)
+        self._entry = entry
 
     @property
     def pyodide_url(self) -> str:
@@ -152,5 +166,9 @@ try {
     def build(self) -> str:
         """Return the page's HTML."""
         return self.TEMPLATE.substitute(
-            pyodide_url=self.pyodide_url, three_url=self.three_url, bundle_url=self._bundle_url
+            pyodide_url=self.pyodide_url,
+            three_url=self.three_url,
+            bundle_url=self._bundle_url,
+            packages=json.dumps(list(self._packages)),
+            entry=json.dumps(self._entry),
         )
