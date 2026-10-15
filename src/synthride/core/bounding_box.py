@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from synthride.core.vector3 import Vector3
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class BoundingBox:
     """An axis-aligned box defined by its minimum and maximum corners."""
 
@@ -41,4 +41,9 @@ class BoundingBox:
 
     def overlaps_footprint(self, other: BoundingBox) -> bool:
         """Return True when the two boxes overlap when seen from above (x/z plane)."""
-        return self.overlap_x(other) > 0 and self.overlap_z(other) > 0
+        # The same test as a positive overlap_x and overlap_z, without building the intermediate values: each
+        # chain checks that both lower bounds lie below both upper bounds.
+        low, high, other_low, other_high = self.minimum, self.maximum, other.minimum, other.maximum
+        return (
+            low.x < other_high.x > other_low.x < high.x > low.x and low.z < other_high.z > other_low.z < high.z > low.z
+        )

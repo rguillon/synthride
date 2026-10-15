@@ -45,6 +45,14 @@ class Track:
                 first, last = math.floor(solid.box.minimum.x / Tile.WIDTH), math.ceil(solid.box.maximum.x / Tile.WIDTH)
                 for column in range(first, last):
                     self._solids.setdefault((column, span.row), []).append(solid)
+        # Each cell's solids with their footprints, as looked up by solids_under for every step of the ship.
+        self._footprints = {
+            cell: tuple(
+                (solid, solid.box.minimum.x, solid.box.maximum.x, solid.box.minimum.z, solid.box.maximum.z)
+                for solid in solids
+            )
+            for cell, solids in self._solids.items()
+        }
 
     @staticmethod
     def _spans_in(row: Sequence[Tile | None]) -> Iterator[TunnelSpan]:
@@ -98,13 +106,24 @@ class Track:
         last_column = math.ceil(box.maximum.x / Tile.WIDTH)
         first_row = math.floor(box.minimum.z / Tile.LENGTH)
         last_row = math.ceil(box.maximum.z / Tile.LENGTH)
-        found: dict[int, Solid] = {}
+        low_x, high_x, low_z, high_z = box.minimum.x, box.maximum.x, box.minimum.z, box.maximum.z
+        found: list[Solid] = []
+        seen: set[int] = set()
         for row in range(first_row, last_row):
             for column in range(first_column, last_column):
-                for solid in self._solids.get((column, row), ()):
-                    if id(solid) not in found and solid.box.overlaps_footprint(box):
-                        found[id(solid)] = solid
-        return list(found.values())
+                for solid, solid_low_x, solid_high_x, solid_low_z, solid_high_z in self._footprints.get(
+                    (column, row), ()
+                ):
+                    # The test of BoundingBox.overlaps_footprint, on footprints read once.
+                    if not (
+                        low_x < solid_high_x > solid_low_x < high_x > low_x
+                        and low_z < solid_high_z > solid_low_z < high_z > low_z
+                    ):
+                        continue
+                    if id(solid) not in seen:
+                        seen.add(id(solid))
+                        found.append(solid)
+        return found
 
     def ceiling_over(self, x: float, first_z: float, last_z: float) -> float | None:
         """Return the lowest tunnel ceiling above ``x`` from ``first_z`` to ``last_z``, or None outside tunnels."""

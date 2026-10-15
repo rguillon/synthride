@@ -6,10 +6,10 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Vector3:
     """An immutable 3D vector. x is lateral, y is up, z is forward along the track."""
 
@@ -37,12 +37,12 @@ class Vector3:
 
     def with_x(self, x: float) -> Vector3:
         """Return a copy with ``x`` replaced."""
-        return replace(self, x=x)
+        return Vector3(x, self.y, self.z)
 
     def with_y(self, y: float) -> Vector3:
         """Return a copy with ``y`` replaced."""
-        return replace(self, y=y)
+        return Vector3(self.x, y, self.z)
 
     def with_z(self, z: float) -> Vector3:
         """Return a copy with ``z`` replaced."""
-        return replace(self, z=z)
+        return Vector3(self.x, self.y, z)
