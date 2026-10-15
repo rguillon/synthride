@@ -23,7 +23,12 @@ runs:
       with:
         version: ${{ inputs.uv-version }}
         enable-cache: 'true'
-        cache-suffix: ${{ matrix.python-version }}
+        cache-suffix: ${{ inputs.python-version }}
+
+    # Override .python-version so uv (sync and later `uv run` steps) uses the requested interpreter
+    - name: Pin uv to the requested Python
+      run: echo "UV_PYTHON=${{ inputs.python-version }}" >> "$GITHUB_ENV"
+      shell: bash
 
     - name: Install Python dependencies
       run: uv sync --frozen
