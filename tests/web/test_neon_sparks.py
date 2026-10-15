@@ -59,6 +59,14 @@ def test_crashing_bursts_far_more_sparks_than_a_scrape() -> None:
     assert max(speeds) <= NeonSparks.DEATH.speed[1]
 
 
+@pytest.mark.parametrize("death", sorted(NeonSparks.DEATHS, key=lambda event: event.name))
+def test_every_death_bursts(death: GameEvent) -> None:
+    sparks = make_sparks()
+    sparks.react([death], Ship(Vector3()))
+    ((values, _),) = writes(sparks, "aBirth")
+    assert len(values) == NeonSparks.DEATH.count
+
+
 def test_sparks_are_born_on_the_spark_clock() -> None:
     sparks = make_sparks()
     sparks.update(1.5)

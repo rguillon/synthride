@@ -22,6 +22,7 @@ class MenuScreen:
 
     KEYS = "↑ ↓ accelerate / brake &nbsp;·&nbsp; ← → strafe &nbsp;·&nbsp; SPACE jump, again in mid-air"
     KEYS_EXTRA = "ESC menu &nbsp;·&nbsp; M mute"
+    LEVELS_PER_COLUMN = 7
     # (tile types sharing a line, the pattern drawn on them, what they do)
     LEGEND: ClassVar[tuple[tuple[tuple[TileType, ...], str, str], ...]] = (
         ((TileType.NORMAL,), "■", "solid ground"),
@@ -56,16 +57,20 @@ class MenuScreen:
         )
 
     def show_level_select(self, names: Sequence[str], selected: int) -> None:
-        """Show the level list with ``selected`` highlighted."""
-        items = "".join(
+        """Show the level list, in columns of ``LEVELS_PER_COLUMN``, with ``selected`` highlighted."""
+        items = [
             f'<li class="{"selected" if index == selected else ""}">{index + 1:02d} · {escape(name.upper())}</li>'
             for index, name in enumerate(names)
+        ]
+        columns = "".join(
+            f'<ul class="level-list">{"".join(items[start : start + self.LEVELS_PER_COLUMN])}</ul>'
+            for start in range(0, len(items), self.LEVELS_PER_COLUMN)
         )
         self._show(
             f"select:{selected}",
             '<p class="subtitle">SELECT LEVEL</p>'
-            f'<ul class="level-list">{items}</ul>{self.legend()}'
-            '<p class="keys">↑ ↓ choose &nbsp;·&nbsp; ENTER ride &nbsp;·&nbsp; ESC back</p>',
+            f'<div class="level-columns">{columns}</div>{self.legend()}'
+            '<p class="keys">↑ ↓ ← → choose &nbsp;·&nbsp; ENTER ride &nbsp;·&nbsp; ESC back</p>',
         )
 
     @classmethod

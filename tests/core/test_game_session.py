@@ -65,6 +65,19 @@ def test_menu_flow() -> None:
     assert session.phase is GamePhase.TITLE
 
 
+def test_level_select_moves_between_columns() -> None:
+    session = GameSession([make_level(FLAT)] * 5)  # columns of two: [0, 1], [2, 3], [4]
+    session.selected_level = 1
+    session.select_level_column(1, 2)
+    assert session.selected_level == 3
+    session.select_level_column(1, 2)
+    assert session.selected_level == 4  # the last column is shorter
+    session.select_level_column(1, 2)
+    assert session.selected_level == 0
+    session.select_level_column(-1, 2)
+    assert session.selected_level == 4
+
+
 def test_ship_starts_grounded_at_track_start() -> None:
     session = started(make_level(FLAT))
     assert session.ship.grounded

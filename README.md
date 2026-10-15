@@ -60,31 +60,28 @@ hosted anywhere, GitHub Pages included.
 
 ## Levels
 
-Levels are Python modules named `level_*.py` in `src/synthride/levels/`, picked up automatically in module-name
-order. Each one defines a `LEVEL` constant:
+Levels are JSON files named `level_*.json` in `src/synthride/levels/`, picked up automatically in file-name order:
 
-```python
-from synthride.core.level import Level
-from synthride.core.track_parser import TrackParser
-
-LEVEL = Level(
-    name="Neon Highway",
-    gravity=18.0,
-    oxygen_seconds=90.0,
-    fuel_capacity=100.0,
-    track=TrackParser().parse([
-        # first row = start of the track
-        (12, ".. .. N1 N1 N1 N1 .. .."),
-        (1, ".. .. N1 B1 B1 N1 .. .."),
-        (3, ".. N2 N2 .. .. N2 N2 .."),
-        (4, ".. .. N1A N1A N1A N1A .. .."),  # a round tunnel four blocks wide
-    ]),
-)
+```json
+{
+  "name": "Neon Highway",
+  "gravity": 18,
+  "oxygen": 90,
+  "fuel": 100,
+  "track": [
+    "# first row = start of the track",
+    [12, ".. .. N1 N1 N1 N1 .. .."],
+    ".. .. N1 B1 B1 N1 .. ..",
+    [3, ".. N2 N2 .. .. N2 N2 .."],
+    [4, ".. .. N1A N1A N1A N1A .. ..  # a round tunnel four blocks wide"]
+  ]
+}
 ```
 
-`gravity`, `oxygen_seconds` (seconds of air) and `fuel_capacity` (1 unit per 4 blocks travelled) are optional; the
-values above are the defaults. `track` lists `(count, row)` pairs, from the start of the track: the row is repeated
-`count` times, so a long straight is written once.
+`gravity`, `oxygen` (seconds of air) and `fuel` (1 unit per 4 blocks travelled) are optional; the values above are
+the defaults. `track` lists rows from the start of the track: a `[count, row]` pair repeats the row `count` times,
+so a long straight is written once, and a lone row string is used once. `#` starts a comment, so a string starting
+with `#` is skipped.
 
 Each row has 8 cells: `..` is a gap, otherwise a type letter (`N`ormal, `B`oost, `S`low, `K`ill, `R`efuel,
 `O` air, `J`ump pad, `I`ce, `<` / `>` pushers, `F`inish) followed by a height from 1 to 8, optionally followed by
@@ -95,10 +92,11 @@ or `r`ight, or its raised corner, `fl`, `fr`, `bl` or `br`. The height digit is 
 one height higher, so `N1 N1f N2` is a ramp up and `N2 N1b N1` a ramp down. Corners join two side ramps around the
 corner of a raised plateau:
 
-```python
-(1, ".. N1 N1fr N1f N1f N1fl N1 .."),  # a hill: rises on all four sides
-(3, ".. N1 N1r  N2  N2  N1l  N1 .."),
-(1, ".. N1 N1br N1b N1b N1bl N1 .."),
+```json
+"# a hill: rises on all four sides",
+".. N1 N1fr N1f N1f N1fl N1 ..",
+[3, ".. N1 N1r  N2  N2  N1l  N1 .."],
+".. N1 N1br N1b N1b N1bl N1 .."
 ```
 
 A ship leaving the top of a ramp keeps its climb, so a ramp that ends over a gap is a kicker.

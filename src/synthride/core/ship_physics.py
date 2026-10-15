@@ -21,8 +21,8 @@ class ShipPhysics:
     """Turns player input, gravity and the surface underneath into the ship's velocity for one step.
 
     On ice the ship only slowly gets the sideways speed the player asks for, so it keeps sliding. Pushers
-    add a constant sideways drift. Holding jump on the ground keeps hopping; once airborne, a fresh press
-    gives one more jump, recharged on landing.
+    add a constant sideways drift. Holding jump on the ground keeps hopping, and a jump off a ramp keeps the
+    ramp's climb; once airborne, a fresh press gives one more jump, recharged on landing.
     """
 
     PUSH_DIRECTIONS: ClassVar[dict[TileType, int]] = {TileType.PUSH_LEFT: -1, TileType.PUSH_RIGHT: 1}
@@ -36,9 +36,11 @@ class ShipPhysics:
         speed = self._forward_speed(ship.speed, ship_input, dt)
         lateral = self._lateral_speed(ship, speed, ship_input, dt)
         vertical = ship.velocity.y
+        across, along = ship.ground_slope
+        climb = lateral * across + speed * along
         jump = self._jump(ship, ship_input)
         if jump is GameEvent.JUMPED:
-            vertical = self._config.jump_velocity
+            vertical = self._config.jump_velocity + climb
         elif jump is GameEvent.DOUBLE_JUMPED:
             vertical = self._config.double_jump_velocity
         ship.velocity = Vector3(lateral, vertical - gravity * dt, speed)

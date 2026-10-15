@@ -31,7 +31,7 @@ class CollisionResolver:
     Oblique tiles are solids whose top is the slope under the ship, so climbing one is a series of small
     steps. Going down, a grounded ship sticks to the slope instead of hopping off it. A ship leaving a slope
     keeps the climb (or dive) it had along it, so the top of a ramp is a kicker. Cresting a ramp onto flatter
-    ground keeps part of the climb lost, for a little hop.
+    ground keeps part of the climb lost, for a little hop. A ship rising slower than the ramp under it lands on it.
 
     A grounded ship whose centre is on the edge of its support, or past it, drifts sideways toward the hole
     until it falls in.
@@ -126,12 +126,12 @@ class CollisionResolver:
     def _move_vertically(self, ship: Ship, dt: float) -> list[CollisionReport]:
         old_y = ship.position.y
         new_y = old_y + ship.velocity.y * dt
-        if new_y > old_y:
-            return self._move_up(ship, old_y, new_y)
         box = ship.box_at(ship.position.with_y(new_y))
         tops = [(solid, solid.top_over(box)) for solid in self._track.solids_under(box)]
         supports = [(solid, top) for solid, top in tops if top <= old_y + self._config.step_tolerance]
         surface = max((top for _, top in supports), default=None)
+        if new_y > old_y and (surface is None or new_y > surface):
+            return self._move_up(ship, old_y, new_y)
         if surface is None or new_y > surface + (self._config.step_tolerance if ship.grounded else 0.0):
             if ship.grounded:
                 across, along = ship.ground_slope

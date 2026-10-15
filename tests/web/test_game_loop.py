@@ -101,6 +101,23 @@ def test_menu_navigation_to_playing_and_back(game: SimpleNamespace) -> None:
     assert game.session.phase is GamePhase.TITLE
 
 
+def test_level_select_left_and_right_change_column(game: SimpleNamespace) -> None:
+    game.session.levels = game.session.levels * MenuScreen.LEVELS_PER_COLUMN
+    press(game, "Enter", "ArrowDown", "ArrowRight")
+    assert game.session.selected_level == MenuScreen.LEVELS_PER_COLUMN + 1
+    press(game, "ArrowLeft")
+    assert game.session.selected_level == 1
+
+
+def test_each_level_brings_its_own_sky(game: SimpleNamespace) -> None:
+    backdrop = game.loop._backdrop  # noqa: SLF001
+    sky = backdrop._sky_material.uniforms  # noqa: SLF001
+    game.loop.tick(1 / 60)
+    first = sky.uNebula.value.setHex.calls[-1]
+    press(game, "Enter", "ArrowDown", "Enter")
+    assert sky.uNebula.value.setHex.calls[-1] != first
+
+
 def test_level_select_ignores_other_keys(game: SimpleNamespace) -> None:
     press(game, "Enter", "KeyX")
     assert game.session.phase is GamePhase.LEVEL_SELECT

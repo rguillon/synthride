@@ -45,11 +45,11 @@ class TrackParser:
     TUNNELS = frozenset(kind.value for kind in TunnelKind)
     SLOPES = frozenset(slope.value for slope in Slope)
 
-    def parse(self, rows: Sequence[TrackRow]) -> Track:
-        """Expand and parse ``rows``."""
+    def parse(self, rows: Sequence[TrackRow], locations: Sequence[str] | None = None) -> Track:
+        """Expand and parse ``rows``. Errors name a row by its entry in ``locations``, or as ``row[index]``."""
         grid: list[list[Tile | None]] = []
         for index, entry in enumerate(rows):
-            location = f"row[{index}]"
+            location = locations[index] if locations is not None else f"row[{index}]"
             if not isinstance(entry, tuple) or len(entry) != 2:
                 raise TrackFormatError(location, f"expected a (count, row) pair, got {entry!r}")
             count, line = entry

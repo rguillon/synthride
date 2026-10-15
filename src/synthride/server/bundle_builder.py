@@ -14,7 +14,7 @@ class BundleBuilder:
     """Zips the client side of the game (core, web and levels) for Pyodide to unpack in the browser."""
 
     CLIENT_PACKAGES = ("core", "web", "levels")
-    SUFFIXES = frozenset({".py"})
+    SUFFIXES = frozenset({".py", ".json"})
     TIMESTAMP = (2024, 1, 1, 0, 0, 0)
 
     def __init__(self, package_root: Path | None = None) -> None:

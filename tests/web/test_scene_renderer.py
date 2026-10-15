@@ -73,6 +73,15 @@ def test_follow_ducks_under_tunnel_roofs() -> None:
     assert renderer.camera.position.set.calls[-1][1] == pytest.approx(0.5 + SceneRenderer.MIN_HEIGHT)
 
 
+def test_follow_stays_level_with_the_ground_while_the_ship_falls() -> None:
+    _, _, renderer = make_renderer()
+    renderer.follow(Ship(Vector3(4, 2.0, 10), grounded=True), 0, 0.016, snap=True)
+    renderer.follow(Ship(Vector3(4, -3.0, 12)), 0, 1.0)
+    assert renderer.camera.position.set.calls[-1][1] == pytest.approx(2.0 + SceneRenderer.CAMERA_HEIGHT)
+    renderer.follow(Ship(Vector3(4, 0.5, 14), grounded=True), 0, 0.016, snap=True)
+    assert renderer.camera.position.set.calls[-1][1] == pytest.approx(0.5 + SceneRenderer.CAMERA_HEIGHT)
+
+
 def test_follow_eases_sideways() -> None:
     _, _, renderer = make_renderer()
     renderer.follow(Ship(Vector3(0, 0, 0)), 0, 0.016, snap=True)

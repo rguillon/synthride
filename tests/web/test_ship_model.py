@@ -30,21 +30,16 @@ def test_follows_ship_in_world_coordinates_and_banks() -> None:
     assert model.group.position.set.calls[-1] == (3, 1, -7)
     assert model.body.rotation.z == pytest.approx(-2 * ShipModel.BANK_PER_SPEED)
     assert model.body.visible
-    assert not model.explosion.visible
 
 
-def test_explodes_while_dying() -> None:
+def test_vanishes_while_dying() -> None:
     model = make_model()
     ship = Ship(Vector3())
     model.sync(ship, GamePhase.DYING, 0.5)
     assert not model.body.visible
-    assert model.explosion.visible
-    assert model.explosion.scale.setScalar.calls[-1] == (1 + 0.5 * ShipModel.EXPLOSION_GROWTH,)
-    model.sync(ship, GamePhase.DYING, 0.6)
+    assert not model.shadow.visible
     model.sync(ship, GamePhase.PLAYING, 0.1)
     assert model.body.visible
-    model.sync(ship, GamePhase.DYING, 0.1)
-    assert model.explosion.scale.setScalar.calls[-1] == (1 + 0.1 * ShipModel.EXPLOSION_GROWTH,)
 
 
 PARTS = (ShipModel.BODY, ShipModel.CANOPY, *ShipModel.RUNNERS, ShipModel.SPOILER, *ShipModel.STRUTS)

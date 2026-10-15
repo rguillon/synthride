@@ -37,13 +37,20 @@ class SparkBurst:
 
 
 class NeonSparks:
-    """Glowing sparks: a shower where the ship scrapes a wall and a big burst when it crashes.
+    """Glowing sparks: a shower where the ship scrapes a wall and a big burst when it is destroyed.
 
     Each spark's start, velocity and birth time are written once into a ring buffer; the vertex shader flies
     it from there under drag and gravity and fades it out, so living sparks cost nothing in Python.
     """
 
     CAPACITY = 2048
+    DEATHS = frozenset({
+        GameEvent.CRASHED,
+        GameEvent.BURNED,
+        GameEvent.FELL,
+        GameEvent.OUT_OF_FUEL,
+        GameEvent.OUT_OF_OXYGEN,
+    })
     GRAVITY = 12.0
     DRAG = 2.5
     SCRAPE = SparkBurst(
@@ -142,7 +149,7 @@ class NeonSparks:
         self.points.frustumCulled = False  # the shader flies every spark away from where the geometry says
 
     def react(self, events: list[GameEvent], ship: Ship) -> None:
-        """Throw sparks off the walls the ship scraped or hit, and a big burst when it crashes."""
+        """Throw sparks off the walls the ship scraped or hit, and a big burst when it is destroyed."""
         counts = Counter(events)
         x, y, z = ship.position.x, ship.position.y, -ship.position.z
         velocity = (ship.velocity.x, ship.velocity.y, -ship.velocity.z)
@@ -155,7 +162,7 @@ class NeonSparks:
             self.emit((x, y + 0.1, z - half_length), self.IMPACT, velocity, direction=(0.0, 1.0, 1.0))
         if counts[GameEvent.BUMPED]:
             self.emit((x, y + ship.height, z), self.IMPACT, velocity, direction=(0.0, -0.5, 0.0))
-        if counts[GameEvent.CRASHED]:
+        if self.DEATHS & counts.keys():
             self.emit((x, y + ship.height / 2, z), self.DEATH, velocity)
 
     def emit(self, origin: Point, burst: SparkBurst, velocity: Point, direction: Point | None = None) -> None:

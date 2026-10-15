@@ -80,6 +80,7 @@ class SceneRenderer:
         self.composer.addPass(self.bloom)
         self.composer.addPass(three.OutputPass.new())
         self._camera_position = [0.0, 0.0, 0.0]
+        self._ground = 0.0  # the height the ship last stood at: the camera never sinks below it
         self._eye = (0.0, 0.0, 0.0)
         self._look = (0.0, 0.0, -1.0)
         self._shake = 0.0
@@ -125,10 +126,13 @@ class SceneRenderer:
     ) -> None:
         """Eases the chase camera toward its spot behind the ship and widens the view with speed.
 
-        Under a ``ceiling`` (a tunnel roof), the camera drops below it so the roof never hides the ship.
+        Under a ``ceiling`` (a tunnel roof), the camera drops below it so the roof never hides the ship. While the
+        ship is airborne the camera stays level with the ground it left, so a fall never shows the track from under.
         """
         x, y, z = ship.position.x, ship.position.y, -ship.position.z
-        height = y + self.CAMERA_HEIGHT
+        if ship.grounded or snap:
+            self._ground = y
+        height = max(y, self._ground) + self.CAMERA_HEIGHT
         if ceiling is not None:
             height = max(y + self.MIN_HEIGHT, min(height, ceiling - self.CEILING_MARGIN))
         target = (x, height, z + self.CAMERA_DISTANCE)

@@ -64,6 +64,13 @@ def test_jumps_only_when_grounded() -> None:
     assert physics.apply(ship, ShipInput(jump=True), gravity=10, dt=0.01) is None
 
 
+def test_jumping_on_a_ramp_keeps_its_climb() -> None:
+    ship = make_ship(speed=CONFIG.max_speed)
+    ship.ground_slope = (0.0, 0.25)
+    ShipPhysics(CONFIG).apply(ship, ShipInput(jump=True), gravity=0, dt=0.01)
+    assert ship.velocity.y == pytest.approx(CONFIG.jump_velocity + CONFIG.max_speed * 0.25)
+
+
 def test_a_fresh_press_in_mid_air_jumps_once_more() -> None:
     physics = ShipPhysics(CONFIG)
     ship = make_ship()

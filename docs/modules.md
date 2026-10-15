@@ -6,6 +6,7 @@
 ::: synthride.core.collision_resolver
 ::: synthride.core.ship_physics
 ::: synthride.core.tile_effect_applier
+::: synthride.core.level_parser
 ::: synthride.core.track_parser
 ::: synthride.core.track
 

@@ -70,6 +70,15 @@ class GameSession:
         """Select the previous level, wrapping around to the last."""
         self.selected_level = (self.selected_level - 1) % len(self.levels)
 
+    def select_level_column(self, step: int, column_size: int) -> None:
+        """Move the selection ``step`` columns sideways, the levels being listed in columns of ``column_size``.
+
+        The selection keeps its row, or takes the last level of a shorter column, and wraps around the columns.
+        """
+        columns = -(-len(self.levels) // column_size)
+        column, row = divmod(self.selected_level, column_size)
+        self.selected_level = min((column + step) % columns * column_size + row, len(self.levels) - 1)
+
     def start(self) -> list[GameEvent]:
         """Start a new game with full lives at the selected level."""
         self.lives = self.config.lives

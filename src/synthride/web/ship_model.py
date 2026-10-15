@@ -73,7 +73,7 @@ def _runner(x: float, half_width: float) -> tuple[Ring, ...]:
 
 
 class ShipModel:
-    """The low-poly wedge sled, its glowing reactor, contact shadow and explosion, kept in sync with the simulated ship.
+    """The low-poly wedge sled, its glowing reactor and contact shadow, kept in sync with the simulated ship.
 
     An 80s supercar wedge riding two runners on the deck. Banking lifts the body just enough that the low
     runner stays on the surface instead of sinking into it.
@@ -129,10 +129,9 @@ class ShipModel:
     SHADOW_LAYERS = (1.2, 1.05, 0.92)  # nested ellipses, relative to the footprint: darkest under the hull
     SHADOW_OPACITY = 0.28
     LINE_WIDTH = 3.0
-    EXPLOSION_GROWTH = 5.0
 
     def __init__(self, bridge: JsBridge, lines: NeonLines) -> None:
-        """Build the ship's meshes, reactor, shadow and explosion."""
+        """Build the ship's meshes, reactor and shadow."""
         self._bridge = bridge
         self._lines = lines
         three = bridge.three
@@ -168,13 +167,6 @@ class ShipModel:
         self.plume = self._reactor(hull_material)
         self.shadow = self._contact_shadow()
         self.group.add(self.shadow)
-        self._explosion_material = three.MeshBasicMaterial.new(
-            bridge.obj(color=Palette.EXPLOSION, wireframe=True, transparent=True, opacity=1.0)
-        )
-        self.explosion = three.Mesh.new(three.IcosahedronGeometry.new(0.4, 1), self._explosion_material)
-        self.explosion.visible = False
-        self.group.add(self.explosion)
-        self._explosion_age = 0.0
         self._time = 0.0
         self._ground_tilt: tuple[float, ...] = (0.0, 0.0)  # eased (roll, pitch) of the ground under the ship
 
@@ -303,14 +295,11 @@ class ShipModel:
         self._time += dt
         position = ship.position
         self.group.position.set(position.x, position.y, -position.z)
-        exploding = phase is GamePhase.DYING
-        self.body.visible = not exploding
-        self.shadow.visible = not exploding and ship.grounded
-        self.explosion.visible = exploding
-        if exploding:
-            self._explode(dt)
+        dying = phase is GamePhase.DYING
+        self.body.visible = not dying
+        self.shadow.visible = not dying and ship.grounded
+        if dying:
             return
-        self._explosion_age = 0.0
         bank = -ship.velocity.x * (self.GROUND_BANK_PER_SPEED if ship.grounded else self.BANK_PER_SPEED)
         pitch = max(-0.3, min(0.3, ship.velocity.y * 0.04))
         # On a slope the model eases into lying along the ground. The ship rests on the highest point under it,
@@ -333,9 +322,3 @@ class ShipModel:
         )
         flicker = self.FLAME_FLICKER * (math.sin(self._time * 47) + 0.5 * math.sin(self._time * 83))
         self.plume.scale.z = 0.5 + 1.5 * min(ship.speed, 40) / 40 + flicker
-
-    def _explode(self, dt: float) -> None:
-        self._explosion_age += dt
-        self.explosion.scale.setScalar(1 + self._explosion_age * self.EXPLOSION_GROWTH)
-        self.explosion.rotation.y = self._explosion_age * 3
-        self._explosion_material.opacity = max(0.0, 1 - self._explosion_age)

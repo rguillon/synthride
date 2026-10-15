@@ -93,3 +93,9 @@ def test_parses_slopes() -> None:
     last = track.tile_at(7, 0)
     assert last is not None
     assert (last.tile_type, last.level, last.tunnel) == (TileType.BOOST, 3, None)
+
+
+def test_errors_name_rows_by_the_given_locations() -> None:
+    with pytest.raises(TrackFormatError) as error:
+        TrackParser().parse([(1, ROW), (1, ".. " * 7 + "X1")], ["track[3]", "track[5]"])
+    assert error.value.location == "track[5]"

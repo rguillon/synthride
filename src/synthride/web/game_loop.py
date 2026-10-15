@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from synthride.core.game_event import GameEvent
 from synthride.core.game_phase import GamePhase
 from synthride.web.scene_renderer import SceneRenderer
+from synthride.web.space_scenery import SpaceScenery
 
 if TYPE_CHECKING:
     from synthride.core.game_session import GameSession
@@ -33,6 +34,8 @@ class GameLoop:
     CONFIRM = frozenset({"Enter", "Space"})
     UP = frozenset({"ArrowUp", "KeyW"})
     DOWN = frozenset({"ArrowDown", "KeyS"})
+    LEFT = frozenset({"ArrowLeft", "KeyA"})
+    RIGHT = frozenset({"ArrowRight", "KeyD"})
     HUD_PHASES = frozenset({GamePhase.PLAYING, GamePhase.DYING, GamePhase.LEVEL_WON})
     # The stretch of track whose tunnel roofs the chase camera ducks under: from where it sits behind
     # the ship to a little ahead, so it is already low when the ship enters a tunnel.
@@ -75,7 +78,7 @@ class GameLoop:
         self._frame_proxy = bridge.proxy(self.on_frame)
         backdrop.add_to(renderer.scene)
         renderer.add(ship_model.group)
-        renderer.mirror(ship_model.body, ship_model.explosion)  # not the shadow: it would hide the mirror image
+        renderer.mirror(ship_model.body)  # not the shadow: it would hide the mirror image
         renderer.add(sparks.points)
 
     def start(self) -> None:
@@ -128,21 +131,29 @@ class GameLoop:
             self._music.start()
             session.open_level_select()
         elif phase is GamePhase.LEVEL_SELECT:
-            if key in self.UP:
-                session.select_previous_level()
-            elif key in self.DOWN:
-                session.select_next_level()
-            elif key in self.CONFIRM:
-                self._sound_effects.play(session.start())
-            elif key == "Escape":
-                session.return_to_title()
+            self._handle_level_select_key(key)
         elif (phase in (GamePhase.PLAYING, GamePhase.DYING) and key == "Escape") or (
             phase in (GamePhase.GAME_OVER, GamePhase.VICTORY) and key in self.CONFIRM
         ):
             session.open_level_select()
 
+    def _handle_level_select_key(self, key: str) -> None:
+        session = self.session
+        if key in self.UP:
+            session.select_previous_level()
+        elif key in self.DOWN:
+            session.select_next_level()
+        elif key in self.LEFT:
+            session.select_level_column(-1, self._menu.LEVELS_PER_COLUMN)
+        elif key in self.RIGHT:
+            session.select_level_column(1, self._menu.LEVELS_PER_COLUMN)
+        elif key in self.CONFIRM:
+            self._sound_effects.play(session.start())
+        elif key == "Escape":
+            session.return_to_title()
+
     def _show_current_level(self) -> bool:
-        """Rebuilds the track meshes when the level changes. Returns True when it did."""
+        """Rebuilds the track meshes and redresses the sky when the level changes. Returns True when it did."""
         level = self.session.level
         if level is self._shown_level:
             return False
@@ -150,6 +161,7 @@ class GameLoop:
             self._renderer.remove(self._track_group)
         self._track_group = self._track_builder.build(level.track)
         self._renderer.add(self._track_group)
+        self._backdrop.show(SpaceScenery.for_level(self.session.level_index))
         self._shown_level = level
         return True
 
