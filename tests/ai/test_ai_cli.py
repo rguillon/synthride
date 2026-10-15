@@ -30,8 +30,8 @@ def test_learn_then_play(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> 
 
 def test_learn_on_chosen_levels(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     options = ["--brain", str(tmp_path / "brain.json"), "--workers", "1", "learn", "--generations", "1"]
-    assert AiCli().run([*options, "--population", "2", "--elites", "1", "--levels", "1", "3"]) == 0
-    assert "levels won  0/2  wins   0.0% of 4 runs" in capsys.readouterr().out
+    assert AiCli().run([*options, "--population", "2", "--elites", "1", "--attempts", "1", "--levels", "1", "3"]) == 0
+    assert "best network wins   0.0% of    2 runs  all networks win   0.0% of    4 runs" in capsys.readouterr().out
 
 
 @pytest.mark.parametrize("number", ["0", "99"])

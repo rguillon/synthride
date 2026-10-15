@@ -116,10 +116,12 @@ jump readiness, fuel, oxygen) and a 5 x 12 window of the track around and ahead 
 height, kill, tunnel, jump pad, pusher direction, helpful or hindering surface). Its outputs drive throttle,
 steering and jump about 20 times a second.
 
-Each generation, a genetic algorithm plays each of its 128 networks once on every training level, with one life
-(128 runs per level). It scores each network by the distance covered plus a bonus for each level won (bigger when
-faster), keeps the best 8 unchanged and fills the rest of the population with mutated copies of them. Each
-generation prints its best and mean fitness, the levels won by its best network and its win rate over all runs. The start position and the decision rhythm are jittered by a
+Each generation, a genetic algorithm plays each of its 128 networks 4 times on every training level, with one life
+(512 runs per level). It scores each network by the distance covered plus a bonus for each level won (bigger when
+faster), averaged over the 4 attempts so that reliable networks beat lucky ones. It keeps the best 8 networks
+unchanged and fills the rest of the population with mutated copies of them. Each generation prints the best and mean
+fitness, the win rate of the best network over its own attempts, and the win rate of all networks, which stays lower
+because most of the population are fresh mutants. The start position and the decision rhythm are jittered by a
 per-generation seed, so the network has to cope with slightly different runs, and `make play` gets a meaningful win
 rate. Options are listed by `uv run python -m synthride.ai learn --help`.
 

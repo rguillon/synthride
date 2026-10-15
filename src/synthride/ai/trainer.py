@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
     from synthride.ai.brain_store import BrainStore
+    from synthride.ai.episode_result import EpisodeResult
     from synthride.ai.evolution import Evolution
     from synthride.ai.level_evaluator import LevelEvaluator
 
@@ -24,9 +25,10 @@ if TYPE_CHECKING:
 class Trainer:
     """Evolves networks generation after generation, saving the best one to the store after each generation.
 
-    Every generation plays the training levels (all of them by default) with a fresh seed, the same for every
-    network, so networks are compared fairly within a generation but must cope with changing conditions across
-    generations.
+    Every generation plays the training levels (all of them by default) ``attempts`` times with fresh seeds, the same
+    for every network, so networks are compared fairly within a generation but must cope with changing conditions.
+    A network's fitness is its total score over the levels, averaged over the attempts, so a network that wins
+    reliably beats one that won by luck.
     """
 
     LAYER_SIZES: ClassVar[tuple[int, ...]] = (ShipObserver.SIZE, 16, Pilot.OUTPUTS)
@@ -40,14 +42,19 @@ class Trainer:
         rng: random.Random | None = None,
         report: Callable[[str], None] = print,
         levels: Sequence[int] | None = None,
+        attempts: int = 4,
     ) -> None:
-        """Train with ``evaluator`` and ``evolution`` on the levels at ``levels``, keeping the best one in ``store``."""
+        """Train with ``evaluator`` and ``evolution`` on the levels at ``levels``, keeping the best one in ``store``.
+
+        Each network plays each level ``attempts`` times per generation.
+        """
         self._store = store
         self._evaluator = evaluator
         self._evolution = evolution
         self._rng = rng or random.Random()  # noqa: S311
         self._report = report
         self._levels = levels
+        self._attempts = attempts
 
     def run(self, generations: int | None = None) -> Brain | None:
         """Train for ``generations`` generations, or forever if None, and return the last brain saved, if any."""
@@ -64,18 +71,21 @@ class Trainer:
         while last is None or generation < last:
             generation += 1
             started = time.perf_counter()
-            results = self._evaluator.score(population, self._rng.randrange(2**31), self._levels)
-            fitness = [sum(result.score for result in by_level) for by_level in results]
+            seeds = [self._rng.randrange(2**31) for _ in range(self._attempts)]
+            results = self._evaluator.score(population, seeds, self._levels)
+            fitness = [sum(result.score for result in runs) / self._attempts for runs in results]
             best = max(range(len(population)), key=fitness.__getitem__)
             brain = Brain(population[best], generation, fitness[best])
             self._store.save(brain)
-            wins = sum(result.won for result in results[best])
-            runs = [result for by_level in results for result in by_level]
-            win_rate = sum(result.won for result in runs) / len(runs)
             self._report(
                 f"generation {generation:5d}  best {fitness[best]:7.2f}  mean {sum(fitness) / len(fitness):7.2f}  "
-                f"levels won {wins:2d}/{len(results[best])}  wins {win_rate:6.1%} of {len(runs)} runs  "
-                f"({time.perf_counter() - started:.1f}s)"
+                f"best network wins {self._win_rate(results[best : best + 1])}  "
+                f"all networks win {self._win_rate(results)}  ({time.perf_counter() - started:.1f}s)"
             )
             population = self._evolution.next_generation(population, fitness)
         return brain
+
+    @staticmethod
+    def _win_rate(results: Sequence[Sequence[EpisodeResult]]) -> str:
+        runs = [result for by_network in results for result in by_network]
+        return f"{sum(result.won for result in runs) / len(runs):6.1%} of {len(runs):4d} runs"

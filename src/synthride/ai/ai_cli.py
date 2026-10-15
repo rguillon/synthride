@@ -38,7 +38,8 @@ class AiCli:
         learn.add_argument("--generations", type=int, default=None, help="stop after this many generations")
         learn.add_argument("--population", type=int, default=128, help="networks per generation")
         learn.add_argument("--elites", type=int, default=8, help="best networks kept in each generation")
-        learn.add_argument("--sigma", type=float, default=0.05, help="mutation strength")
+        learn.add_argument("--sigma", type=float, default=0.02, help="mutation strength")
+        learn.add_argument("--attempts", type=int, default=4, help="attempts per network and level each generation")
         learn.add_argument("--levels", type=int, nargs="+", default=None, help="train only on these level numbers")
         play = commands.add_parser("play", help="show the network's win rate on each level")
         play.add_argument("--attempts", type=int, default=20, help="attempts per level")
@@ -57,25 +58,29 @@ class AiCli:
                 if not all(1 <= number <= count for number in arguments.levels):
                     parser.error(f"level numbers go from 1 to {count}")
                 levels = [number - 1 for number in arguments.levels]
-            return self.learn(store, evolution, arguments.workers, arguments.generations, levels)
+            return self.learn(
+                store, evolution, arguments.workers, arguments.generations, levels=levels, attempts=arguments.attempts
+            )
         return self.play(store, arguments.workers, arguments.attempts)
 
     @staticmethod
-    def learn(
+    def learn(  # noqa: PLR0913
         store: BrainStore,
         evolution: Evolution,
         workers: int,
         generations: int | None,
+        *,
         levels: Sequence[int] | None = None,
+        attempts: int = 4,
     ) -> int:
-        """Train the network in ``store`` on the levels at ``levels`` (all by default).
+        """Train the network in ``store`` on the levels at ``levels`` (all by default), ``attempts`` times each.
 
         Training goes on until interrupted unless ``generations`` is given.
         """
         print(f"Learning with {workers} workers, saving to {store.path} (Ctrl+C to stop)")  # noqa: T201
         try:
             with LevelEvaluator(workers) as evaluator:
-                Trainer(store, evaluator, evolution, levels=levels).run(generations)
+                Trainer(store, evaluator, evolution, levels=levels, attempts=attempts).run(generations)
         except KeyboardInterrupt:
             print("Stopped.")  # noqa: T201
         return 0

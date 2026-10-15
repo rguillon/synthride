@@ -14,17 +14,17 @@ LEVEL_COUNT = len(LevelCatalog().file_names())
 def test_scores_every_level_for_every_network() -> None:
     networks = [constant_network(throttle=2), constant_network(throttle=-2)]
     with LevelEvaluator() as evaluator:
-        results = evaluator.score(networks, seed=1)
+        results = evaluator.score(networks, seeds=[1])
     assert [len(by_level) for by_level in results] == [LEVEL_COUNT, LEVEL_COUNT]
     assert sum(result.progress for result in results[0]) > sum(result.progress for result in results[1])
 
 
 def test_scores_only_the_chosen_levels() -> None:
     with LevelEvaluator() as evaluator:
-        results = evaluator.score([constant_network(throttle=2)] * 2, seed=1, levels=[0, 2])
-        expected = evaluator.play([(constant_network(throttle=2), 2, 1)])
-    assert [len(by_level) for by_level in results] == [2, 2]
-    assert results[0][1] == expected[0]
+        results = evaluator.score([constant_network(throttle=2, steering=0.5)] * 2, seeds=[1, 2], levels=[0, 2])
+        expected = evaluator.play([(constant_network(throttle=2, steering=0.5), 2, seed) for seed in (1, 2)])
+    assert [len(runs) for runs in results] == [4, 4]
+    assert results[0][2:] == results[1][2:] == expected
 
 
 def test_worker_processes_give_the_same_results() -> None:
