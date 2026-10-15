@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 from synthride.core.level_catalog import LevelCatalog
 from tests.ai.brain_store import BrainStore
 from tests.ai.evolution import Evolution
+from tests.ai.evolution_strategy import EvolutionStrategy
 from tests.ai.level_evaluator import LevelEvaluator
 from tests.ai.trainer import Trainer
 
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from tests.ai.brain import Brain
+    from tests.ai.breeder import Breeder
 
 
 class AiCli:
@@ -36,9 +38,16 @@ class AiCli:
         commands = parser.add_subparsers(dest="command", required=True)
         learn = commands.add_parser("learn", help="train the network, until interrupted by default")
         learn.add_argument("--generations", type=int, default=None, help="stop after this many generations")
-        learn.add_argument("--population", type=int, default=128, help="networks per generation")
-        learn.add_argument("--elites", type=int, default=8, help="best networks kept in each generation")
+        learn.add_argument(
+            "--strategy",
+            choices=("es", "ga"),
+            default="es",
+            help="es: evolution strategy (default), ga: genetic algorithm keeping elites",
+        )
+        learn.add_argument("--population", type=int, default=129, help="networks per generation (odd for es)")
+        learn.add_argument("--elites", type=int, default=8, help="ga: best networks kept in each generation")
         learn.add_argument("--sigma", type=float, default=0.02, help="mutation strength")
+        learn.add_argument("--learning-rate", type=float, default=0.01, help="es: step size of the centre")
         learn.add_argument("--attempts", type=int, default=4, help="attempts per network and level each generation")
         learn.add_argument("--levels", type=int, nargs="+", default=None, help="train only on these level numbers")
         play = commands.add_parser("play", help="show the network's win rate on each level")
@@ -51,7 +60,13 @@ class AiCli:
         arguments = parser.parse_args(argv)
         store = BrainStore(arguments.brain)
         if arguments.command == "learn":
-            evolution = Evolution(arguments.population, arguments.elites, arguments.sigma, random.Random())
+            evolution: Breeder
+            if arguments.strategy == "es":
+                evolution = EvolutionStrategy(
+                    arguments.population, arguments.sigma, random.Random(), learning_rate=arguments.learning_rate
+                )
+            else:
+                evolution = Evolution(arguments.population, arguments.elites, arguments.sigma, random.Random())
             levels = None
             if arguments.levels is not None:
                 count = len(LevelCatalog().file_names())
@@ -66,7 +81,7 @@ class AiCli:
     @staticmethod
     def learn(  # noqa: PLR0913
         store: BrainStore,
-        evolution: Evolution,
+        evolution: Breeder,
         workers: int,
         generations: int | None,
         *,
