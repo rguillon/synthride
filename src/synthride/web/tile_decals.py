@@ -62,8 +62,7 @@ class TileDecals:
         decks: dict[TileType, list[Tile]] = {}
         curtains: dict[TileType, list[Tile]] = {}
         for tile in track.tiles():
-            if tile.tile_type in self.DECKS:
-                decks.setdefault(tile.tile_type, []).append(tile)
+            decks.setdefault(tile.tile_type, []).append(tile)  # every tile type has deck markings
             behind = track.tile_at(tile.column, tile.row - 1)
             if tile.tile_type in self.CURTAINS and (behind is None or behind.tile_type is not tile.tile_type):
                 curtains.setdefault(tile.tile_type, []).append(tile)
