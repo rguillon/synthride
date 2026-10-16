@@ -63,3 +63,10 @@ def test_level_select_explains_every_block() -> None:
     assert legend.count("<li>") == len(MenuScreen.LEGEND) + 1
     assert Palette.css(Palette.tile_color(TileType.JUMP)) in legend
     assert "TUNNELS" in legend
+
+
+def test_level_select_links_to_the_repo() -> None:
+    container, menu = make_menu()
+    menu.show_level_select(["One"], selected=0)
+    assert f'href="{MenuScreen.REPO_URL}"' in container.innerHTML
+    assert 'target="_blank" rel="noopener"' in container.innerHTML

@@ -23,6 +23,7 @@ class MenuScreen:
     KEYS = "↑ ↓ accelerate / brake &nbsp;·&nbsp; ← → strafe &nbsp;·&nbsp; SPACE jump, again in mid-air"
     KEYS_EXTRA = "ESC menu &nbsp;·&nbsp; M mute"
     LEVELS_PER_COLUMN = 7
+    REPO_URL = "https://github.com/rguillon/synthride"
     # (tile types sharing a line, the pattern drawn on them, what they do)
     LEGEND: ClassVar[tuple[tuple[tuple[TileType, ...], str, str], ...]] = (
         ((TileType.NORMAL,), "■", "solid ground"),
@@ -70,7 +71,8 @@ class MenuScreen:
             f"select:{selected}",
             '<p class="subtitle">SELECT LEVEL</p>'
             f'<div class="level-columns">{columns}</div>{self.legend()}'
-            '<p class="keys">↑ ↓ ← → choose &nbsp;·&nbsp; ENTER ride &nbsp;·&nbsp; ESC back</p>',
+            '<p class="keys">↑ ↓ ← → choose &nbsp;·&nbsp; ENTER ride &nbsp;·&nbsp; ESC back</p>'
+            f'<a class="repo-link" href="{self.REPO_URL}" target="_blank" rel="noopener">SOURCE ON GITHUB</a>',
         )
 
     @classmethod

@@ -61,6 +61,9 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
   font-size: 0.75rem; letter-spacing: 0.1em; white-space: nowrap; }
 .level-list li.selected { border-color: var(--pink); color: var(--pink); box-shadow: 0 0 16px var(--pink);
   text-shadow: 0 0 8px var(--pink); }
+.repo-link { font-size: 0.7rem; letter-spacing: 0.2em; color: var(--cyan); text-decoration: none;
+  text-shadow: 0 0 8px var(--cyan); }
+.repo-link:hover, .repo-link:focus-visible { color: var(--pink); text-shadow: 0 0 8px var(--pink); }
 .headline { font-size: clamp(1.8rem, 7vw, 4rem); margin: 0; color: var(--pink); text-shadow: 0 0 20px var(--pink); }
 #hud { position: fixed; inset: 0; z-index: 2; pointer-events: none; padding: 16px; font-size: 0.8rem;
   text-shadow: 0 0 6px var(--cyan); }
