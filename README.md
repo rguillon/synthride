@@ -6,13 +6,30 @@
 [![Commit activity](https://img.shields.io/github/commit-activity/m/rguillon/synthride)](https://img.shields.io/github/commit-activity/m/rguillon/synthride)
 [![License](https://img.shields.io/github/license/rguillon/synthride)](https://img.shields.io/github/license/rguillon/synthride)
 
-**SynthRide** is a SkyRoads (1993)-inspired 3D sky racer with a synthwave / cyberpunk look. The whole game is
-written in Python and **runs entirely in the browser**: a tiny Python server packages the game into an HTML5
-page that boots [Pyodide](https://pyodide.org) (CPython compiled to WebAssembly) and renders with
+**SynthRide** is a 3D sky racer with a synthwave / cyberpunk look, inspired by SkyRoads (1993). Steer a ship along
+neon tracks floating in space: jump the gaps, ride the ramps, thread the tunnels, and keep an eye on your fuel
+and oxygen until you cross the finish line.
+
+The whole game is written in Python and **runs entirely in the browser**. A tiny Python server packages it into an
+HTML5 page that boots [Pyodide](https://pyodide.org) (CPython compiled to WebAssembly) and renders it with
 [Three.js](https://threejs.org).
 
-- **Github repository**: <https://github.com/rguillon/synthride/>
-- **Documentation** <https://rguillon.github.io/synthride/>
+- **GitHub repository**: <https://github.com/rguillon/synthride/>
+- **Documentation**: <https://rguillon.github.io/synthride/>
+
+## Features
+
+- **28 levels**, from *Neon Highway* to *Terminal Velocity*, each under its own sky: nebula colours, a planet and
+  sometimes a moon.
+- **Tracks built from blocks** 8 wide and up to 8 high: boost and slow strips, ice, kill blocks, jump pads, side
+  pushers, refuel and oxygen pads, ramps and banked corners, square and round tunnels.
+- **Arcade physics**: per-level gravity, jumps with one double jump, ramps that launch you over gaps, and corner
+  clips that nudge you aside instead of killing you.
+- **Neon visuals**: bloom glow, animated markings on the special blocks, the ship mirrored in the track, and sparks.
+- **Procedural sound**: a synthwave song sequenced live with WebAudio (bass, pad, lead and drums), plus synthesized
+  sound effects.
+- **A 3D level editor**: paint the track with brushes, test-ride it at once, and save it straight into the game's
+  level files.
 
 ## Play
 
@@ -21,15 +38,7 @@ make install        # once: create the virtual environment
 make serve          # then open http://127.0.0.1:8000
 ```
 
-### Level editor
-
-`make serve-dev` (or `uv run synthride serve --dev`) serves the game with the level editor: press `E` on the title or
-on a level in the level select. Paint the track with the brushes, ride it with `T`, and **Save** writes it into
-`src/synthride/levels/`, over the level's own file or as a new `level_NN.json` after the last one. Without `--dev`
-there is no editor, and the server refuses every `POST`, so the level files stay read-only.
-
-`make site` (or `uv run synthride build --out dist/web`) writes a static `index.html` + `synthride.zip` that can be
-hosted anywhere, GitHub Pages included.
+Press `Enter` on the title screen, choose a level with the arrow keys and press `Enter` to ride.
 
 | Key | Action |
 | --- | --- |
@@ -58,16 +67,66 @@ hosted anywhere, GitHub Pages included.
   | air | blue, bubbles | refills oxygen |
   | finish | gold checker | ends the level |
 
+- Blocks can be **ramps**: sloped up or down the track, banked to one side, or cut as corners. A ship leaving the top
+  of a ramp keeps its climb, so a ramp ending over a gap is a kicker.
 - Blocks can carry a **tunnel**, square or round. Side-by-side tunnel blocks merge into one wide tunnel. Its walls
   stop you, jumping inside bumps your head on the roof, flying into its front edge is a crash, and you can ride
   on top of it.
+- Fuel burns as you travel and oxygen runs out with time; the HUD shows both, with your speed and progress.
 - Falling off the track, hitting a block head-on, riding a kill block, or running out of fuel or oxygen costs a life
   and restarts the level. Clipping a block with only a corner of the ship nudges you sideways instead.
-- Finish the track to unlock the next level. You have 3 lives.
+- You have 3 lives. Finishing a level takes you to the next one, and finishing the last level wins the game.
 
-## Levels
+## Level editor
 
-Levels are JSON files named `level_*.json` in `src/synthride/levels/`, picked up automatically in file-name order:
+```bash
+make serve-dev      # or: uv run synthride serve --dev
+```
+
+The dev server adds the level editor. Press `E` on the title screen to start a new track, or on a level in the
+level select to edit that level. The editor shows the track in 3D from a raised camera, with the brushes below.
+
+- **Move along the track** with the mouse wheel, or `↑` `↓`.
+- **Paint**: press on the track, drag and release. The whole rectangle between the two cells gets the brush.
+  A right drag erases.
+- **Height**: pick 1 to 8 (or press the digit) for the new tiles painted over gaps. Painting a tile brush over
+  existing tiles changes their type and keeps their height, so a raised section can be turned to ice in one stroke.
+  A faint grid shows the brush height past the end of the track.
+
+| Brushes | What they do |
+| --- | --- |
+| tiles | normal, boost, slow, ice, kill, jump pad, refuel, air, push left or right, finish |
+| edit | erase, raise one height, lower one height |
+| slopes | ramps rising ahead, behind, to the left or right, and the four corners |
+| shapes | square tunnel, round tunnel, flat (no ramp, no tunnel) |
+
+The slope and shape brushes reshape the tiles already there; they leave gaps alone.
+
+The top bar holds the track's name, gravity, fuel and oxygen, the file it saves to, and warnings: no tiles under
+the start, or no finish line. The buttons below are **Undo**, **Test ride**, **Save**, **New** and **Back**.
+
+| Key | Action |
+| --- | --- |
+| wheel / `↑` `↓` | move along the track |
+| drag / right drag | paint / erase |
+| `1`–`8` | brush height |
+| `Q` `E` | previous / next brush |
+| `Z` | undo |
+| `T` | test ride: unlimited lives, a crash restarts the ride, `Esc` or the finish line brings you back |
+| `Esc` | back to the level select |
+
+Letter shortcuts follow your keyboard layout, so `Z` undoes on AZERTY keyboards too.
+
+**Save** sends the track to the dev server, which checks it and writes it into `src/synthride/levels/`: over the
+edited level's file, or as a new `level_NN.json` after the last one. The level is playable right away, and stays in
+the game from then on. Saving rewrites the file, so comments written by hand in it are lost.
+
+Without `--dev` there is no editor, and the server refuses every `POST`, so the level files stay read-only.
+
+## Level files
+
+The editor writes them for you, but levels are plain JSON files named `level_*.json` in `src/synthride/levels/`,
+picked up automatically in file-name order:
 
 ```json
 {
@@ -108,13 +167,28 @@ corner of a raised plateau:
 
 A ship leaving the top of a ramp keeps its climb, so a ramp that ends over a gap is a kicker.
 
+## Host it
+
+`make site` (or `uv run synthride build --out dist/web`) writes a static `index.html` + `synthride.zip` that can be
+hosted anywhere, GitHub Pages included. The static site has no editor.
+
+The `Dockerfile` serves that site with nginx:
+
+```bash
+make site
+docker build -t synthride .
+docker run --rm -p 8080:80 synthride    # then open http://127.0.0.1:8080
+```
+
 ## Architecture
 
 | Package | Role |
 | --- | --- |
 | `synthride.core` | Pure Python game logic: tracks, physics, collisions, tile effects, lives, phases. No browser code. |
-| `synthride.web` | Browser adapters: Three.js rendering, keyboard, HUD/menus, procedural WebAudio music and SFX. Every browser object is injected through `JsBridge`, so it is unit-tested with fakes. |
-| `synthride.server` | Desktop tooling: zips `core` + `web` + `levels`, generates the HTML5 page, serves both. |
+| `synthride.editor` | Pure Python editor model: the track grid, the brushes, undo, and picking the cell under the mouse. |
+| `synthride.web` | Browser adapters: Three.js rendering, keyboard, HUD/menus, the editor screen, procedural WebAudio music and SFX. Every browser object is injected through `JsBridge`, so it is unit-tested with fakes. |
+| `synthride.levels` | The level files. |
+| `synthride.server` | Desktop tooling: zips `core` + `editor` + `web` + `levels`, generates the HTML5 page, serves both, and in dev mode saves the levels posted by the editor. |
 
 The code has one class per file, and each source file has a matching test file under `tests/`.
 
