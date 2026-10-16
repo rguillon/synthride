@@ -51,6 +51,14 @@ def test_flies_when_above_surface() -> None:
     assert ship.position.y == pytest.approx(1.98)
 
 
+def test_jumping_over_a_hole_reports_no_tile_left() -> None:
+    ship = make_ship(velocity=Vector3(0, CONFIG.jump_velocity, 0))
+    track = make_track(".. .. .. .. .. .. .. ..")
+    assert CollisionResolver(track, CONFIG).move(ship, 0.02, took_off=True) == []
+    assert not ship.grounded
+    assert ship.position.y > 0.5
+
+
 def test_full_frontal_hit_crashes() -> None:
     track = make_track(FLAT, "N2 N2 N2 N2 N2 N2 N2 N2")
     ship = make_ship(velocity=Vector3(0, 0, 10))
