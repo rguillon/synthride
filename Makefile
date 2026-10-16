@@ -28,6 +28,11 @@ serve: ## Serve the game at http://127.0.0.1:8000
 serve-dev: ## Serve the game with the level editor, whose saves write the level files
 	@uv run synthride serve --dev
 
+.PHONY: screenshots
+screenshots: ## Take an in-game and a level editor screenshot into data/ (1600x900 JPEGs)
+	@uv run playwright install chromium-headless-shell
+	@uv run python -m tests.screenshots
+
 .PHONY: site
 site: ## Build a static site of the game into dist/web
 	@uv run synthride build --out dist/web

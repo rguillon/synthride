@@ -72,7 +72,7 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
   grid-template-columns: repeat(3, 1fr); gap: 0.8rem; }
 .gauge-label { display: block; margin-bottom: 0.3rem; letter-spacing: 0.2em; }
 .gauge { height: 10px; border: 1px solid currentColor; box-shadow: 0 0 8px currentColor; }
-.gauge-fill { height: 100%; width: 100%; background: currentColor; transition: width 0.1s linear; }
+.gauge-fill { height: 100%; width: 100%; background: currentColor; transform-origin: left; }
 .gauge-speed { color: var(--cyan); }
 .gauge-fuel { color: var(--sun); }
 .gauge-oxygen { color: #7dff9b; }

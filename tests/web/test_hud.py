@@ -31,8 +31,8 @@ def test_update_shows_level_lives_and_gauges() -> None:
     element = document.getElementById
     assert element("hud-level").textContent == "01 · GRID ZERO"
     assert element("hud-lives").textContent == Hud.LIFE_ICON * 3
-    assert element("hud-fuel-fill").style.width == "50.0%"
-    assert element("hud-speed-fill").style.width == "0.0%"
+    assert element("hud-fuel-fill").style.transform == "scaleX(0.500)"
+    assert element("hud-speed-fill").style.transform == "scaleX(0.000)"
     assert element("hud-speed-label").textContent == "SPEED   0 KM/H"
     assert element("hud-oxygen").classList.contains("low")
     assert not element("hud-fuel").classList.contains("low")

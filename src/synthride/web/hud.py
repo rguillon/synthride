@@ -118,7 +118,8 @@ class Hud:
             self._elements["fps"].textContent = f"{round(self._fps.fps)} FPS"
 
     def _set_gauge(self, name: str, fraction: float, *, warn: bool = True) -> None:
-        self._elements[f"{name}-fill"].style.width = self._percent(fraction)
+        # Scaled, not resized: a width changed every frame crashed Edge on Windows (STATUS_ACCESS_VIOLATION).
+        self._elements[f"{name}-fill"].style.transform = f"scaleX({max(0.0, min(1.0, fraction)):.3f})"
         self._elements[name].classList.toggle("low", warn and fraction < self.LOW)
 
     @staticmethod
