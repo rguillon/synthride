@@ -1,6 +1,5 @@
 # synthride
 
-[![Release](https://img.shields.io/github/v/release/rguillon/synthride)](https://img.shields.io/github/v/release/rguillon/synthride)
 [![Build status](https://img.shields.io/github/actions/workflow/status/rguillon/synthride/main.yml?branch=main)](https://github.com/rguillon/synthride/actions/workflows/main.yml?query=branch%3Amain)
 [![codecov](https://codecov.io/gh/rguillon/synthride/branch/main/graph/badge.svg)](https://codecov.io/gh/rguillon/synthride)
 [![Commit activity](https://img.shields.io/github/commit-activity/m/rguillon/synthride)](https://img.shields.io/github/commit-activity/m/rguillon/synthride)
