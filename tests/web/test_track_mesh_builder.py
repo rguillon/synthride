@@ -19,23 +19,30 @@ def build(rows: str) -> tuple[FakeJsObject, TrackMeshBuilder, FakeJsObject, Neon
     return bridge.three, builder, group, lines
 
 
-def rails_of(three: FakeJsObject, color: int) -> set[tuple[tuple[float, ...], tuple[float, ...]]]:
-    """Segments (start, end) of the line set drawn in ``color``."""
+def rails_of(
+    three: FakeJsObject, color: int, width: float | None = None
+) -> set[tuple[tuple[float, ...], tuple[float, ...]]]:
+    """Segments (start, end) of the line set drawn in ``color`` (and ``width``, if given)."""
     for line, material in zip(three.LineSegments2.created, three.LineMaterial.created, strict=True):
-        if material.args[0]["color"] == color:
+        options = material.args[0]
+        if options["color"] == color and width in (None, options["linewidth"]):
             positions = line.args[0].setPositions.calls[0][0]
             return {(tuple(positions[i : i + 3]), tuple(positions[i + 3 : i + 6])) for i in range(0, len(positions), 6)}
     return set()
 
 
-def test_one_mesh_and_one_rail_set_per_tile_type_plus_seams() -> None:
+def test_one_mesh_per_tile_type_one_rail_set_per_colour_plus_seams() -> None:
     three, _, group, _ = build("N1 N1 K1 .. .. .. .. ..\nN2 B1 .. .. .. .. .. ..")
     assert len(three.Mesh.created) == 5  # three tile types, plus kill and boost markings
     assert len(three.MeshBasicMaterial.created) == 2
     assert len(three.LineSegments2.created) == 4
-    assert len(group.add.calls) == 8  # meshes, rail sets, seams and the markings group
+    assert (
+        len(group.add.calls) == 8
+    )  # meshes, rail sets (kill rails join the normal ones), seams, kill outline, markings
     widths = sorted(m.args[0]["linewidth"] for m in three.LineMaterial.created)
-    assert widths == [TrackMeshBuilder.SEAM_WIDTH] + [TrackMeshBuilder.LINE_WIDTH] * 3
+    assert (
+        widths == [TrackMeshBuilder.SEAM_WIDTH, TrackMeshBuilder.KILL_OUTLINE_WIDTH] + [TrackMeshBuilder.LINE_WIDTH] * 2
+    )
     emissive = sorted(material.args[0]["emissive"] for material in three.MeshStandardMaterial.created)
     assert emissive == sorted(Palette.tile_color(t) for t in (TileType.NORMAL, TileType.KILL, TileType.BOOST))
     assert all(material.args[0]["vertexColors"] for material in three.MeshStandardMaterial.created)
@@ -150,3 +157,39 @@ def test_deck_materials_show_the_ship_reflection() -> None:
     materials = bridge.three.MeshStandardMaterial.created
     assert len(materials) == 2
     assert all(callable(material.onBeforeCompile) for material in materials)
+
+
+def test_kill_patches_are_outlined_where_they_meet_other_tiles() -> None:
+    three, _, _, _ = build("N1 N1 N1 .. .. .. .. ..\nN1 K1 N2 .. .. .. .. ..\nN1 .. N1 .. .. .. .. ..")
+    y = 0.5 + TrackMeshBuilder.LINE_LIFT
+    outline = rails_of(three, TrackMeshBuilder.KILL_OUTLINE_COLOR, TrackMeshBuilder.KILL_OUTLINE_WIDTH)
+    assert outline == {
+        ((1.0, y, -2.0), (1.0, y, -4.0)),  # beside the level tile on its left
+        ((1.0, y, -2.0), (2.0, y, -2.0)),  # behind it
+        ((2.0, y, -2.0), (2.0, y, -4.0)),  # under the higher tile on its right
+    }  # its front drops away: that edge keeps its brighter rail
+    assert ((1.0, y, -4.0), (2.0, y, -4.0)) in rails_of(
+        three, Palette.tile_color(TileType.NORMAL), TrackMeshBuilder.LINE_WIDTH
+    )
+    seams = rails_of(three, TrackMeshBuilder.SEAM_COLOR)
+    assert not outline & seams
+    assert Palette.tile_color(TileType.NORMAL) == TrackMeshBuilder.KILL_OUTLINE_COLOR  # the track border's colour
+    assert TrackMeshBuilder.SEAM_WIDTH < TrackMeshBuilder.KILL_OUTLINE_WIDTH < TrackMeshBuilder.LINE_WIDTH
+
+
+def test_neighbouring_kill_tiles_share_no_outline() -> None:
+    three, _, _, _ = build("N1 K1 K1 N1 .. .. .. ..")
+    y = 0.5 + TrackMeshBuilder.LINE_LIFT
+    outline = rails_of(three, TrackMeshBuilder.KILL_OUTLINE_COLOR, TrackMeshBuilder.KILL_OUTLINE_WIDTH)
+    assert ((1.0, y, 0.0), (1.0, y, -2.0)) in outline
+    assert ((3.0, y, 0.0), (3.0, y, -2.0)) in outline
+    assert ((2.0, y, 0.0), (2.0, y, -2.0)) not in outline
+
+
+def test_kill_tiles_have_no_red_lines() -> None:
+    three, _, _, _ = build("N1 K1 .. .. .. .. .. ..")
+    colors = {material.args[0]["color"] for material in three.LineMaterial.created}
+    assert Palette.tile_color(TileType.KILL) not in colors
+    rails = rails_of(three, Palette.tile_color(TileType.NORMAL), TrackMeshBuilder.LINE_WIDTH)
+    y = 0.5 + TrackMeshBuilder.LINE_LIFT
+    assert ((2.0, y, 0.0), (2.0, y, -2.0)) in rails  # the kill tile's border rides with the normal rails

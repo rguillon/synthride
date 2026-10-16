@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from array import array
 from typing import TYPE_CHECKING, Any, TypeAlias
 
 if TYPE_CHECKING:
@@ -36,5 +37,9 @@ class JsBridge:
         return self._create_proxy(function)
 
     def float32_array(self, values: Sequence[float]) -> JsObject:
-        """Return a JavaScript ``Float32Array`` holding ``values``."""
-        return self.window.Float32Array.new(self._to_js(list(values)))
+        """Return a JavaScript ``Float32Array`` holding ``values``.
+
+        Packing them into a typed Python array first lets Pyodide copy them as one block of memory: far
+        faster than converting a list number by number.
+        """
+        return self.window.Float32Array.new(self._to_js(array("f", values)))

@@ -52,8 +52,8 @@ class TunnelMeshBuilder:
         mouths: list[float] = []
         ribs: list[float] = []
         for span in track.tunnels:
-            self._add_shell(buffer, span)
             outer, inner = span.outer_path(), span.inner_path()
+            self._add_shell(buffer, span, outer, inner)
             near, far = -span.start, -span.end
             self._trace(ribs, inner, (near + far) / 2)  # one rib per square, like the deck's seams
             if not any(span.continues(other) for other in rows.get(span.row - 1, ())):
@@ -88,9 +88,8 @@ class TunnelMeshBuilder:
             self._lines.segments(ribs, self.RIB_COLOR, self.RIB_WIDTH),
         ]
 
-    def _add_shell(self, buffer: BoxGeometryBuffer, span: TunnelSpan) -> None:
-        """Outer skin, inner skin and both end caps, as quads between consecutive path points."""
-        outer, inner = span.outer_path(), span.inner_path()
+    def _add_shell(self, buffer: BoxGeometryBuffer, span: TunnelSpan, outer: list[Point], inner: list[Point]) -> None:
+        """Outer skin, inner skin and both end caps, as quads between consecutive points of the span's paths."""
         near, far = -span.start, -span.end
         for (p, q), (pi, qi) in zip(pairwise(outer), pairwise(inner), strict=True):
             self._quad(buffer, ((*p, near), (*q, near), (*q, far), (*p, far)), self.OUTER)

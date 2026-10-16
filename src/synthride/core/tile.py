@@ -66,6 +66,8 @@ class Tile:
 
     def corner_height(self, corner_x: float, corner_z: float) -> float:
         """Return the height of the top face at a point given as 0 to 1 along each axis (0 or 1 for a corner)."""
+        if self.slope is None:
+            return self.base
         return self.height_at((self.column + corner_x) * self.WIDTH, (self.row + corner_z) * self.LENGTH)
 
     def top_over(self, box: BoundingBox) -> float:
