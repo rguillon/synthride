@@ -26,10 +26,21 @@ def test_outline_uses_thick_lines() -> None:
 
 def test_follows_ship_in_world_coordinates_and_banks() -> None:
     model = make_model()
-    model.sync(Ship(Vector3(3, 1, 7), velocity=Vector3(2, 0, 5)), GamePhase.PLAYING, 0.016)
+    ship = Ship(Vector3(3, 1, 7), velocity=Vector3(2, 0, 5))
+    model.sync(ship, GamePhase.PLAYING, 0.016)
     assert model.group.position.set.calls[-1] == (3, 1, -7)
-    assert model.body.rotation.z == pytest.approx(-2 * ShipModel.BANK_PER_SPEED)
     assert model.body.visible
+    for _ in range(500):
+        model.sync(ship, GamePhase.PLAYING, 0.016)
+    assert model.body.rotation.z == pytest.approx(-2 * ShipModel.BANK_PER_SPEED)
+
+
+def test_banks_slowly_in_the_air() -> None:
+    model = make_model()
+    model.sync(Ship(Vector3(), velocity=Vector3(2, 0, 5)), GamePhase.PLAYING, 0.016)
+    assert -2 * ShipModel.BANK_PER_SPEED < model.body.rotation.z < 0
+    model.sync(Ship(Vector3(), velocity=Vector3(2, 0, 5), grounded=True), GamePhase.PLAYING, 0.016)
+    assert model.body.rotation.z == pytest.approx(-2 * ShipModel.GROUND_BANK_PER_SPEED)
 
 
 def test_vanishes_while_dying() -> None:

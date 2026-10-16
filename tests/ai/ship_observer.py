@@ -119,6 +119,11 @@ class ShipObserver:
         return self._maps[id(track)][1]
 
     @classmethod
+    def forget(cls, track: Track) -> None:
+        """Drop the arrays of ``track``, which will not be observed any more."""
+        cls._maps.pop(id(track), None)
+
+    @classmethod
     def cell(cls, tile: Tile) -> tuple[float, ...]:
         """Return the features of a point on ``tile``, its height left at 0."""
         kind = tile.tile_type

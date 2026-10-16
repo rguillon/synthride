@@ -36,6 +36,7 @@ class EpisodeRunner:
     def __init__(self, levels: Sequence[Level]) -> None:
         """Play the levels of ``levels``."""
         self._session = GameSession(levels)
+        self.levels = self._session.levels
 
     def run(self, pilot: Pilot, level_index: int, seed: int) -> EpisodeResult:
         """Play the level at ``level_index`` with ``pilot`` and return how it went."""

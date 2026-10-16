@@ -126,6 +126,7 @@ class ShipModel:
     FOOTPRINT = (0.33, 0.4)  # half width and half length of the body seen from above
     SHADOW_LIFT = 0.002
     GROUND_TILT_RATE = 14.0  # how fast the model settles onto a new slope
+    AIR_BANK_RATE = 4.0  # how slowly the model leans into a strafe while airborne; the physics are unaffected
     SHADOW_LAYERS = (1.2, 1.05, 0.92)  # nested ellipses, relative to the footprint: darkest under the hull
     SHADOW_OPACITY = 0.28
     LINE_WIDTH = 3.0
@@ -169,6 +170,7 @@ class ShipModel:
         self.group.add(self.shadow)
         self._time = 0.0
         self._ground_tilt: tuple[float, ...] = (0.0, 0.0)  # eased (roll, pitch) of the ground under the ship
+        self._bank = 0.0  # the model's lean into a strafe, eased while airborne
 
     @staticmethod
     def _lofted(rings: Sequence[Ring]) -> list[Point]:
@@ -300,7 +302,12 @@ class ShipModel:
         self.shadow.visible = not dying and ship.grounded
         if dying:
             return
-        bank = -ship.velocity.x * (self.GROUND_BANK_PER_SPEED if ship.grounded else self.BANK_PER_SPEED)
+        if ship.grounded:
+            self._bank = -ship.velocity.x * self.GROUND_BANK_PER_SPEED
+        else:
+            target = -ship.velocity.x * self.BANK_PER_SPEED
+            self._bank += (target - self._bank) * (1 - math.exp(-self.AIR_BANK_RATE * dt))
+        bank = self._bank
         pitch = max(-0.3, min(0.3, ship.velocity.y * 0.04))
         # On a slope the model eases into lying along the ground. The ship rests on the highest point under it,
         # which on a slope is above the ground under its centre, so the body comes down to meet it.
