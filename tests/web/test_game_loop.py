@@ -9,7 +9,6 @@ from synthride.core.game_phase import GamePhase
 from synthride.core.game_session import GameSession
 from synthride.editor.track_grid import Brush, BrushKind, Rect
 from synthride.web.browser_keyboard import BrowserKeyboard
-from synthride.web.custom_level_store import CustomLevelStore
 from synthride.web.editor_screen import EditorScreen
 from synthride.web.game_loop import GameLoop
 from synthride.web.hud import Hud
@@ -26,6 +25,7 @@ from synthride.web.track_mesh_builder import TrackMeshBuilder
 from tests.level_factory import make_level
 from tests.web.fakes.fake_audio_context import FakeAudioContext
 from tests.web.fakes.fake_element import FakeElement
+from tests.web.fakes.fake_fetch import FakeFetch
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
 from tests.web.fakes.fake_js_object import FakeJsObject
 from tests.web.fakes.fake_key_event import FakeKeyEvent
@@ -50,11 +50,15 @@ def build_game(*, with_editor: bool = False) -> SimpleNamespace:
     voices = SynthVoices(bridge, context, FakeJsObject("destination"))
     lines = NeonLines(bridge)
     renderer = SceneRenderer(bridge, bridge.document.getElementById("stage"), lines)
-    store = CustomLevelStore(bridge.window)
-    editor = EditorScreen(bridge, store, FakeJsObject("canvas"), renderer.camera) if with_editor else None
+    bridge.window.fetch = FakeFetch()
+    session = GameSession(levels)
+    files = ["level_01.json", "level_02.json"]
+    editor = None
+    if with_editor:
+        editor = EditorScreen(bridge, FakeJsObject("canvas"), renderer.camera, files, session.put_level)
     loop = GameLoop(
         bridge,
-        session=GameSession(levels),
+        session=session,
         keyboard=BrowserKeyboard(bridge),
         renderer=renderer,
         track_builder=TrackMeshBuilder(bridge, lines),
@@ -226,25 +230,27 @@ def test_a_test_ride_returns_to_the_editor(edited: SimpleNamespace) -> None:
     assert not editor_element(edited).hidden
 
 
-def test_editing_a_bundled_level_copies_it(edited: SimpleNamespace) -> None:
+def test_e_on_the_level_select_edits_the_selected_level(edited: SimpleNamespace) -> None:
     press(edited, "Enter", "ArrowDown", "KeyE")
     assert edited.editor.settings.name == "L2"
     assert edited.editor.grid.length == 5
-    assert edited.editor.slot is None
+    assert edited.editor.file == "level_02.json"
 
 
-def test_saved_levels_join_the_level_select_and_can_be_edited_again(edited: SimpleNamespace) -> None:
+def test_saved_levels_join_the_level_select(edited: SimpleNamespace) -> None:
     press(edited, "KeyE")
     edited.editor.on_change(
         SimpleNamespace(target=SimpleNamespace(dataset=SimpleNamespace(field="name"), value="Mine"))
     )
     edited.editor.act("save")
+    edited.bridge.window.fetch.answer()
     press(edited, "Escape")
     assert [level.name for level in edited.session.levels] == ["L1", "L2", "Mine"]
-    assert "★ MINE" in menu_html(edited)
+    assert edited.session.selected_level == 2
+    assert "MINE" in menu_html(edited)
     assert "E edit" in menu_html(edited)
-    press(edited, "ArrowUp", "KeyE")
-    assert edited.editor.slot == 0
+    press(edited, "KeyE")
+    assert edited.editor.file == "level_03.json"
     assert edited.editor.settings.name == "Mine"
 
 

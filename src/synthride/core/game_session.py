@@ -30,8 +30,8 @@ if TYPE_CHECKING:
 class GameSession:
     """The whole game state: phase machine, lives, current level and its fixed-step simulation.
 
-    Custom levels, made in the editor, come after the bundled ones. A test ride from the editor plays one level with
-    no limit on lives, and goes back to the editor when the level is won or left.
+    A test ride from the editor plays one level with no limit on lives, and goes back to the editor when the level is
+    won or left.
     """
 
     MAX_STEPS_PER_UPDATE = 30
@@ -43,7 +43,6 @@ class GameSession:
             raise ValueError(msg)
         self.config = config or GameConfig()
         self.levels = tuple(levels)
-        self._bundled = self.levels
         self._test_level: Level | None = None
         self.phase = GamePhase.TITLE
         self.lives = self.config.lives
@@ -64,21 +63,14 @@ class GameSession:
         """Whether the level being played is a test ride from the editor."""
         return self._test_level is not None
 
-    @property
-    def custom_count(self) -> int:
-        """How many custom levels follow the bundled ones."""
-        return len(self.levels) - len(self._bundled)
-
-    def is_custom(self, index: int) -> bool:
-        """Whether the level at ``index`` is a custom level."""
-        return index >= len(self._bundled)
-
-    def set_custom_levels(self, levels: Sequence[Level]) -> None:
-        """Replace the custom levels, listed after the bundled ones."""
-        self.levels = (*self._bundled, *levels)
-        self.selected_level = min(self.selected_level, len(self.levels) - 1)
-        if self.level_index >= len(self.levels):
-            self._load_level(0)
+    def put_level(self, index: int, level: Level) -> None:
+        """Replace the level at ``index`` with ``level``, or add it after the last one when ``index`` is past it."""
+        levels = list(self.levels)
+        if index < len(levels):
+            levels[index] = level
+        else:
+            levels.append(level)
+        self.levels = tuple(levels)
 
     def open_editor(self) -> None:
         """Switch to the level editor, ending any test ride."""

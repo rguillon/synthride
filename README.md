@@ -21,6 +21,13 @@ make install        # once: create the virtual environment
 make serve          # then open http://127.0.0.1:8000
 ```
 
+### Level editor
+
+`make serve-dev` (or `uv run synthride serve --dev`) serves the game with the level editor: press `E` on the title or
+on a level in the level select. Paint the track with the brushes, ride it with `T`, and **Save** writes it into
+`src/synthride/levels/`, over the level's own file or as a new `level_NN.json` after the last one. Without `--dev`
+there is no editor, and the server refuses every `POST`, so the level files stay read-only.
+
 `make site` (or `uv run synthride build --out dist/web`) writes a static `index.html` + `synthride.zip` that can be
 hosted anywhere, GitHub Pages included.
 

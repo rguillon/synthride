@@ -24,6 +24,10 @@ test: ## Test the code with pytest
 serve: ## Serve the game at http://127.0.0.1:8000
 	@uv run synthride serve
 
+.PHONY: serve-dev
+serve-dev: ## Serve the game with the level editor, whose saves write the level files
+	@uv run synthride serve --dev
+
 .PHONY: site
 site: ## Build a static site of the game into dist/web
 	@uv run synthride build --out dist/web

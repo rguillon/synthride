@@ -19,3 +19,8 @@ def test_page_has_the_game_containers() -> None:
         assert f'id="{element_id}"' in page
     for name in ("UnrealBloomPass", "LineSegments2", "LineSegmentsGeometry", "LineMaterial"):
         assert name in page
+
+
+def test_dev_page_turns_the_editor_on() -> None:
+    assert "main(dev=True)" in HtmlPageBuilder(dev=True).build()
+    assert "main(dev=True)" not in HtmlPageBuilder().build()

@@ -15,6 +15,7 @@ class HtmlPageBuilder:
     PYODIDE_VERSION = "0.29.5"
     THREE_VERSION = "0.170.0"
     ENTRY = "from synthride.web.main import main; main()"
+    DEV_ENTRY = "from synthride.web.main import main; main(dev=True)"
 
     TEMPLATE = Template("""\
 <!doctype html>
@@ -168,8 +169,11 @@ try {
         pyodide_version: str = PYODIDE_VERSION,
         three_version: str = THREE_VERSION,
         bundle_url: str = "synthride.zip",
+        *,
+        dev: bool = False,
     ) -> None:
-        """Use the given library versions and load the bundle from ``bundle_url``."""
+        """Use the given library versions and load the bundle from ``bundle_url``; ``dev`` turns the editor on."""
+        self._dev = dev
         self._pyodide_version = pyodide_version
         self._three_version = three_version
         self._bundle_url = bundle_url
@@ -190,5 +194,5 @@ try {
             pyodide_url=self.pyodide_url,
             three_url=self.three_url,
             bundle_url=self._bundle_url,
-            entry=json.dumps(self.ENTRY),
+            entry=json.dumps(self.DEV_ENTRY if self._dev else self.ENTRY),
         )

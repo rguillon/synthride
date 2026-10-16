@@ -270,18 +270,12 @@ def test_leaving_a_test_ride_for_the_level_select_ends_it() -> None:
     assert not session.riding
 
 
-def test_custom_levels_follow_the_bundled_ones() -> None:
-    bundled = make_level(FLAT, name="bundled")
-    session = GameSession([bundled])
-    custom = [make_level(FLAT, name="a"), make_level(FLAT, name="b")]
-    session.set_custom_levels(custom)
-    assert [level.name for level in session.levels] == ["bundled", "a", "b"]
-    assert session.custom_count == 2
-    assert not session.is_custom(0)
-    assert session.is_custom(2)
-    session.selected_level = 2
-    session.start()
-    session.set_custom_levels([])
-    assert session.levels == (bundled,)
-    assert session.selected_level == 0
-    assert session.level is bundled
+def test_put_level_replaces_a_level_or_adds_one() -> None:
+    first, second = make_level(FLAT, name="first"), make_level(FLAT, name="second")
+    session = GameSession([first])
+    session.put_level(1, second)
+    assert session.levels == (first, second)
+    edited = make_level(FLAT, name="edited")
+    session.put_level(0, edited)
+    assert session.levels == (edited, second)
+    assert session.level is edited

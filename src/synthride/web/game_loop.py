@@ -40,7 +40,6 @@ class GameLoop:
     HUD_PHASES = frozenset({GamePhase.PLAYING, GamePhase.DYING, GamePhase.LEVEL_WON})
     EDIT = "e"
     MUTE = "m"
-    CUSTOM_MARK = "★ "
     # The stretch of track whose tunnel roofs the chase camera ducks under: from where it sits behind
     # the ship to a little ahead, so it is already low when the ship enters a tunnel.
     CAMERA_REACH_BEHIND = SceneRenderer.CAMERA_DISTANCE + 0.5
@@ -162,12 +161,11 @@ class GameLoop:
             session.open_level_select()
 
     def _open_editor(self, editor: EditorScreen, *, from_level_select: bool) -> None:
-        """Open the editor: on the selected custom level, a copy of the selected bundled level, or the last track."""
+        """Open the editor: on the selected level from the level select, on the last track from the title."""
         session = self.session
         if from_level_select:
             index = session.selected_level
-            custom = index - (len(session.levels) - session.custom_count)
-            editor.open_level(session.levels[index], custom if session.is_custom(index) else None)
+            editor.open_level(session.levels[index], index)
         session.open_editor()
 
     def _handle_editor_actions(self) -> None:
@@ -180,7 +178,8 @@ class GameLoop:
             if action == self._editor.RIDE:
                 self._sound_effects.play(session.ride(self._editor.level))
             elif action == self._editor.BACK:
-                session.set_custom_levels(self._editor.levels())
+                if self._editor.index is not None:
+                    session.selected_level = self._editor.index
                 session.open_level_select()
 
     def _handle_level_select_key(self, key: str) -> None:
@@ -219,10 +218,7 @@ class GameLoop:
             case GamePhase.TITLE:
                 self._menu.show_title()
             case GamePhase.LEVEL_SELECT:
-                names = [
-                    f"{self.CUSTOM_MARK if session.is_custom(index) else ''}{level.name}"
-                    for index, level in enumerate(session.levels)
-                ]
+                names = [level.name for level in session.levels]
                 self._menu.show_level_select(names, session.selected_level, editor=self._editor is not None)
             case GamePhase.LEVEL_WON:
                 self._menu.show_level_won(session.level.name)

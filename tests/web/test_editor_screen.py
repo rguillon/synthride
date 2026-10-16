@@ -7,11 +7,10 @@ from types import SimpleNamespace
 import pytest
 
 from synthride.core.slope import Slope
-from synthride.editor.track_grid import LevelSettings, TrackGrid
-from synthride.web.custom_level_store import CustomLevelStore
 from synthride.web.editor_screen import EditorScreen
 from tests.level_factory import make_level
 from tests.web.fakes.fake_element import FakeElement
+from tests.web.fakes.fake_fetch import FakeFetch
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
 from tests.web.fakes.fake_js_object import FakeJsObject
 
@@ -27,30 +26,22 @@ class Target:
         return self if hasattr(self.dataset, "action") else None
 
 
-class Storage:
-    def __init__(self) -> None:
-        self.items: dict[str, str] = {}
-
-    def getItem(self, key: str) -> str | None:  # noqa: N802
-        return self.items.get(key)
-
-    def setItem(self, key: str, value: str) -> None:  # noqa: N802
-        self.items[key] = value
-
-
 @pytest.fixture
 def ed(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     bridge = FakeJsBridge()
-    bridge.window.localStorage = Storage()
-    store = CustomLevelStore(bridge.window)
+    bridge.window.fetch = FakeFetch()
+    saved: list[tuple[int, object]] = []
     surface = FakeElement("canvas", "canvas")
     surface.clientWidth, surface.clientHeight = 800, 400
     camera = SimpleNamespace(position=SimpleNamespace(x=0.0, y=10.0, z=0.0))
-    screen = EditorScreen(bridge, store, surface, camera)
+    files = ["level_01.json", "level_02.json"]
+    screen = EditorScreen(bridge, surface, camera, files, lambda index, level: saved.append((index, level)))
     # A view straight down: across the screen spans the eight columns, up the screen the first 20 rows.
     monkeypatch.setattr(screen, "_pick", lambda x, y: (min(7, max(0, int((x + 1) * 4))), max(0, int((y + 1) * 10))))
     screen.show()
-    return SimpleNamespace(bridge=bridge, store=store, screen=screen, element=bridge.document.getElementById)
+    return SimpleNamespace(
+        bridge=bridge, fetch=bridge.window.fetch, saved=saved, screen=screen, element=bridge.document.getElementById
+    )
 
 
 def at(column: int, row: int, button: int = 0) -> SimpleNamespace:
@@ -231,59 +222,55 @@ def test_clicks_outside_buttons_and_unknown_actions_do_nothing(ed: SimpleNamespa
     assert ed.screen.consume_actions() == []
 
 
-def test_save_then_reopen_and_delete(ed: SimpleNamespace) -> None:
+def test_saving_a_new_track_posts_it_as_the_next_level_file(ed: SimpleNamespace) -> None:
+    assert "level_03.json (NEW)" in html(ed, "editor-status")
     click(ed, "save")
-    assert ed.screen.slot == 0
-    assert "Saved" in html(ed, "editor-status")
-    stroke(ed, (0, 0), (0, 0))
+    (request,) = ed.fetch.requests
+    assert request.url == "levels/level_03.json"
+    assert request.options["method"] == "POST"
+    assert json.loads(request.options["body"])["name"] == "My track"
+    assert "Saving level_03.json" in html(ed, "editor-status")
     click(ed, "save")
-    assert len(ed.store.texts) == 1
-    assert [level.name for level in ed.screen.levels()] == ["My track"]
+    assert len(ed.fetch.requests) == 1
+    assert "Still saving" in html(ed, "editor-status")
+    ed.fetch.answer(200, "Saved level_03.json")
+    assert ed.screen.index == 2
+    assert ed.screen.files[-1] == "level_03.json"
+    assert [(index, level.name) for index, level in ed.saved] == [(2, "My track")]
+    assert "Saved level_03.json" in html(ed, "editor-status")
+    assert "(NEW)" not in html(ed, "editor-status")
+    click(ed, "save")
+    assert ed.fetch.requests[-1].url == "levels/level_03.json"
+
+
+def test_saving_a_level_overwrites_its_file(ed: SimpleNamespace) -> None:
+    ed.screen.open_level(make_level("N1 N1 N1 N1 N1 N1 N1 N1", name="Second"), 1)
+    click(ed, "save")
+    assert ed.fetch.requests[-1].url == "levels/level_02.json"
+    ed.fetch.answer()
+    assert [index for index, _level in ed.saved] == [1]
+    assert ed.screen.files == ["level_01.json", "level_02.json"]
+
+
+def test_a_track_opened_while_saving_stays_new(ed: SimpleNamespace) -> None:
+    click(ed, "save")
     click(ed, "new")
-    assert ed.screen.slot is None
-    click(ed, "remove")
-    assert "not saved" in html(ed, "editor-status")
-    ed.screen.open_level(ed.store.levels()[0], 0)
-    assert ed.screen.grid.cell(0, 0) == "N1"
-    ed.bridge.window.confirm = lambda _message: False
-    click(ed, "remove")
-    assert len(ed.store.texts) == 1
-    ed.bridge.window.confirm = lambda _message: True
-    click(ed, "remove")
-    assert ed.store.texts == ()
+    ed.fetch.answer()
+    assert ed.screen.index is None
+    assert "level_04.json (NEW)" in html(ed, "editor-status")
 
 
-def test_export_downloads_the_level_file(ed: SimpleNamespace) -> None:
-    ed.screen.open(LevelSettings("Neon Run!"), TrackGrid.starter())
-    click(ed, "export")
-    window = ed.bridge.window
-    (blob,) = window.Blob.created
-    assert json.loads(blob.args[0][0])["name"] == "Neon Run!"
-    link = ed.bridge.document.created[-1]
-    assert link.download == "neon_run.json"
-    assert link.clicks == 1
-    assert window.URL.revokeObjectURL.calls
-
-
-def test_import_reads_the_picked_file(ed: SimpleNamespace) -> None:
-    click(ed, "import")
-    file_input = ed.element("editor-file")
-    assert file_input.clicks == 1
-    text = json.dumps({"name": "Mine", "track": [[12, ".. .. N1 N1 N1 N1 .. .."]]})
-    promise = SimpleNamespace(then=lambda callback: callback(text))
-    file_input.files = SimpleNamespace(item=lambda _index: SimpleNamespace(text=lambda: promise))
-    file_input.dataset = SimpleNamespace(field="file")
-    ed.element("editor").dispatch("change", SimpleNamespace(target=file_input))
-    assert ed.screen.settings.name == "Mine"
-    assert "Imported" in html(ed, "editor-status")
-    assert ed.element("editor-name").value == "Mine"
-    file_input.files = SimpleNamespace(item=lambda _index: None)
-    ed.element("editor").dispatch("change", SimpleNamespace(target=file_input))
-
-
-def test_a_broken_file_is_reported(ed: SimpleNamespace) -> None:
-    ed.screen.on_file_text("{nope")
-    assert "Import failed" in html(ed, "editor-status")
+def test_a_refused_or_failed_save_is_reported(ed: SimpleNamespace) -> None:
+    click(ed, "save")
+    ed.fetch.answer(403, "The levels are read-only")
+    assert "Not saved: The levels are read-only" in html(ed, "editor-status")
+    assert ed.saved == []
+    assert ed.screen.index is None
+    click(ed, "save")
+    ed.fetch.requests[-1].promise.reject("TypeError: Failed to fetch")
+    assert "server is unreachable" in html(ed, "editor-status")
+    ed.screen.on_save_response(SimpleNamespace(ok=True))
+    assert ed.saved == []
 
 
 def test_warnings_for_a_missing_start_or_finish(ed: SimpleNamespace) -> None:
@@ -291,13 +278,6 @@ def test_warnings_for_a_missing_start_or_finish(ed: SimpleNamespace) -> None:
     status = html(ed, "editor-status")
     assert "THE START NEEDS TILES" in status
     assert "NO FINISH LINE" in status
-
-
-def test_without_storage_saving_says_so(ed: SimpleNamespace) -> None:
-    ed.bridge.window.localStorage = None
-    click(ed, "save")
-    assert "NOT SAVED IN THIS BROWSER" in html(ed, "editor-status")
-    assert "Kept until you close the page" in html(ed, "editor-status")
 
 
 def test_hidden_editor_ignores_the_mouse(ed: SimpleNamespace) -> None:
@@ -320,10 +300,5 @@ def test_picking_casts_a_ray_from_the_camera() -> None:
     point = SimpleNamespace(x=3.5, y=9.0, z=-5.0)
     bridge.three.Vector3 = SimpleNamespace(new=lambda *_: SimpleNamespace(unproject=lambda _camera: point))
     camera = SimpleNamespace(position=SimpleNamespace(x=3.5, y=10.0, z=-5.0))
-    screen = EditorScreen(bridge, CustomLevelStore(SimpleNamespace(localStorage=None)), FakeJsObject(), camera)
+    screen = EditorScreen(bridge, FakeJsObject(), camera)
     assert screen._pick(0.0, 0.0) == (3, 2)  # noqa: SLF001
-
-
-def test_file_names() -> None:
-    assert EditorScreen.file_name("Neon  Run #2") == "neon_run_2"
-    assert EditorScreen.file_name("★★") == "track"

@@ -21,8 +21,9 @@ from synthride.editor.track_picker import TrackPicker
 from synthride.web.palette import Palette
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+
     from synthride.core.level import Level
-    from synthride.web.custom_level_store import CustomLevelStore
     from synthride.web.js_bridge import JsBridge, JsObject
 
 
@@ -69,6 +70,9 @@ class EditorScreen:
     the two cells with the selected brush; the right button erases. New tiles stand at the selected height. The
     toolbar holds the brushes, the heights and the track's settings. Starting a test ride and leaving the editor are
     left to the game loop, as actions it collects with :meth:`consume_actions`.
+
+    Saving posts the level file to the dev server, which writes it into the bundled levels: over the file of the level
+    being edited, or as a new file after the last one.
     """
 
     RIDE: ClassVar[str] = "ride"
@@ -99,10 +103,7 @@ class EditorScreen:
         ("undo", "↶ Undo"),
         (RIDE, "▶ Test ride"),
         ("save", "Save"),
-        ("export", "Export"),
-        ("import", "Import"),
         ("new", "New"),
-        ("remove", "Delete"),
         (BACK, "Back"),
     )
     # (field, label, low, high): the track's settings
@@ -128,21 +129,33 @@ class EditorScreen:
     GUIDE_ROWS: ClassVar[int] = 80
     GUIDE_COLOR: ClassVar[int] = 0x00F0FF
     GUIDE_LIFT: ClassVar[float] = 0.01
+    LEVELS_URL: ClassVar[str] = "levels/"
+    FILE_NAME: ClassVar[re.Pattern[str]] = re.compile(r"level_(\d+)\.json")
 
-    def __init__(self, bridge: JsBridge, store: CustomLevelStore, surface: JsObject, camera: JsObject) -> None:
+    def __init__(
+        self,
+        bridge: JsBridge,
+        surface: JsObject,
+        camera: JsObject,
+        files: Sequence[str] = (),
+        on_saved: Callable[[int, Level], object] | None = None,
+    ) -> None:
         """Render the toolbar into the ``editor`` element and paint with the mouse on ``surface``, seen by ``camera``.
 
-        Levels are saved in ``store``.
+        ``files`` names the level files, in the order of the levels. Once the server has saved a level,
+        ``on_saved`` gets its index among them and the level.
         """
         self._bridge = bridge
         self._document = bridge.document
         self._container = self._document.getElementById("editor")
-        self._store = store
         self._surface = surface
         self._camera = camera
+        self.files = list(files)
+        self._on_saved = on_saved
         self.grid = TrackGrid.starter()
         self.settings = LevelSettings()
-        self.slot: int | None = None
+        self.index: int | None = None  # the level being edited, None for a new one
+        self._saving: tuple[int, str, TrackGrid, Level] | None = None
         self.tool = self.TOOLS[0]
         self.height = 1
         self.row = 0.0  # where the camera looks, in rows from the start
@@ -159,7 +172,9 @@ class EditorScreen:
         self._shown: dict[str, str] = {}
         self.cursor = self._make_cursor()
         self.guide = self._make_guide()
-        self._read_file = bridge.proxy(self.on_file_text)
+        self._saved_proxy = bridge.proxy(self.on_save_response)
+        self._failed_proxy = bridge.proxy(self.on_save_failed)
+        self._refused_proxy = bridge.proxy(self.on_save_refused)
         container = self._container
         container.addEventListener("click", bridge.proxy(self.on_click))
         container.addEventListener("change", bridge.proxy(self.on_change))
@@ -179,22 +194,26 @@ class EditorScreen:
             self._level = self.settings.level(self.grid)
         return self._level
 
-    def open(self, settings: LevelSettings, grid: TrackGrid, slot: int | None = None) -> None:
-        """Edit ``grid`` with ``settings``, saved in ``slot`` if it is a saved level."""
-        self.settings, self.grid, self.slot = settings, grid, slot
+    def open(self, settings: LevelSettings, grid: TrackGrid, index: int | None = None) -> None:
+        """Edit ``grid`` with ``settings``: the level at ``index``, or a new one when None."""
+        self.settings, self.grid, self.index = settings, grid, index
         self.row = self._target_row = 0.0
         self.message = ""
         self._changed()
         self._sync_fields()
         self.refresh()
 
-    def open_level(self, level: Level, slot: int | None = None) -> None:
-        """Edit ``level``: the custom level saved in ``slot``, or a copy of a bundled level when None."""
-        self.open(LevelSettings.of(level), TrackGrid.from_track(level.track), slot)
+    def open_level(self, level: Level, index: int | None = None) -> None:
+        """Edit ``level``, the level at ``index``, or a copy saved as a new level when None."""
+        self.open(LevelSettings.of(level), TrackGrid.from_track(level.track), index)
 
-    def levels(self) -> list[Level]:
-        """Return the saved levels, for the level select."""
-        return self._store.levels()
+    @property
+    def file(self) -> str:
+        """The file the track is saved to: its level's, or a new one after the last."""
+        if self.index is not None and self.index < len(self.files):
+            return self.files[self.index]
+        numbers = [int(match[1]) for name in self.files if (match := self.FILE_NAME.fullmatch(name))]
+        return f"level_{max(numbers, default=0) + 1:02d}.json"
 
     def consume_actions(self) -> list[str]:
         """Return the actions for the game loop since the last call: :attr:`RIDE` or :attr:`BACK`."""
@@ -269,7 +288,7 @@ class EditorScreen:
         elif code == "Escape":
             self.act(self.BACK)
 
-    def act(self, action: str, value: str = "") -> None:  # noqa: C901  (one branch per button)
+    def act(self, action: str, value: str = "") -> None:
         """Carry out ``action``, from a button or a key."""
         match action:
             case self.RIDE | self.BACK:
@@ -285,14 +304,8 @@ class EditorScreen:
                     self._changed()
             case "save":
                 self._save()
-            case "export":
-                self._export()
-            case "import":
-                self._document.getElementById("editor-file").click()
             case "new":
                 self.open(LevelSettings(), TrackGrid.starter())
-            case "remove":
-                self._remove()
             case _:
                 return
         self.refresh()
@@ -304,15 +317,9 @@ class EditorScreen:
             self.act(self._data(element, "action"), self._data(element, "value"))
 
     def on_change(self, event: JsObject) -> None:
-        """Take in a changed setting, or read the level file picked to import."""
+        """Take in a changed setting."""
         target = event.target
         field = self._data(target, "field")
-        if field == "file":
-            file = target.files.item(0)
-            if file is not None:
-                file.text().then(self._read_file)
-            target.value = ""
-            return
         if field == "name":
             self.settings = replace(self.settings, name=str(target.value).strip() or "My track")
         elif field in ("gravity", "fuel", "oxygen"):
@@ -329,17 +336,6 @@ class EditorScreen:
             return
         self._level = None
         self._sync_fields()
-        self.refresh()
-
-    def on_file_text(self, text: str) -> None:
-        """Import the level file ``text``."""
-        try:
-            settings, grid = LevelSettings.read(str(text))
-        except ValueError as error:
-            self.message = f"Import failed: {error}"
-        else:
-            self.open(settings, grid)
-            self.message = f"Imported “{settings.name}”"
         self.refresh()
 
     @staticmethod
@@ -510,7 +506,6 @@ class EditorScreen:
             '<div id="editor-status" class="editor-status"></div></div>'
             '<div class="editor-bottom"><div id="editor-tools" class="editor-tools"></div>'
             f'<div class="editor-actions">{actions}</div><p class="keys">{self.KEYS}</p></div>'
-            '<input type="file" id="editor-file" accept=".json,application/json" data-field="file" hidden>'
         )
         self._mounted = True
         self._shown.clear()
@@ -553,10 +548,8 @@ class EditorScreen:
             warnings.append("THE START NEEDS TILES UNDER THE MIDDLE COLUMNS")
         if not any(tile.tile_type is TileType.FINISH for tile in track.tiles()):
             warnings.append("NO FINISH LINE: THE LEVEL ENDS AT THE LAST ROW")
-        status = f"{self.grid.length} ROWS"
-        if not self._store.persistent:
-            status += " · NOT SAVED IN THIS BROWSER"
-        markup = escape(status)
+        new = " (NEW)" if self.index is None else ""
+        markup = escape(f"{self.file}{new} · {self.grid.length} ROWS")
         markup += "".join(f'<span class="editor-warning">⚠ {escape(warning)}</span>' for warning in warnings)
         if self.message:
             markup += f'<span class="editor-message">{escape(self.message)}</span>'
@@ -568,33 +561,46 @@ class EditorScreen:
         self._level = None
 
     def _save(self) -> None:
-        self.slot = self._store.put(self.slot, self.settings.write(self.grid))
-        stored = "Saved" if self._store.persistent else "Kept until you close the page"
-        self.message = f"{stored}: “{self.settings.name}”"
-
-    def _remove(self) -> None:
-        if self.slot is None:
-            self.message = "This track is not saved"
+        """Post the level file to the server."""
+        if self._saving is not None:
+            self.message = f"Still saving {self._saving[1]}…"
             return
-        if not self._bridge.window.confirm(f"Delete the saved track “{self.settings.name}”?"):
+        index = len(self.files) if self.index is None or self.index >= len(self.files) else self.index
+        name = self.file
+        self._saving = (index, name, self.grid, self.level)
+        self.message = f"Saving {name}…"
+        bridge = self._bridge
+        options = bridge.obj(
+            method="POST", body=self.settings.write(self.grid), headers={"Content-Type": "application/json"}
+        )
+        bridge.window.fetch(f"{self.LEVELS_URL}{name}", options).then(self._saved_proxy).catch(self._failed_proxy)
+
+    def on_save_response(self, response: JsObject) -> None:
+        """Take in the server's answer to a save."""
+        if self._saving is None:
             return
-        self._store.remove(self.slot)
-        self.slot = None
-        self.message = "Deleted from the saved tracks"
+        if not response.ok:
+            response.text().then(self._refused_proxy)
+            return
+        index, name, grid, level = self._saving
+        self._saving = None
+        if index == len(self.files):
+            self.files.append(name)
+        if grid is self.grid:
+            self.index = index
+        self.message = f"Saved {name}"
+        if self._on_saved is not None:
+            self._on_saved(index, level)
+        self.refresh()
 
-    def _export(self) -> None:
-        window, bridge = self._bridge.window, self._bridge
-        text = self.settings.write(self.grid)
-        blob = window.Blob.new(bridge.array([text]), bridge.obj(type="application/json"))
-        url = window.URL.createObjectURL(blob)
-        link = self._document.createElement("a")
-        link.href = url
-        link.download = f"{self.file_name(self.settings.name)}.json"
-        link.click()
-        window.URL.revokeObjectURL(url)
-        self.message = f"Exported {link.download}"
+    def on_save_refused(self, text: str) -> None:
+        """Show why the server refused a save."""
+        self._saving = None
+        self.message = f"Not saved: {text}".strip()
+        self.refresh()
 
-    @staticmethod
-    def file_name(name: str) -> str:
-        """Return a file name for a track called ``name``."""
-        return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_") or "track"
+    def on_save_failed(self, error: JsObject) -> None:
+        """Report a save that never reached the server."""
+        self._saving = None
+        self.message = f"Not saved, the server is unreachable: {error}"
+        self.refresh()

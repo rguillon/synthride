@@ -8,7 +8,6 @@ from __future__ import annotations
 from synthride.core.game_session import GameSession
 from synthride.core.level_catalog import LevelCatalog
 from synthride.web.browser_keyboard import BrowserKeyboard
-from synthride.web.custom_level_store import CustomLevelStore
 from synthride.web.editor_screen import EditorScreen
 from synthride.web.game_loop import GameLoop
 from synthride.web.hud import Hud
@@ -31,10 +30,11 @@ class Main:
 
     MASTER_VOLUME = 0.6
 
-    def __init__(self, bridge: JsBridge, catalog: LevelCatalog | None = None) -> None:
-        """Build the game on ``bridge``, with the levels from ``catalog``."""
+    def __init__(self, bridge: JsBridge, catalog: LevelCatalog | None = None, *, dev: bool = False) -> None:
+        """Build the game on ``bridge``, with the levels from ``catalog``, and the level editor when ``dev``."""
         self._bridge = bridge
         self._catalog = catalog or LevelCatalog()
+        self._dev = dev
 
     def build(self) -> GameLoop:
         """Create the game loop and everything it drives."""
@@ -47,9 +47,10 @@ class Main:
         reflection = ShipReflection(bridge)
         session = GameSession(self._catalog.load_all())
         renderer = SceneRenderer(bridge, bridge.document.getElementById("stage"), lines, reflection=reflection)
-        store = CustomLevelStore(bridge.window)
-        editor = EditorScreen(bridge, store, renderer.renderer.domElement, renderer.camera)
-        session.set_custom_levels(editor.levels())
+        editor = None
+        if self._dev:
+            files = self._catalog.file_names()
+            editor = EditorScreen(bridge, renderer.renderer.domElement, renderer.camera, files, session.put_level)
         return GameLoop(
             bridge,
             session=session,
@@ -60,18 +61,18 @@ class Main:
             sparks=NeonSparks(bridge),
             backdrop=SpaceBackdrop(bridge),
             hud=Hud(bridge),
-            menu=MenuScreen(bridge, editor=True),
+            menu=MenuScreen(bridge, editor=editor is not None),
             music=SynthMusic(SynthVoices(bridge, context, master)),
             sound_effects=SoundEffects(SynthVoices(bridge, context, master)),
             editor=editor,
         )
 
 
-def main() -> GameLoop:
-    """Browser entry point, called by the page once Pyodide has unpacked the bundle."""
+def main(*, dev: bool = False) -> GameLoop:
+    """Browser entry point, called by the page once Pyodide has unpacked the bundle; ``dev`` turns the editor on."""
     import js  # noqa: PLC0415  # ty: ignore[unresolved-import]  (these modules only exist inside Pyodide)
     from pyodide.ffi import create_proxy, to_js  # noqa: PLC0415  # ty: ignore[unresolved-import]
 
-    loop = Main(JsBridge(js.window, js.THREE, create_proxy, to_js)).build()
+    loop = Main(JsBridge(js.window, js.THREE, create_proxy, to_js), dev=dev).build()
     loop.start()
     return loop
