@@ -8,6 +8,8 @@ from __future__ import annotations
 from synthride.core.game_session import GameSession
 from synthride.core.level_catalog import LevelCatalog
 from synthride.web.browser_keyboard import BrowserKeyboard
+from synthride.web.custom_level_store import CustomLevelStore
+from synthride.web.editor_screen import EditorScreen
 from synthride.web.game_loop import GameLoop
 from synthride.web.hud import Hud
 from synthride.web.js_bridge import JsBridge
@@ -44,19 +46,24 @@ class Main:
         lines = NeonLines(bridge)
         reflection = ShipReflection(bridge)
         session = GameSession(self._catalog.load_all())
+        renderer = SceneRenderer(bridge, bridge.document.getElementById("stage"), lines, reflection=reflection)
+        store = CustomLevelStore(bridge.window)
+        editor = EditorScreen(bridge, store, renderer.renderer.domElement, renderer.camera)
+        session.set_custom_levels(editor.levels())
         return GameLoop(
             bridge,
             session=session,
             keyboard=self.keyboard(session),
-            renderer=SceneRenderer(bridge, bridge.document.getElementById("stage"), lines, reflection=reflection),
+            renderer=renderer,
             track_builder=TrackMeshBuilder(bridge, lines, reflection=reflection),
             ship_model=ShipModel(bridge, lines),
             sparks=NeonSparks(bridge),
             backdrop=SpaceBackdrop(bridge),
             hud=Hud(bridge),
-            menu=MenuScreen(bridge),
+            menu=MenuScreen(bridge, editor=True),
             music=SynthMusic(SynthVoices(bridge, context, master)),
             sound_effects=SoundEffects(SynthVoices(bridge, context, master)),
+            editor=editor,
         )
 
     def keyboard(self, session: GameSession) -> BrowserKeyboard:  # noqa: ARG002  (used by subclasses)

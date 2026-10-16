@@ -32,6 +32,10 @@ class JsBridge:
         """Return a plain JavaScript object literal, nested dictionaries included."""
         return self._to_js(properties, dict_converter=self.window.Object.fromEntries)
 
+    def array(self, values: Sequence[object]) -> JsObject:
+        """Return a JavaScript array holding ``values``."""
+        return self._to_js(list(values))
+
     def proxy(self, function: Callable[..., object]) -> JsObject:
         """Return a persistent JavaScript callable wrapping ``function`` (for listeners and frame callbacks)."""
         return self._create_proxy(function)

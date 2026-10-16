@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from synthride.core.game_session import GameSession
     from synthride.core.level import Level
     from synthride.web.browser_keyboard import BrowserKeyboard
+    from synthride.web.editor_screen import EditorScreen
     from synthride.web.hud import Hud
     from synthride.web.js_bridge import JsBridge, JsObject
     from synthride.web.menu_screen import MenuScreen
@@ -37,6 +38,8 @@ class GameLoop:
     LEFT = frozenset({"ArrowLeft", "KeyA"})
     RIGHT = frozenset({"ArrowRight", "KeyD"})
     HUD_PHASES = frozenset({GamePhase.PLAYING, GamePhase.DYING, GamePhase.LEVEL_WON})
+    EDIT = "KeyE"
+    CUSTOM_MARK = "★ "
     # The stretch of track whose tunnel roofs the chase camera ducks under: from where it sits behind
     # the ship to a little ahead, so it is already low when the ship enters a tunnel.
     CAMERA_REACH_BEHIND = SceneRenderer.CAMERA_DISTANCE + 0.5
@@ -57,8 +60,9 @@ class GameLoop:
         menu: MenuScreen,
         music: SynthMusic,
         sound_effects: SoundEffects,
+        editor: EditorScreen | None = None,
     ) -> None:
-        """Wire the loop to the session and every browser-side component."""
+        """Wire the loop to the session and every browser-side component, the level editor if there is one."""
         self._bridge = bridge
         self.session = session
         self._keyboard = keyboard
@@ -71,6 +75,7 @@ class GameLoop:
         self._music = music
         self._sound_effects = sound_effects
         self._backdrop = backdrop
+        self._editor = editor
         self._shown_level: Level | None = None
         self._track_group: JsObject = None
         self._last_timestamp: float | None = None
@@ -80,6 +85,9 @@ class GameLoop:
         renderer.add(ship_model.group)
         renderer.mirror(ship_model.body)  # not the shadow: it would hide the mirror image
         renderer.add(sparks.points)
+        if editor is not None:
+            for item in editor.objects:
+                renderer.add(item)
 
     def start(self) -> None:
         """Request the first animation frame."""
@@ -98,6 +106,7 @@ class GameLoop:
         session = self.session
         for key in self._keyboard.consume_presses():
             self.handle_key(key)
+        self._handle_editor_actions()
         events = session.update(dt, self._keyboard.ship_input())
         self._sound_effects.play(events)
         self._renderer.react(events)
@@ -107,9 +116,15 @@ class GameLoop:
         self._hud.fade(dt)
         self._hud.count_frame(dt)
         self._music.update()
-        snap = self._show_current_level() or GameEvent.LEVEL_STARTED in events
+        editor = self._editor if session.phase is GamePhase.EDITOR else None
+        snap = self._show_level(session.level if editor is None else editor.level)
+        snap = snap or GameEvent.LEVEL_STARTED in events
         self._ship_model.sync(session.ship, session.phase, dt)
-        if session.phase is not GamePhase.DYING:
+        self._ship_model.group.visible = editor is None
+        if editor is not None:
+            editor.update(dt)
+            self._renderer.overlook(*editor.focus)
+        elif session.phase is not GamePhase.DYING:
             ship = session.ship
             speed_fraction = ship.speed / session.config.max_speed
             ceiling = session.level.track.ceiling_over(
@@ -127,6 +142,13 @@ class GameLoop:
         session, phase = self.session, self.session.phase
         if key == "KeyM":
             self._music.toggle_mute()
+        elif phase is GamePhase.EDITOR:
+            if self._editor is not None:
+                self._editor.handle_key(key)
+        elif key == self.EDIT and phase in (GamePhase.TITLE, GamePhase.LEVEL_SELECT) and self._editor is not None:
+            self._open_editor(self._editor, from_level_select=phase is GamePhase.LEVEL_SELECT)
+        elif session.riding and phase in (GamePhase.PLAYING, GamePhase.DYING) and key == "Escape":
+            session.open_editor()
         elif phase is GamePhase.TITLE and key in self.CONFIRM:
             self._music.start()
             session.open_level_select()
@@ -136,6 +158,28 @@ class GameLoop:
             phase in (GamePhase.GAME_OVER, GamePhase.VICTORY) and key in self.CONFIRM
         ):
             session.open_level_select()
+
+    def _open_editor(self, editor: EditorScreen, *, from_level_select: bool) -> None:
+        """Open the editor: on the selected custom level, a copy of the selected bundled level, or the last track."""
+        session = self.session
+        if from_level_select:
+            index = session.selected_level
+            custom = index - (len(session.levels) - session.custom_count)
+            editor.open_level(session.levels[index], custom if session.is_custom(index) else None)
+        session.open_editor()
+
+    def _handle_editor_actions(self) -> None:
+        if self._editor is None:
+            return
+        session = self.session
+        for action in self._editor.consume_actions():
+            if session.phase is not GamePhase.EDITOR:
+                continue
+            if action == self._editor.RIDE:
+                self._sound_effects.play(session.ride(self._editor.level))
+            elif action == self._editor.BACK:
+                session.set_custom_levels(self._editor.levels())
+                session.open_level_select()
 
     def _handle_level_select_key(self, key: str) -> None:
         session = self.session
@@ -152,9 +196,8 @@ class GameLoop:
         elif key == "Escape":
             session.return_to_title()
 
-    def _show_current_level(self) -> bool:
-        """Rebuilds the track meshes and redresses the sky when the level changes. Returns True when it did."""
-        level = self.session.level
+    def _show_level(self, level: Level) -> bool:
+        """Rebuilds the track meshes and redresses the sky when ``level`` is not the one shown. Returns True if so."""
         if level is self._shown_level:
             return False
         if self._track_group is not None:
@@ -174,7 +217,11 @@ class GameLoop:
             case GamePhase.TITLE:
                 self._menu.show_title()
             case GamePhase.LEVEL_SELECT:
-                self._menu.show_level_select([level.name for level in session.levels], session.selected_level)
+                names = [
+                    f"{self.CUSTOM_MARK if session.is_custom(index) else ''}{level.name}"
+                    for index, level in enumerate(session.levels)
+                ]
+                self._menu.show_level_select(names, session.selected_level, editor=self._editor is not None)
             case GamePhase.LEVEL_WON:
                 self._menu.show_level_won(session.level.name)
             case GamePhase.GAME_OVER:
@@ -183,3 +230,8 @@ class GameLoop:
                 self._menu.show_victory()
             case _:
                 self._menu.hide()
+        if self._editor is not None:
+            if phase is GamePhase.EDITOR:
+                self._editor.show()
+            else:
+                self._editor.hide()

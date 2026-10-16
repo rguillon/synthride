@@ -22,6 +22,7 @@ class BrowserKeyboard:
     RIGHT = frozenset({"ArrowRight", "KeyD"})
     JUMP = frozenset({"Space"})
     CAPTURED = ACCELERATE | BRAKE | LEFT | RIGHT | JUMP | {"Enter", "Escape"}
+    FIELDS = frozenset({"INPUT", "SELECT", "TEXTAREA"})
 
     def __init__(self, bridge: JsBridge) -> None:
         """Listen to the window's key events."""
@@ -33,8 +34,16 @@ class BrowserKeyboard:
         window.addEventListener("blur", bridge.proxy(lambda _event: self._held.clear()))
 
     def on_key_down(self, event: JsObject) -> None:
-        """Record a pressed key, keeping the page from scrolling on game keys."""
+        """Record a pressed key, keeping the page from scrolling on game keys.
+
+        Keys typed in a form field, such as the level editor's, are left to the field; Escape leaves the field.
+        """
         code = event.code
+        target = getattr(event, "target", None)
+        if target is not None and getattr(target, "tagName", None) in self.FIELDS:
+            if code == "Escape":
+                target.blur()
+            return
         if code in self.CAPTURED:
             event.preventDefault()
         if not event.repeat:

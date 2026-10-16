@@ -10,7 +10,8 @@ from synthride.server.bundle_builder import BundleBuilder
 
 def make_package(tmp_path: Path) -> Path:
     root = tmp_path / "synthride"
-    for relative in ("__init__.py", "core/a.py", "web/b.py", "levels/l.json", "server/s.py", "core/__pycache__/x.py"):
+    relatives = ("__init__.py", "core/a.py", "editor/e.py", "web/b.py", "levels/l.json", "server/s.py")
+    for relative in (*relatives, "core/__pycache__/x.py"):
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(relative)
@@ -20,7 +21,13 @@ def make_package(tmp_path: Path) -> Path:
 
 def test_bundles_only_client_files(tmp_path: Path) -> None:
     names = [path.as_posix() for path in BundleBuilder(make_package(tmp_path)).files()]
-    assert names == ["synthride/__init__.py", "synthride/core/a.py", "synthride/web/b.py", "synthride/levels/l.json"]
+    assert names == [
+        "synthride/__init__.py",
+        "synthride/core/a.py",
+        "synthride/editor/e.py",
+        "synthride/web/b.py",
+        "synthride/levels/l.json",
+    ]
 
 
 def test_build_produces_a_deterministic_zip(tmp_path: Path) -> None:

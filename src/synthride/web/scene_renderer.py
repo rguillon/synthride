@@ -29,6 +29,9 @@ class SceneRenderer:
     LOOK_AHEAD = 8.0
     CEILING_MARGIN = 0.22  # how far under a tunnel roof the camera stays
     MIN_HEIGHT = 0.35
+    EDITOR_HEIGHT = 7.0
+    EDITOR_DISTANCE = 8.0
+    EDITOR_LOOK_AHEAD = 12.0
     FOLLOW_RATE = 7.0
     MSAA_SAMPLES = 4
     FOG_NEAR = 30.0
@@ -149,6 +152,16 @@ class SceneRenderer:
         self.camera.position.set(*self._eye)
         self.camera.lookAt(*self._look)
         self.camera.fov = self.BASE_FOV + self.SPEED_FOV * speed_fraction
+        self.camera.updateProjectionMatrix()
+
+    def overlook(self, x: float, z: float, ground: float) -> None:
+        """Place the editor's camera raised behind the point ``(x, z)`` at ``ground`` height, looking down the track."""
+        self._eye = (x, ground + self.EDITOR_HEIGHT, z + self.EDITOR_DISTANCE)
+        self._look = (x, ground, z - self.EDITOR_LOOK_AHEAD)
+        self._camera_position = list(self._eye)
+        self.camera.position.set(*self._eye)
+        self.camera.lookAt(*self._look)
+        self.camera.fov = self.BASE_FOV
         self.camera.updateProjectionMatrix()
 
     def reflect_on(self, ship: Ship, deck: float | None) -> None:

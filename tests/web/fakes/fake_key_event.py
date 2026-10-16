@@ -9,6 +9,7 @@ class FakeKeyEvent:
         self.code = code
         self.repeat = repeat
         self.prevented = False
+        self.target: object = None
 
     def preventDefault(self) -> None:  # noqa: N802
         self.prevented = True
