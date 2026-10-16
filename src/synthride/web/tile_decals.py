@@ -22,15 +22,16 @@ if TYPE_CHECKING:
 class TileDecals:
     """Glowing, animated markings that show what each kind of block does.
 
-    Boost chevrons race forward, slow chevrons crawl back, pushers' arrows stream sideways, kill blocks
-    flash hazard stripes, and jump pads and air blocks raise a sheet of rising arrows or bubbles at the
-    front of each patch. Each layer is one mesh per tile type, mapped in track units so patterns run
-    seamlessly across neighbouring tiles; animating is just sliding the texture.
+    Plain blocks carry a faint panel grid. Boost chevrons race forward, slow chevrons crawl back, pushers' arrows
+    stream sideways, kill blocks flash hazard stripes, and jump pads and air blocks raise a sheet of rising arrows
+    or bubbles at the front of each patch. Each layer is one mesh per tile type, mapped in track units so patterns
+    run seamlessly across neighbouring tiles; animating is just sliding the texture.
     """
 
     DECK_LIFT = 0.006
     CURTAIN_HEIGHT = 1.3
     DECKS: ClassVar[dict[TileType, DecalStyle]] = {
+        TileType.NORMAL: DecalStyle("grid", opacity=0.22),
         TileType.BOOST: DecalStyle("chevrons-up", drift=(0.0, 2.4), opacity=0.9),
         TileType.SLOW: DecalStyle("chevrons-down", drift=(0.0, -0.5), opacity=0.75),
         TileType.KILL: DecalStyle("stripes", drift=(0.5, 0.0), opacity=0.7, pulse=9.0),

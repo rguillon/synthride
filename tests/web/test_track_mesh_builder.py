@@ -33,8 +33,8 @@ def rails_of(
 
 def test_one_mesh_per_tile_type_one_rail_set_per_colour_plus_seams() -> None:
     three, _, group, _ = build("N1 N1 K1 .. .. .. .. ..\nN2 B1 .. .. .. .. .. ..")
-    assert len(three.Mesh.created) == 5  # three tile types, plus kill and boost markings
-    assert len(three.MeshBasicMaterial.created) == 2
+    assert len(three.Mesh.created) == 6  # three tile types, plus normal, kill and boost markings
+    assert len(three.MeshBasicMaterial.created) == 3
     assert len(three.LineSegments2.created) == 4
     assert (
         len(group.add.calls) == 8

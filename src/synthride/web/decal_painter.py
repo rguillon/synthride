@@ -32,7 +32,7 @@ class DecalPainter:
         """Return the canvas painted with ``pattern``, painting it on first use.
 
         ``pattern`` is ``chevrons-<up|down|left|right>``, ``stripes``, ``plus``, ``bubbles``, ``target``,
-        ``crystal`` or ``checker``. Canvases are painted once and shared.
+        ``crystal``, ``checker`` or ``grid``. Canvases are painted once and shared.
         """
         if pattern not in self._canvases:
             canvas = self._document.createElement("canvas")
@@ -93,6 +93,19 @@ class DecalPainter:
         for row in range(4):
             for column in range(row % 2, 4, 2):
                 context.fillRect(column * cell, row * cell, cell, cell)
+
+    def _paint_grid(self, context: JsObject) -> None:
+        cell = self.SIZE // 4
+        context.lineWidth = 2
+        context.lineCap = "butt"
+        # Lines on the canvas edges are drawn on both sides, so each half meets its wrapped twin.
+        for offset in range(0, self.SIZE + 1, cell):
+            self._polyline(context, ((offset, 0), (offset, self.SIZE)))
+            self._polyline(context, ((0, offset), (self.SIZE, offset)))
+        for row in range(4):
+            for column in range(4):
+                x, y = column * cell + cell // 2, row * cell + cell // 2
+                context.fillRect(x - 2, y - 2, 4, 4)
 
     @staticmethod
     def _polyline(context: JsObject, points: tuple[tuple[float, float], ...]) -> None:
