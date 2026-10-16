@@ -150,7 +150,7 @@ globalThis.THREE = {
 const status = document.getElementById("loading-status");
 try {
   const pyodide = await loadPyodide();
-  status.textContent = "Loading the cyberspace\\u2026";
+  status.textContent = "Cyberspace loading\\u2026";
   const response = await fetch("$bundle_url", { cache: "no-store" });
   pyodide.unpackArchive(await response.arrayBuffer(), "zip");
   pyodide.runPython($entry);
