@@ -11,6 +11,7 @@ from dataclasses import dataclass, replace
 from html import escape
 from typing import TYPE_CHECKING, ClassVar
 
+from synthride.core.slope import Slope
 from synthride.core.tile import Tile
 from synthride.core.tile_type import TileType
 from synthride.core.track import Track
@@ -27,18 +28,38 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class Tool:
-    """A brush as the toolbar shows it: its icon, its colour and what it does."""
+    """A brush as the toolbar shows it: its icon, its colour, what it does and the group it sits in."""
 
     name: str
     glyph: str
     color: int
     label: str
     brush: Brush
+    group: str = "tiles"
 
 
 def _tile(tile_type: TileType, glyph: str, label: str) -> Tool:
     color = Palette.tile_color(tile_type)
     return Tool(tile_type.name.lower(), glyph, color, label, Brush(BrushKind.TILE, tile_type.value))
+
+
+# The icon of each slope: its filled part is the raised side or corner (the front is up the screen).
+SLOPE_GLYPHS: dict[Slope, tuple[str, str]] = {
+    Slope.FRONT: ("⬒", "Ramp rising ahead"),
+    Slope.BACK: ("⬓", "Ramp falling ahead"),
+    Slope.LEFT: ("◧", "Ramp rising to the left"),
+    Slope.RIGHT: ("◨", "Ramp rising to the right"),
+    Slope.FRONT_LEFT: ("◤", "Corner rising ahead and to the left"),
+    Slope.FRONT_RIGHT: ("◥", "Corner rising ahead and to the right"),
+    Slope.BACK_LEFT: ("◣", "Corner rising behind and to the left"),
+    Slope.BACK_RIGHT: ("◢", "Corner rising behind and to the right"),
+}
+SLOPE_COLOR = 0xFFB347
+
+
+def _slope(slope: Slope) -> Tool:
+    glyph, label = SLOPE_GLYPHS[slope]
+    return Tool(f"ramp_{slope.name.lower()}", glyph, SLOPE_COLOR, label, Brush(BrushKind.SHAPE, slope.value), "slopes")
 
 
 class EditorScreen:
@@ -52,7 +73,7 @@ class EditorScreen:
 
     RIDE: ClassVar[str] = "ride"
     BACK: ClassVar[str] = "back"
-    ERASER: ClassVar[Tool] = Tool("erase", "⌫", 0xFF6D6D, "Erase: leave a gap", Brush(BrushKind.ERASE))
+    ERASER: ClassVar[Tool] = Tool("erase", "⌫", 0xFF6D6D, "Erase: leave a gap", Brush(BrushKind.ERASE), "edit")
     TOOLS: ClassVar[tuple[Tool, ...]] = (
         _tile(TileType.NORMAL, "■", "Solid ground"),
         _tile(TileType.BOOST, "︿", "Boost: speed burst"),
@@ -66,13 +87,12 @@ class EditorScreen:
         _tile(TileType.PUSH_RIGHT, "▸", "Pushes right"),
         _tile(TileType.FINISH, "▚", "Finish line"),
         ERASER,
-        Tool("raise", "⬆", 0xFFFFFF, "Raise one height", Brush(BrushKind.RAISE)),
-        Tool("lower", "⬇", 0xFFFFFF, "Lower one height", Brush(BrushKind.LOWER)),
-        Tool("ramp_up", "◢", 0xFFB347, "Ramp rising ahead", Brush(BrushKind.SHAPE, "f")),
-        Tool("ramp_down", "◣", 0xFFB347, "Ramp falling ahead", Brush(BrushKind.SHAPE, "b")),
-        Tool("tunnel", "∩", Palette.TUNNEL, "Square tunnel", Brush(BrushKind.SHAPE, "T")),
-        Tool("round_tunnel", "◠", Palette.TUNNEL, "Round tunnel", Brush(BrushKind.SHAPE, "A")),
-        Tool("flat", "▬", 0xFFFFFF, "Flat and open: no ramp, no tunnel", Brush(BrushKind.SHAPE, "")),
+        Tool("raise", "⬆", 0xFFFFFF, "Raise one height", Brush(BrushKind.RAISE), "edit"),
+        Tool("lower", "⬇", 0xFFFFFF, "Lower one height", Brush(BrushKind.LOWER), "edit"),
+        *(_slope(slope) for slope in Slope),
+        Tool("tunnel", "∩", Palette.TUNNEL, "Square tunnel", Brush(BrushKind.SHAPE, "T"), "shapes"),
+        Tool("round_tunnel", "◠", Palette.TUNNEL, "Round tunnel", Brush(BrushKind.SHAPE, "A"), "shapes"),
+        Tool("flat", "▬", 0xFFFFFF, "Flat and open: no ramp, no tunnel", Brush(BrushKind.SHAPE, ""), "shapes"),
     )
     # (action, label): the buttons acting on the whole track
     ACTIONS: ClassVar[tuple[tuple[str, str], ...]] = (
@@ -498,19 +518,21 @@ class EditorScreen:
         document.getElementById("editor-oxygen").value = f"{settings.oxygen_seconds:g}"
 
     def _tools_markup(self) -> str:
-        tools = "".join(
-            f'<button type="button" class="tool{" selected" if tool is self.tool else ""}" data-action="tool"'
-            f' data-value="{tool.name}" title="{escape(tool.label)}" style="color:{Palette.css(tool.color)}">'
-            f"{tool.glyph}</button>"
-            for tool in self.TOOLS
-        )
+        groups: dict[str, list[str]] = {}
+        for tool in self.TOOLS:
+            groups.setdefault(tool.group, []).append(
+                f'<button type="button" class="tool{" selected" if tool is self.tool else ""}" data-action="tool"'
+                f' data-value="{tool.name}" title="{escape(tool.label)}" style="color:{Palette.css(tool.color)}">'
+                f"{tool.glyph}</button>"
+            )
+        tools = "".join(f'<div class="tool-group">{"".join(buttons)}</div>' for buttons in groups.values())
         heights = "".join(
             f'<button type="button" class="height{" selected" if level == self.height else ""}"'
             f' data-action="height" data-value="{level}" title="New tiles at height {level}">{level}</button>'
             for level in range(1, TrackParser.MAX_LEVEL + 1)
         )
         return (
-            f'<div class="tool-group">{tools}</div>'
+            f"{tools}"
             f'<div class="tool-group"><span class="tool-caption">HEIGHT</span>{heights}</div>'
             f'<div class="tool-name">{escape(self.tool.label.upper())}</div>'
         )

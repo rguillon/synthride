@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from synthride.core.slope import Slope
 from synthride.editor.track_grid import LevelSettings, TrackGrid
 from synthride.web.custom_level_store import CustomLevelStore
 from synthride.web.editor_screen import EditorScreen
@@ -84,6 +85,18 @@ def test_showing_mounts_the_toolbar(ed: SimpleNamespace) -> None:
     ed.screen.hide()
     assert ed.element("editor").hidden
     assert not ed.screen.cursor.visible
+
+
+def test_every_slope_has_a_brush(ed: SimpleNamespace) -> None:
+    values = {tool.brush.value for tool in EditorScreen.TOOLS if tool.group == "slopes"}
+    assert values == {slope.value for slope in Slope}
+    click(ed, "tool", "ramp_front_left")
+    stroke(ed, (2, 3), (3, 3))
+    assert ed.screen.grid.cell(2, 3) == "N1fl"
+    click(ed, "tool", "ramp_right")
+    stroke(ed, (4, 3), (4, 3))
+    assert ed.screen.grid.cell(4, 3) == "N1r"
+    assert html(ed, "editor-tools").count('class="tool-group"') == 5
 
 
 def test_a_drag_paints_the_rectangle_with_the_brush(ed: SimpleNamespace) -> None:
