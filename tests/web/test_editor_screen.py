@@ -252,6 +252,19 @@ def test_saving_a_level_overwrites_its_file(ed: SimpleNamespace) -> None:
     assert ed.screen.files == ["level_01.json", "level_02.json"]
 
 
+def test_saving_without_a_listener(ed: SimpleNamespace) -> None:
+    screen = EditorScreen(ed.bridge, FakeElement("canvas", "canvas"), ed.screen._camera)  # noqa: SLF001
+    screen.act("save")
+    ed.fetch.answer()
+    assert screen.files == ["level_01.json"]
+    assert screen.index == 0
+
+
+def test_a_stroke_that_changes_nothing_is_not_undoable(ed: SimpleNamespace) -> None:
+    stroke(ed, (2, 0), (3, 1))
+    assert not ed.screen.grid.can_undo
+
+
 def test_a_track_opened_while_saving_stays_new(ed: SimpleNamespace) -> None:
     click(ed, "save")
     click(ed, "new")

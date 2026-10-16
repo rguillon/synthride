@@ -143,9 +143,8 @@ class GameLoop:
         letter = self._keyboard.letter(key)
         if letter == self.MUTE:
             self._music.toggle_mute()
-        elif phase is GamePhase.EDITOR:
-            if self._editor is not None:
-                self._editor.handle_key(key, letter)
+        elif phase is GamePhase.EDITOR and self._editor is not None:
+            self._editor.handle_key(key, letter)
         elif letter == self.EDIT and phase in (GamePhase.TITLE, GamePhase.LEVEL_SELECT) and self._editor is not None:
             self._open_editor(self._editor, from_level_select=phase is GamePhase.LEVEL_SELECT)
         elif session.riding and phase in (GamePhase.PLAYING, GamePhase.DYING) and key == "Escape":
@@ -177,7 +176,7 @@ class GameLoop:
                 continue
             if action == self._editor.RIDE:
                 self._sound_effects.play(session.ride(self._editor.level))
-            elif action == self._editor.BACK:
+            else:  # BACK
                 if self._editor.index is not None:
                     session.selected_level = self._editor.index
                 session.open_level_select()
