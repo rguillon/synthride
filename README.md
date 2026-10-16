@@ -9,6 +9,8 @@
 neon tracks floating in space: jump the gaps, ride the ramps, thread the tunnels, and keep an eye on your fuel
 and oxygen until you cross the finish line.
 
+![SynthRide in game](data/screenshot-game.jpg)
+
 The whole game is written in Python and **runs entirely in the browser**. A tiny Python server packages it into an
 HTML5 page that boots [Pyodide](https://pyodide.org) (CPython compiled to WebAssembly) and renders it with
 [Three.js](https://threejs.org).
@@ -84,6 +86,8 @@ make serve-dev      # or: uv run synthride serve --dev
 
 The dev server adds the level editor. Press `E` on the title screen to start a new track, or on a level in the
 level select to edit that level. The editor shows the track in 3D from a raised camera, with the brushes below.
+
+![The level editor](data/screenshot-editor.jpg)
 
 - **Move along the track** with the mouse wheel, or `↑` `↓`.
 - **Paint**: press on the track, drag and release. The whole rectangle between the two cells gets the brush.
