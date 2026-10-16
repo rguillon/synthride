@@ -201,8 +201,6 @@ docker run --rm -p 8080:80 synthride    # then open http://127.0.0.1:8080
 | `synthride.levels` | The level files. |
 | `synthride.server` | Desktop tooling: zips `core` + `editor` + `web` + `levels`, generates the HTML5 page, serves both, and in dev mode saves the levels posted by the editor. |
 
-The code has one class per file, and each source file has a matching test file at the same path under `tests/`.
-
 ## Development
 
 ```bash

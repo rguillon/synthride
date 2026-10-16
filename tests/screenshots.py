@@ -15,7 +15,9 @@ OUT = Path("data")
 VIEWPORT = ViewportSize(width=1600, height=900)
 QUALITY = 88
 EDITOR_SCROLL = 12  # rows the editor moves forward
-LEVEL = 22  # Prism Cascade, counted from 1: heights and colours from the start
+GAME_LEVEL = 23  # Static Storm, counted from 1: pushers, kill strips and refuel tiles from the start
+GAME_PROGRESS = 6.3  # percent of the track ridden: row 28 of 448
+EDITOR_LEVEL = 22  # Prism Cascade: heights and colours from the start
 
 
 def snap(page: Page, name: str) -> None:
@@ -25,29 +27,52 @@ def snap(page: Page, name: str) -> None:
     print(f"{path} ({path.stat().st_size // 1024} KB)")  # noqa: T201
 
 
+def press(page: Page, *codes: str) -> None:
+    """Press and release the keys at ``codes`` in a single round trip.
+
+    Each Playwright key press waits for a frame, which takes long with software WebGL; the game queues presses, so
+    sending them all at once lands them in order on the next frame.
+    """
+    page.evaluate(
+        """codes => {
+            for (const code of codes) {
+                const key = code.startsWith("Key") ? code.slice(3).toLowerCase() : code;
+                for (const type of ["keydown", "keyup"]) {
+                    window.dispatchEvent(new KeyboardEvent(type, {code, key, cancelable: true}));
+                }
+            }
+        }""",
+        codes,
+    )
+
+
 def take(url: str) -> None:
-    """Ride ``LEVEL``, then edit it, taking a screenshot of each."""
+    """Ride ``GAME_LEVEL``, then edit ``EDITOR_LEVEL``, taking a screenshot of each."""
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(args=["--enable-unsafe-swiftshader"])
         page = browser.new_page(viewport=VIEWPORT)
         page.goto(url)
         page.wait_for_selector("#loading", state="detached", timeout=60_000)
-        page.keyboard.press("Enter")  # title -> level select
-        for _ in range(LEVEL - 1):
-            page.keyboard.press("ArrowDown")
-        page.keyboard.press("Enter")  # ride the level
-        page.keyboard.down("ArrowUp")
-        page.wait_for_timeout(2500)
-        snap(page, "screenshot-game.jpg")
-        page.keyboard.up("ArrowUp")
-        page.keyboard.press("Escape")  # back to the level select
+        page.add_style_tag(content="#hud-fps { visibility: hidden; }")  # software WebGL makes it read ~10 FPS
+        press(page, "Enter")  # title -> level select
+        # The editor keeps the sky of the last level ridden, so start the edited level first
+        press(page, *["ArrowDown"] * (EDITOR_LEVEL - 1), "Enter")
         page.wait_for_timeout(500)
-        page.keyboard.press("KeyE")  # edit the selected level
+        press(page, "Escape")  # back to the level select
+        page.wait_for_timeout(500)
+        press(page, "KeyE")  # edit the level
         page.wait_for_timeout(1000)
-        for _ in range(EDITOR_SCROLL):
-            page.keyboard.press("ArrowUp")  # move along the track
+        press(page, *["ArrowUp"] * EDITOR_SCROLL)  # move along the track
         page.wait_for_timeout(1500)
         snap(page, "screenshot-editor.jpg")
+        press(page, "Escape")  # back to the level select
+        page.wait_for_timeout(500)
+        press(page, *["ArrowDown"] * (GAME_LEVEL - EDITOR_LEVEL), "Enter")  # ride the other level
+        page.keyboard.down("ArrowUp")
+        # Frame times vary too much to ride for a set time: wait for the progress bar to reach the second pushers,
+        # with a kill strip alongside
+        page.wait_for_function(f"parseFloat(document.getElementById('hud-progress').style.width) >= {GAME_PROGRESS}")
+        snap(page, "screenshot-game.jpg")
         browser.close()
 
 
