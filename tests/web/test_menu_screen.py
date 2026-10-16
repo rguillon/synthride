@@ -37,6 +37,21 @@ def test_level_select_lays_levels_out_in_columns() -> None:
     assert columns[1].count("<li") == 1
 
 
+def test_the_editor_key_is_told_when_there_is_an_editor() -> None:
+    container, menu = make_menu()
+    menu.show_level_select(["One"], selected=0)
+    assert "E edit" not in container.innerHTML
+    menu.show_level_select(["One"], selected=0, editor=True)
+    assert "E edit" in container.innerHTML
+
+
+def test_level_select_redraws_when_the_levels_change() -> None:
+    container, menu = make_menu()
+    menu.show_level_select(["One"], selected=0)
+    menu.show_level_select(["One", "Two"], selected=0)
+    assert "TWO" in container.innerHTML
+
+
 def test_does_not_rewrite_unchanged_screen() -> None:
     container, menu = make_menu()
     menu.show_game_over()

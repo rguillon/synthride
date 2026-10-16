@@ -28,7 +28,11 @@ if TYPE_CHECKING:
 
 
 class GameSession:
-    """The whole game state: phase machine, lives, current level and its fixed-step simulation."""
+    """The whole game state: phase machine, lives, current level and its fixed-step simulation.
+
+    A test ride from the editor plays one level with no limit on lives, and goes back to the editor when the level is
+    won or left.
+    """
 
     MAX_STEPS_PER_UPDATE = 30
 
@@ -39,6 +43,7 @@ class GameSession:
             raise ValueError(msg)
         self.config = config or GameConfig()
         self.levels = tuple(levels)
+        self._test_level: Level | None = None
         self.phase = GamePhase.TITLE
         self.lives = self.config.lives
         self.selected_level = 0
@@ -51,7 +56,33 @@ class GameSession:
     @property
     def level(self) -> Level:
         """The level being played."""
-        return self.levels[self.level_index]
+        return self._test_level or self.levels[self.level_index]
+
+    @property
+    def riding(self) -> bool:
+        """Whether the level being played is a test ride from the editor."""
+        return self._test_level is not None
+
+    def put_level(self, index: int, level: Level) -> None:
+        """Replace the level at ``index`` with ``level``, or add it after the last one when ``index`` is past it."""
+        levels = list(self.levels)
+        if index < len(levels):
+            levels[index] = level
+        else:
+            levels.append(level)
+        self.levels = tuple(levels)
+
+    def open_editor(self) -> None:
+        """Switch to the level editor, ending any test ride."""
+        self._test_level = None
+        self.phase = GamePhase.EDITOR
+
+    def ride(self, level: Level) -> list[GameEvent]:
+        """Start a test ride of ``level``, from the editor."""
+        self._test_level = level
+        self._load(level)
+        self.phase = GamePhase.PLAYING
+        return [GameEvent.LEVEL_STARTED]
 
     @property
     def progress(self) -> float:
@@ -60,6 +91,7 @@ class GameSession:
 
     def open_level_select(self) -> None:
         """Switch to the level selection screen."""
+        self._test_level = None
         self.phase = GamePhase.LEVEL_SELECT
 
     def select_next_level(self) -> None:
@@ -161,7 +193,8 @@ class GameSession:
         return [] if event is None else [event]
 
     def _die(self, cause: GameEvent) -> list[GameEvent]:
-        self.lives -= 1
+        if not self.riding:
+            self.lives -= 1
         self.phase = GamePhase.DYING
         self._phase_timer = self.config.dying_seconds
         return [cause, GameEvent.LIFE_LOST]
@@ -172,6 +205,11 @@ class GameSession:
         return [GameEvent.LEVEL_WON]
 
     def _finish_transition(self) -> list[GameEvent]:
+        if self._test_level is not None:
+            if self.phase is GamePhase.DYING:
+                return self.ride(self._test_level)
+            self.open_editor()
+            return []
         if self.phase is GamePhase.DYING:
             if self.lives > 0:
                 return self._begin_level(self.level_index)
@@ -189,7 +227,9 @@ class GameSession:
 
     def _load_level(self, index: int) -> None:
         self.level_index = index
-        level = self.levels[index]
+        self._load(self.levels[index])
+
+    def _load(self, level: Level) -> None:
         track = level.track
         start_x, start_z = track.width / 2, self.config.ship_length / 2 + 0.1
         start_y = max(

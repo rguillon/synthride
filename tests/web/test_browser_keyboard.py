@@ -1,6 +1,8 @@
 # Copyright (c) 2026 Renaud Guillon
 # SPDX-License-Identifier: MIT
 
+from types import SimpleNamespace
+
 from synthride.core.ship_input import ShipInput
 from synthride.web.browser_keyboard import BrowserKeyboard
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
@@ -46,3 +48,35 @@ def test_losing_focus_releases_keys() -> None:
     window.dispatch("keydown", FakeKeyEvent("ArrowUp"))
     window.dispatch("blur")
     assert keyboard.ship_input() == ShipInput()
+
+
+def test_keys_typed_in_a_form_field_are_left_to_it() -> None:
+    bridge = FakeJsBridge()
+    keyboard = BrowserKeyboard(bridge)
+    field = SimpleNamespace(tagName="INPUT", blurred=False)
+    field.blur = lambda: setattr(field, "blurred", True)
+    event = FakeKeyEvent("KeyW")
+    event.target = field
+    bridge.window.dispatch("keydown", event)
+    assert keyboard.consume_presses() == []
+    assert not event.prevented
+    assert not keyboard.ship_input().accelerate
+    escape = FakeKeyEvent("Escape")
+    escape.target = field
+    bridge.window.dispatch("keydown", escape)
+    assert field.blurred
+    assert keyboard.consume_presses() == []
+
+
+def test_letters_follow_the_players_layout() -> None:
+    bridge = FakeJsBridge()
+    keyboard = BrowserKeyboard(bridge)
+    assert keyboard.letter("KeyW") == "w"  # not pressed yet: its QWERTY letter
+    bridge.window.dispatch("keydown", FakeKeyEvent("KeyW", key="z"))  # AZERTY: Z sits where QWERTY has W
+    bridge.window.dispatch("keydown", FakeKeyEvent("Semicolon", key="M"))  # AZERTY: M sits on the semicolon key
+    bridge.window.dispatch("keydown", FakeKeyEvent("Digit1", key="&"))
+    assert keyboard.letter("KeyW") == "z"
+    assert keyboard.letter("Semicolon") == "m"
+    assert keyboard.letter("Digit1") == ""
+    assert keyboard.letter("ArrowUp") == ""
+    assert keyboard.ship_input().accelerate  # steering still goes by position

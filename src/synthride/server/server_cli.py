@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class ServerCli:
     """Command line entry point: ``serve`` the game locally or ``build`` a static site."""
 
-    def __init__(self, server_factory: Callable[[str, int], Any] = GameServer) -> None:
+    def __init__(self, server_factory: Callable[..., Any] = GameServer) -> None:
         """Use ``server_factory`` to create the server for ``serve``."""
         self._server_factory = server_factory
 
@@ -31,6 +31,7 @@ class ServerCli:
         serve = commands.add_parser("serve", help="serve the game on a local web server")
         serve.add_argument("--host", default="127.0.0.1")
         serve.add_argument("--port", type=int, default=8000)
+        serve.add_argument("--dev", action="store_true", help="turn the level editor on, saving to the level files")
         build = commands.add_parser("build", help="write a static site (index.html + synthride.zip)")
         build.add_argument("--out", type=Path, default=Path("dist/web"))
         return parser
@@ -40,7 +41,7 @@ class ServerCli:
         arguments = self.parser().parse_args(argv)
         if arguments.command == "build":
             return self.build(arguments.out)
-        return self.serve(arguments.host, arguments.port)
+        return self.serve(arguments.host, arguments.port, dev=arguments.dev)
 
     def build(self, out: Path) -> int:
         """Write a static site into ``out``."""
@@ -50,10 +51,11 @@ class ServerCli:
         print(f"Static site written to {out}")  # noqa: T201
         return 0
 
-    def serve(self, host: str, port: int) -> int:
-        """Serve the game until interrupted."""
-        with self._server_factory(host, port) as server:
-            print(f"SynthRide running at {server.url} (Ctrl+C to stop)")  # noqa: T201
+    def serve(self, host: str, port: int, *, dev: bool = False) -> int:
+        """Serve the game until interrupted, with the level editor when ``dev``."""
+        with self._server_factory(host, port, dev=dev) as server:
+            mode = ", level editor on" if dev else ""
+            print(f"SynthRide running at {server.url}{mode} (Ctrl+C to stop)")  # noqa: T201
             try:
                 server.serve_forever()
             except KeyboardInterrupt:

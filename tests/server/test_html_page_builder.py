@@ -21,7 +21,6 @@ def test_page_has_the_game_containers() -> None:
         assert name in page
 
 
-def test_page_loads_the_packages_and_runs_the_entry() -> None:
-    page = HtmlPageBuilder(packages=("numpy",), entry='from x import main; main("y")').build()
-    assert 'await pyodide.loadPackage(["numpy"]);' in page
-    assert 'pyodide.runPython("from x import main; main(\\"y\\")");' in page
+def test_dev_page_turns_the_editor_on() -> None:
+    assert "main(dev=True)" in HtmlPageBuilder(dev=True).build()
+    assert "main(dev=True)" not in HtmlPageBuilder().build()

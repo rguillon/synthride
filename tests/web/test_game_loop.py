@@ -7,7 +7,9 @@ import pytest
 
 from synthride.core.game_phase import GamePhase
 from synthride.core.game_session import GameSession
+from synthride.editor.track_grid import Brush, BrushKind, Rect
 from synthride.web.browser_keyboard import BrowserKeyboard
+from synthride.web.editor_screen import EditorScreen
 from synthride.web.game_loop import GameLoop
 from synthride.web.hud import Hud
 from synthride.web.menu_screen import MenuScreen
@@ -22,6 +24,8 @@ from synthride.web.synth_voices import SynthVoices
 from synthride.web.track_mesh_builder import TrackMeshBuilder
 from tests.level_factory import make_level
 from tests.web.fakes.fake_audio_context import FakeAudioContext
+from tests.web.fakes.fake_element import FakeElement
+from tests.web.fakes.fake_fetch import FakeFetch
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
 from tests.web.fakes.fake_js_object import FakeJsObject
 from tests.web.fakes.fake_key_event import FakeKeyEvent
@@ -31,15 +35,30 @@ FLAT = "N1 N1 N1 N1 N1 N1 N1 N1"
 
 @pytest.fixture
 def game() -> SimpleNamespace:
+    return build_game()
+
+
+@pytest.fixture
+def edited() -> SimpleNamespace:
+    return build_game(with_editor=True)
+
+
+def build_game(*, with_editor: bool = False) -> SimpleNamespace:
     bridge = FakeJsBridge()
     levels = [make_level(*[FLAT] * 5, name=f"L{n}") for n in (1, 2)]
     context = FakeAudioContext()
     voices = SynthVoices(bridge, context, FakeJsObject("destination"))
     lines = NeonLines(bridge)
     renderer = SceneRenderer(bridge, bridge.document.getElementById("stage"), lines)
+    bridge.window.fetch = FakeFetch()
+    session = GameSession(levels)
+    files = ["level_01.json", "level_02.json"]
+    editor = None
+    if with_editor:
+        editor = EditorScreen(bridge, FakeJsObject("canvas"), renderer.camera, files, session.put_level)
     loop = GameLoop(
         bridge,
-        session=GameSession(levels),
+        session=session,
         keyboard=BrowserKeyboard(bridge),
         renderer=renderer,
         track_builder=TrackMeshBuilder(bridge, lines),
@@ -47,11 +66,14 @@ def game() -> SimpleNamespace:
         sparks=NeonSparks(bridge),
         backdrop=SpaceBackdrop(bridge),
         hud=Hud(bridge),
-        menu=MenuScreen(bridge),
+        menu=MenuScreen(bridge, editor=with_editor),
         music=SynthMusic(voices),
         sound_effects=SoundEffects(voices),
+        editor=editor,
     )
-    return SimpleNamespace(bridge=bridge, loop=loop, session=loop.session, context=context, renderer=renderer)
+    return SimpleNamespace(
+        bridge=bridge, loop=loop, session=loop.session, context=context, renderer=renderer, editor=editor
+    )
 
 
 def press(game: SimpleNamespace, *codes: str) -> None:
@@ -160,3 +182,92 @@ def test_camera_freezes_while_dying(game: SimpleNamespace) -> None:
     calls = len(game.renderer.camera.position.set.calls)
     game.loop.tick(0.016)
     assert len(game.renderer.camera.position.set.calls) == calls
+
+
+def editor_element(game: SimpleNamespace) -> FakeElement:
+    return game.bridge.document.getElementById("editor")
+
+
+def test_without_an_editor_e_does_nothing(game: SimpleNamespace) -> None:
+    press(game, "KeyE")
+    assert game.session.phase is GamePhase.TITLE
+
+
+def test_e_on_the_title_opens_the_editor_over_its_track(edited: SimpleNamespace) -> None:
+    edited.loop.tick(1 / 60)
+    assert "E level editor" in menu_html(edited)
+    press(edited, "KeyE")
+    assert edited.session.phase is GamePhase.EDITOR
+    assert edited.bridge.document.getElementById("menu").hidden
+    assert not editor_element(edited).hidden
+    assert edited.bridge.document.getElementById("hud").hidden
+    assert edited.loop._shown_level is edited.editor.level  # noqa: SLF001
+    assert not edited.loop._ship_model.group.visible  # noqa: SLF001
+    assert edited.editor.cursor in [call[0] for call in edited.renderer.scene.add.calls]
+    press(edited, "Escape")
+    assert edited.session.phase is GamePhase.LEVEL_SELECT
+    assert editor_element(edited).hidden
+    assert edited.loop._ship_model.group.visible  # noqa: SLF001
+
+
+def test_editor_keys_go_to_the_editor(edited: SimpleNamespace) -> None:
+    press(edited, "KeyE", "Digit4")
+    assert edited.editor.height == 4
+    press(edited, "KeyM")
+    assert edited.loop._music.muted  # noqa: SLF001
+
+
+def test_a_test_ride_returns_to_the_editor(edited: SimpleNamespace) -> None:
+    press(edited, "KeyE", "KeyT")
+    session = edited.session
+    assert session.phase is GamePhase.PLAYING
+    assert session.riding
+    assert session.level is edited.editor.level
+    assert not edited.bridge.document.getElementById("hud").hidden
+    assert editor_element(edited).hidden
+    press(edited, "Escape")
+    assert session.phase is GamePhase.EDITOR
+    assert not editor_element(edited).hidden
+
+
+def test_e_on_the_level_select_edits_the_selected_level(edited: SimpleNamespace) -> None:
+    press(edited, "Enter", "ArrowDown", "KeyE")
+    assert edited.editor.settings.name == "L2"
+    assert edited.editor.grid.length == 5
+    assert edited.editor.file == "level_02.json"
+
+
+def test_saved_levels_join_the_level_select(edited: SimpleNamespace) -> None:
+    press(edited, "KeyE")
+    edited.editor.on_change(
+        SimpleNamespace(target=SimpleNamespace(dataset=SimpleNamespace(field="name"), value="Mine"))
+    )
+    edited.editor.act("save")
+    edited.bridge.window.fetch.answer()
+    press(edited, "Escape")
+    assert [level.name for level in edited.session.levels] == ["L1", "L2", "Mine"]
+    assert edited.session.selected_level == 2
+    assert "MINE" in menu_html(edited)
+    assert "E edit" in menu_html(edited)
+    press(edited, "KeyE")
+    assert edited.editor.file == "level_03.json"
+    assert edited.editor.settings.name == "Mine"
+
+
+def test_editor_actions_outside_the_editor_are_dropped(edited: SimpleNamespace) -> None:
+    edited.editor.act(EditorScreen.RIDE)
+    edited.loop.tick(1 / 60)
+    assert edited.session.phase is GamePhase.TITLE
+
+
+def test_letter_keys_follow_the_layout(edited: SimpleNamespace) -> None:
+    window = edited.bridge.window
+    window.dispatch("keydown", FakeKeyEvent("Semicolon", key="m"))
+    window.dispatch("keydown", FakeKeyEvent("KeyE", key="e"))
+    edited.loop.tick(1 / 60)
+    assert edited.loop._music.muted  # noqa: SLF001
+    assert edited.session.phase is GamePhase.EDITOR
+    edited.editor.grid.paint(Rect(0, 0, 0, 0), Brush(BrushKind.TILE, "I"))
+    window.dispatch("keydown", FakeKeyEvent("KeyW", key="z"))
+    edited.loop.tick(1 / 60)
+    assert not edited.editor.grid.can_undo

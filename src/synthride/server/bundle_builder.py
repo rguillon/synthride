@@ -11,9 +11,9 @@ from pathlib import Path
 
 
 class BundleBuilder:
-    """Zips the client side of the game (core, web and levels) for Pyodide to unpack in the browser."""
+    """Zips the client side of the game (core, editor, web and levels) for Pyodide to unpack in the browser."""
 
-    CLIENT_PACKAGES = ("core", "web", "levels")
+    CLIENT_PACKAGES = ("core", "editor", "web", "levels")
     SUFFIXES = frozenset({".py", ".json"})
     TIMESTAMP = (2024, 1, 1, 0, 0, 0)
 

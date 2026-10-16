@@ -232,3 +232,50 @@ def test_landing_on_a_tunnel_roof_has_no_tile_effect() -> None:
     assert events == [GameEvent.LANDED]
     assert session.ship.position.y == pytest.approx(roof)
     assert session.ship.surface is None
+
+
+GAP = ".. .. .. .. .. .. .. .."
+
+
+def test_a_test_ride_plays_only_that_level_then_returns_to_the_editor() -> None:
+    session = GameSession([make_level(FLAT)])
+    session.open_editor()
+    assert session.phase is GamePhase.EDITOR
+    ride = make_level(*[FLAT] * 10, name="ride")
+    assert session.ride(ride) == [GameEvent.LEVEL_STARTED]
+    assert session.riding
+    assert session.level is ride
+    run(session, 3)
+    assert session.phase is GamePhase.LEVEL_WON
+    assert run(session, CONFIG.level_won_seconds + 0.1, ShipInput()) == []
+    assert session.phase is GamePhase.EDITOR
+    assert not session.riding
+    assert session.level is not ride
+
+
+def test_a_test_ride_never_runs_out_of_lives() -> None:
+    session = GameSession([make_level(FLAT)])
+    session.ride(make_level(FLAT, *[GAP] * 30))
+    for _ in range(CONFIG.lives + 1):
+        run_until(session, GamePhase.DYING)
+        assert run(session, CONFIG.dying_seconds + 0.1, ShipInput()) == [GameEvent.LEVEL_STARTED]
+    assert session.lives == CONFIG.lives
+    assert session.riding
+
+
+def test_leaving_a_test_ride_for_the_level_select_ends_it() -> None:
+    session = GameSession([make_level(FLAT)])
+    session.ride(make_level(FLAT, name="ride"))
+    session.open_level_select()
+    assert not session.riding
+
+
+def test_put_level_replaces_a_level_or_adds_one() -> None:
+    first, second = make_level(FLAT, name="first"), make_level(FLAT, name="second")
+    session = GameSession([first])
+    session.put_level(1, second)
+    assert session.levels == (first, second)
+    edited = make_level(FLAT, name="edited")
+    session.put_level(0, edited)
+    assert session.levels == (edited, second)
+    assert session.level is edited

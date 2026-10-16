@@ -73,3 +73,10 @@ def test_counts_frames_into_a_frame_rate_readout() -> None:
     assert fps.textContent == ""
     hud.count_frame(1 / 64)
     assert fps.textContent == "64 FPS"
+
+
+def test_a_test_ride_is_labelled_as_such() -> None:
+    document, hud, session = make_hud()
+    session.ride(make_level("N1 " * 8, name="Mine"))
+    hud.update(session)
+    assert document.getElementById("hud-level").textContent == "TEST RIDE · MINE"

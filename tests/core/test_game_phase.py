@@ -6,4 +6,4 @@ from synthride.core.game_phase import GamePhase
 
 def test_phases() -> None:
     assert GamePhase.TITLE in GamePhase
-    assert len(GamePhase) == 7
+    assert len(GamePhase) == 8

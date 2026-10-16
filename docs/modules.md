@@ -21,11 +21,4 @@
 ::: synthride.server.game_server
 ::: synthride.server.bundle_builder
 ::: synthride.server.html_page_builder
-
-## AI
-
-::: tests.ai.trainer
-::: tests.ai.evolution
-::: tests.ai.neural_network
-::: tests.ai.ship_observer
-::: tests.ai.episode_runner
+::: synthride.server.level_folder

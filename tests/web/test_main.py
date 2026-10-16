@@ -19,6 +19,15 @@ def test_build_wires_a_game_loop_with_bundled_levels() -> None:
     loop = Main(bridge).build()
     assert isinstance(loop, GameLoop)
     assert len(loop.session.levels) >= 3
+    assert loop._editor is None  # noqa: SLF001
+
+
+def test_dev_mode_adds_the_editor_saving_to_the_level_files() -> None:
+    loop = Main(FakeJsBridge(), dev=True).build()
+    editor = loop._editor  # noqa: SLF001
+    assert editor is not None
+    assert editor.files[0] == "level_01.json"
+    assert len(editor.files) == len(loop.session.levels)
 
 
 def test_main_boots_from_pyodide_modules(monkeypatch: pytest.MonkeyPatch) -> None:

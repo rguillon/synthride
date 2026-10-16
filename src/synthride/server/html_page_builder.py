@@ -7,10 +7,6 @@ from __future__ import annotations
 
 import json
 from string import Template
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
 
 
 class HtmlPageBuilder:
@@ -19,6 +15,7 @@ class HtmlPageBuilder:
     PYODIDE_VERSION = "0.29.5"
     THREE_VERSION = "0.170.0"
     ENTRY = "from synthride.web.main import main; main()"
+    DEV_ENTRY = "from synthride.web.main import main; main(dev=True)"
 
     TEMPLATE = Template("""\
 <!doctype html>
@@ -90,6 +87,35 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
 .hud-callout { position: absolute; top: 26%; left: 0; right: 0; text-align: center; opacity: 0;
   font-size: clamp(1.3rem, 5vw, 2.6rem); font-weight: 800; letter-spacing: 0.25em;
   text-shadow: 0 0 14px currentColor, 0 0 30px currentColor; }
+#editor { position: fixed; inset: 0; z-index: 3; pointer-events: none; display: flex; flex-direction: column;
+  justify-content: space-between; padding: 12px 16px; font-size: 0.72rem; letter-spacing: 0.1em; }
+#editor[hidden] { display: none; }
+.editor-top, .editor-bottom { pointer-events: auto; display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem;
+  align-items: center; justify-content: center; padding: 0.6rem 0.8rem; background: rgba(11,0,20,0.72);
+  border: 1px solid rgba(0,240,255,0.25); }
+.editor-bottom { flex-direction: column; gap: 0.5rem; }
+.editor-name { font: inherit; font-size: 0.95rem; background: transparent; color: var(--pink); letter-spacing: 0.1em;
+  border: 1px solid rgba(255,43,214,0.5); padding: 0.35rem 0.6rem; width: min(280px, 100%); }
+.editor-settings { display: flex; flex-wrap: wrap; gap: 0.8rem; color: var(--cyan); }
+.editor-settings input { font: inherit; width: 4.5rem; background: transparent; color: var(--text);
+  border: 1px solid rgba(0,240,255,0.4); padding: 0.25rem 0.4rem; }
+.editor-status { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; align-items: center; }
+.editor-warning { color: var(--sun); }
+.editor-message { color: #7dff9b; }
+.editor-tools { display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem; align-items: center; justify-content: center; }
+.tool-group { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; }
+.tool-caption { color: var(--cyan); margin-right: 0.3rem; }
+.tool-name { min-width: 14rem; color: var(--pink); text-shadow: 0 0 8px var(--pink); }
+#editor button { font: inherit; color: var(--text); background: rgba(42,8,69,0.7); cursor: pointer;
+  border: 1px solid rgba(0,240,255,0.35); padding: 0.35rem 0.6rem; letter-spacing: 0.1em; }
+#editor button.tool { font-size: 1.15rem; width: 2.3rem; height: 2.3rem; padding: 0; font-weight: 800;
+  text-shadow: 0 0 8px currentColor; }
+#editor button.height { width: 2rem; padding: 0.35rem 0; }
+#editor button.selected { border-color: var(--pink); box-shadow: 0 0 12px var(--pink);
+  background: rgba(255,43,214,0.18); }
+#editor button:hover, #editor button:focus-visible { border-color: var(--pink); }
+.editor-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; }
+#editor .keys { margin: 0; }
 #loading { z-index: 4; }
 @keyframes blink { to { visibility: hidden; } }
 @media (max-width: 600px) { .hud-bottom, .legend { grid-template-columns: 1fr; } }
@@ -103,6 +129,7 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
 <div id="stage"></div>
 <div id="hud" hidden></div>
 <div id="menu" class="overlay" hidden></div>
+<div id="editor" hidden></div>
 <div id="loading" class="overlay">
   <h1 class="logo">SYNTHRIDE</h1>
   <p class="subtitle" id="loading-status">Booting Python&hellip;</p>
@@ -123,10 +150,9 @@ globalThis.THREE = {
 const status = document.getElementById("loading-status");
 try {
   const pyodide = await loadPyodide();
-  status.textContent = "Loading the cyberspace\\u2026";
+  status.textContent = "Cyberspace loading\\u2026";
   const response = await fetch("$bundle_url", { cache: "no-store" });
   pyodide.unpackArchive(await response.arrayBuffer(), "zip");
-  await pyodide.loadPackage($packages);
   pyodide.runPython($entry);
   document.getElementById("loading").remove();
 } catch (error) {
@@ -143,18 +169,14 @@ try {
         pyodide_version: str = PYODIDE_VERSION,
         three_version: str = THREE_VERSION,
         bundle_url: str = "synthride.zip",
-        packages: Sequence[str] = (),
-        entry: str = ENTRY,
+        *,
+        dev: bool = False,
     ) -> None:
-        """Use the given library versions and load the bundle from ``bundle_url``.
-
-        The page also loads the Pyodide ``packages`` the bundle needs, then runs the Python statement ``entry``.
-        """
+        """Use the given library versions and load the bundle from ``bundle_url``; ``dev`` turns the editor on."""
+        self._dev = dev
         self._pyodide_version = pyodide_version
         self._three_version = three_version
         self._bundle_url = bundle_url
-        self._packages = tuple(packages)
-        self._entry = entry
 
     @property
     def pyodide_url(self) -> str:
@@ -172,6 +194,5 @@ try {
             pyodide_url=self.pyodide_url,
             three_url=self.three_url,
             bundle_url=self._bundle_url,
-            packages=json.dumps(list(self._packages)),
-            entry=json.dumps(self._entry),
+            entry=json.dumps(self.DEV_ENTRY if self._dev else self.ENTRY),
         )

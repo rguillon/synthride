@@ -83,7 +83,8 @@ class Hud:
         """Refresh every readout from ``session``."""
         config, ship = session.config, session.ship
         speed_fraction = min(1.0, ship.speed / (config.max_speed * config.boost_factor))
-        self._elements["level"].textContent = f"{session.level_index + 1:02d} · {session.level.name.upper()}"
+        number = "TEST RIDE" if session.riding else f"{session.level_index + 1:02d}"
+        self._elements["level"].textContent = f"{number} · {session.level.name.upper()}"
         self._elements["lives"].textContent = self.LIFE_ICON * session.lives
         self._elements["progress"].style.width = self._percent(session.progress)
         self._elements["speed-label"].textContent = f"SPEED {round(ship.speed * self.KMH_PER_UNIT):>3} KM/H"

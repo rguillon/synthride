@@ -22,6 +22,7 @@ class MenuScreen:
 
     KEYS = "↑ ↓ accelerate / brake &nbsp;·&nbsp; ← → strafe &nbsp;·&nbsp; SPACE jump, again in mid-air"
     KEYS_EXTRA = "ESC menu &nbsp;·&nbsp; M mute"
+    EDITOR_KEY = " &nbsp;·&nbsp; E level editor"
     LEVELS_PER_COLUMN = 7
     REPO_URL = "https://github.com/rguillon/synthride"
     # (tile types sharing a line, the pattern drawn on them, what they do)
@@ -38,10 +39,11 @@ class MenuScreen:
         ((TileType.FINISH,), "▚", "finish line"),
     )
 
-    def __init__(self, bridge: JsBridge) -> None:
-        """Render into the ``menu`` element."""
+    def __init__(self, bridge: JsBridge, *, editor: bool = False) -> None:
+        """Render into the ``menu`` element, telling of the level editor's key if the game has an ``editor``."""
         self._container = bridge.document.getElementById("menu")
         self._current: str | None = None
+        self._editor_key = self.EDITOR_KEY if editor else ""
 
     @property
     def current(self) -> str | None:
@@ -54,11 +56,14 @@ class MenuScreen:
             "title",
             '<h1 class="logo">SYNTHRIDE</h1><p class="subtitle">RIDE THE NEON GRID</p>'
             '<p class="prompt">PRESS ENTER</p>'
-            f'<p class="keys">{self.KEYS}<br>{self.KEYS_EXTRA}</p>',
+            f'<p class="keys">{self.KEYS}<br>{self.KEYS_EXTRA}{self._editor_key}</p>',
         )
 
-    def show_level_select(self, names: Sequence[str], selected: int) -> None:
-        """Show the level list, in columns of ``LEVELS_PER_COLUMN``, with ``selected`` highlighted."""
+    def show_level_select(self, names: Sequence[str], selected: int, *, editor: bool = False) -> None:
+        """Show the level list, in columns of ``LEVELS_PER_COLUMN``, with ``selected`` highlighted.
+
+        With an ``editor``, the keys tell how to edit the selected level.
+        """
         items = [
             f'<li class="{"selected" if index == selected else ""}">{index + 1:02d} · {escape(name.upper())}</li>'
             for index, name in enumerate(names)
@@ -67,11 +72,12 @@ class MenuScreen:
             f'<ul class="level-list">{"".join(items[start : start + self.LEVELS_PER_COLUMN])}</ul>'
             for start in range(0, len(items), self.LEVELS_PER_COLUMN)
         )
+        edit = " &nbsp;·&nbsp; E edit" if editor else ""
         self._show(
-            f"select:{selected}",
+            f"select:{selected}:{editor}:{'|'.join(names)}",
             '<p class="subtitle">SELECT LEVEL</p>'
             f'<div class="level-columns">{columns}</div>{self.legend()}'
-            '<p class="keys">↑ ↓ ← → choose &nbsp;·&nbsp; ENTER ride &nbsp;·&nbsp; ESC back</p>'
+            f'<p class="keys">↑ ↓ ← → choose &nbsp;·&nbsp; ENTER ride{edit} &nbsp;·&nbsp; ESC back</p>'
             f'<a class="repo-link" href="{self.REPO_URL}" target="_blank" rel="noopener">SOURCE ON GITHUB</a>',
         )
 

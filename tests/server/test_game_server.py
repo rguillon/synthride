@@ -13,3 +13,10 @@ def test_binds_and_reports_url() -> None:
         assert not server.url.endswith(":0/")
         assert server.page_builder is page
         assert server.bundle_builder is bundle
+
+
+def test_only_dev_mode_writes_levels() -> None:
+    with GameServer(port=0) as server:
+        assert server.levels is None
+    with GameServer(port=0, dev=True) as server:
+        assert server.levels is not None
