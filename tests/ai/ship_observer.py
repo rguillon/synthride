@@ -19,38 +19,50 @@ if TYPE_CHECKING:
 
 
 class _TrackMap:
-    """A track's tiles as arrays, so that many points of it can be looked up at once."""
+    """A track's tiles as one table, so that many points of it can be looked up at once.
+
+    Each cell's row holds its features, the height of its base and its slope as ``a + b * t`` along each axis, ``t``
+    going from 0 to 1 across the cell: how far up the slope a point is is the lower of the two, infinite along an axis
+    the slope does not rise along, and both are 0 for a flat cell. A border of empty cells, all zeros, surrounds the
+    track, and points off the track look up that border.
+    """
 
     def __init__(self, track: Track, features: int) -> None:
         self.rows, self.columns = track.row_count, track.COLUMNS
-        self.cells = np.zeros((self.rows, self.columns, features))
-        self.base = np.zeros((self.rows, self.columns))
-        self.slope_x = np.zeros((self.rows, self.columns))
-        self.slope_z = np.zeros((self.rows, self.columns))
+        self.features = features
+        self.table = np.zeros((self.rows + 2, self.columns + 2, features + 5))
         for tile in track.tiles():
-            self.cells[tile.row, tile.column] = ShipObserver.cell(tile)
-            self.base[tile.row, tile.column] = tile.base
+            cell = self.table[tile.row + 1, tile.column + 1]
+            cell[:features] = ShipObserver.cell(tile)
+            cell[features] = tile.base
             if tile.slope is not None:
-                self.slope_x[tile.row, tile.column], self.slope_z[tile.row, tile.column] = tile.slope.direction
+                for axis, sign in enumerate(tile.slope.direction):
+                    cell[features + 1 + 2 * axis : features + 3 + 2 * axis] = self._ramp(sign)
+        self.table = self.table.reshape(-1, features + 5)
 
     def look(self, x: np.ndarray, z: np.ndarray, height: float) -> np.ndarray:
         """Return the features of the points ``(x, z)``, with heights relative to ``height``, zero off the track."""
         u, v = x / Tile.WIDTH, z / Tile.LENGTH
         column, row = np.floor(u).astype(int), np.floor(v).astype(int)
         u, v = u - column, v - row
-        inside = (column >= 0) & (column < self.columns) & (row >= 0) & (row < self.rows)
-        column, row = np.where(inside, column, 0), np.where(inside, row, 0)
-        cells = self.cells[row, column] * inside[..., np.newaxis]
-        slope_x, slope_z = self.slope_x[row, column], self.slope_z[row, column]
-        rise = np.minimum(self._ramp(slope_x, u), self._ramp(slope_z, v))
-        top = self.base[row, column] + Tile.HEIGHT_UNIT * np.where(np.isinf(rise), 0.0, rise)
-        cells[..., 1] = np.clip((top - height) / 2, -1.0, 1.0) * cells[..., 0]
+        # np.minimum and np.maximum rather than np.clip, which costs several times more on arrays this small.
+        row = np.minimum(np.maximum(row, -1), self.rows) + 1
+        index = row * (self.columns + 2) + np.minimum(np.maximum(column, -1), self.columns) + 1
+        table = self.table.take(index, axis=0)
+        features = self.features
+        cells = table[..., :features]
+        rise = np.minimum(
+            table[..., features + 1] + table[..., features + 2] * u,
+            table[..., features + 3] + table[..., features + 4] * v,
+        )
+        top = table[..., features] + Tile.HEIGHT_UNIT * rise
+        cells[..., 1] = np.minimum(np.maximum((top - height) / 2, -1.0), 1.0) * cells[..., 0]
         return cells
 
     @staticmethod
-    def _ramp(sign: np.ndarray, t: np.ndarray) -> np.ndarray:
-        """Return how far up a slope rising toward ``sign`` the points ``t`` are, infinite where it is flat."""
-        return np.where(sign > 0, t, np.where(sign < 0, 1 - t, np.inf))
+    def _ramp(sign: int) -> tuple[float, float]:
+        """Return ``(a, b)`` such that ``a + b * t`` is how far up a slope rising toward ``sign`` the point ``t`` is."""
+        return (0.0, 1.0) if sign > 0 else (1.0, -1.0) if sign < 0 else (math.inf, 0.0)
 
 
 class ShipObserver:
@@ -64,7 +76,7 @@ class ShipObserver:
 
     COLUMNS: ClassVar[int] = 5
     ROWS: ClassVar[int] = 12
-    SAMPLES: ClassVar[int] = 4
+    SAMPLES: ClassVar[int] = 2
     SHIP_FEATURES: ClassVar[int] = 10
     CELL_FEATURES: ClassVar[int] = 7
     SIZE: ClassVar[int] = SHIP_FEATURES + COLUMNS * ROWS * SAMPLES * SAMPLES * CELL_FEATURES
@@ -105,6 +117,11 @@ class ShipObserver:
         if id(track) not in self._maps:
             self._maps[id(track)] = (track, _TrackMap(track, self.CELL_FEATURES))
         return self._maps[id(track)][1]
+
+    @classmethod
+    def forget(cls, track: Track) -> None:
+        """Drop the arrays of ``track``, which will not be observed any more."""
+        cls._maps.pop(id(track), None)
 
     @classmethod
     def cell(cls, tile: Tile) -> tuple[float, ...]:

@@ -19,3 +19,9 @@ def test_page_has_the_game_containers() -> None:
         assert f'id="{element_id}"' in page
     for name in ("UnrealBloomPass", "LineSegments2", "LineSegmentsGeometry", "LineMaterial"):
         assert name in page
+
+
+def test_page_loads_the_packages_and_runs_the_entry() -> None:
+    page = HtmlPageBuilder(packages=("numpy",), entry='from x import main; main("y")').build()
+    assert 'await pyodide.loadPackage(["numpy"]);' in page
+    assert 'pyodide.runPython("from x import main; main(\\"y\\")");' in page

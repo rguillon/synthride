@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import itertools
 import math
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import numpy as np
 
@@ -17,10 +17,13 @@ if TYPE_CHECKING:
 
 
 class NeuralNetwork:
-    """A multilayer perceptron with tanh activations, its weights kept in one flat array.
+    """A multilayer perceptron, its weights kept in one flat array.
 
+    Hidden layers use leaky ReLU activations and the output layer tanh, so every output lies between -1 and 1.
     Each layer stores, for every output neuron, its bias followed by one weight per input.
     """
+
+    LEAK: ClassVar[float] = 0.01
 
     def __init__(self, layer_sizes: Sequence[int], weights: Sequence[float] | np.ndarray) -> None:
         """Build a network with ``layer_sizes`` neurons per layer (inputs first) from its flat ``weights``."""
@@ -46,11 +49,16 @@ class NeuralNetwork:
 
     @classmethod
     def random(cls, layer_sizes: Sequence[int], rng: Random) -> NeuralNetwork:
-        """Create a network with small random weights scaled to each layer's fan-in, and zero biases."""
+        """Create a network with small random weights scaled to each layer's fan-in, and zero biases.
+
+        Layers feeding a leaky ReLU get twice the variance of the output layer, which feeds a tanh.
+        """
         noise = np.random.default_rng(rng.getrandbits(64))
         blocks = []
-        for inputs, outputs in itertools.pairwise(layer_sizes):
-            block = noise.normal(0.0, 1 / math.sqrt(inputs), (outputs, inputs + 1))
+        last = len(layer_sizes) - 2
+        for index, (inputs, outputs) in enumerate(itertools.pairwise(layer_sizes)):
+            gain = 1.0 if index == last else 2.0
+            block = noise.normal(0.0, math.sqrt(gain / inputs), (outputs, inputs + 1))
             block[:, 0] = 0.0
             blocks.append(block.ravel())
         return cls(layer_sizes, np.concatenate(blocks))
@@ -63,9 +71,11 @@ class NeuralNetwork:
     def forward(self, inputs: Sequence[float] | np.ndarray) -> list[float]:
         """Return the outputs, each between -1 and 1, for ``inputs``."""
         values = np.asarray(inputs, dtype=np.float64)
-        for weights, biases in self._layers:
-            values = np.tanh(weights @ values + biases)
-        return values.tolist()
+        for weights, biases in self._layers[:-1]:
+            values = weights @ values + biases
+            values = np.maximum(values, self.LEAK * values)
+        weights, biases = self._layers[-1]
+        return np.tanh(weights @ values + biases).tolist()
 
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-friendly description of the network."""

@@ -1,6 +1,8 @@
 # Copyright (c) 2026 Renaud Guillon
 # SPDX-License-Identifier: MIT
 
+from array import array
+
 from synthride.web.js_bridge import JsBridge
 from tests.web.fakes.fake_js_object import FakeJsObject
 
@@ -33,4 +35,4 @@ def test_proxy_and_float32_array() -> None:
     window, bridge = make_bridge([])
     assert bridge.proxy(print) == ("proxy", print)
     bridge.float32_array((1.0, 2.0))
-    assert window.Float32Array.created[0].args == (("js", [1.0, 2.0]),)
+    assert window.Float32Array.created[0].args == (("js", array("f", [1.0, 2.0])),)

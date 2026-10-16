@@ -6,7 +6,7 @@ import pytest
 from synthride.web.decal_painter import DecalPainter
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
 
-PATTERNS = ["chevrons-up", "chevrons-left", "stripes", "plus", "bubbles", "target", "crystal", "checker"]
+PATTERNS = ["chevrons-up", "chevrons-left", "stripes", "plus", "bubbles", "target", "crystal", "checker", "grid"]
 
 
 @pytest.mark.parametrize("pattern", PATTERNS)

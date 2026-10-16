@@ -18,12 +18,12 @@ def build(*rows: str) -> tuple[FakeJsObject, TileDecals, FakeJsObject]:
     return bridge.three, decals, group
 
 
-def test_every_special_tile_type_is_marked() -> None:
-    assert set(TileDecals.DECKS) == set(TileType) - {TileType.NORMAL}
+def test_every_tile_type_is_marked() -> None:
+    assert set(TileDecals.DECKS) == set(TileType)
 
 
-def test_one_layer_per_marked_tile_type_and_none_for_plain_tiles() -> None:
-    three, decals, group = build("N1 B1 B1 K1 .. .. .. ..", "N1 B1 B1 K1 .. .. .. ..")
+def test_one_layer_per_marked_tile_type() -> None:
+    three, decals, group = build(".. B1 B1 K1 .. .. .. ..", ".. B1 B1 K1 .. .. .. ..")
     assert decals.layer_count == 2
     assert len(group.add.calls) == 2
     colors = sorted(material.args[0]["color"] for material in three.MeshBasicMaterial.created)
@@ -68,7 +68,7 @@ def test_rebuilding_frees_the_old_textures() -> None:
     three, decals, _ = build(".. B1 .. .. .. .. .. ..")
     decals.build(make_level("N1 " * 8).track)
     assert three.CanvasTexture.created[0].dispose.calls == [()]
-    assert decals.layer_count == 0
+    assert decals.layer_count == 1
 
 
 def test_markings_lie_on_slopes_and_fold_along_corner_creases() -> None:

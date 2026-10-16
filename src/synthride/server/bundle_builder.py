@@ -33,12 +33,16 @@ class BundleBuilder:
             if path.is_file() and path.suffix in self.SUFFIXES and "__pycache__" not in path.parts
         ]
 
+    def entries(self) -> list[tuple[str, bytes]]:
+        """Return the archive's ``(name, content)`` pairs."""
+        return [(relative.as_posix(), (self._package_root.parent / relative).read_bytes()) for relative in self.files()]
+
     def build(self) -> bytes:
         """Return the zip archive of the client files."""
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
-            for relative in self.files():
-                info = zipfile.ZipInfo(relative.as_posix(), self.TIMESTAMP)
+            for name, content in self.entries():
+                info = zipfile.ZipInfo(name, self.TIMESTAMP)
                 info.compress_type = zipfile.ZIP_DEFLATED
-                archive.writestr(info, (self._package_root.parent / relative).read_bytes())
+                archive.writestr(info, content)
         return buffer.getvalue()

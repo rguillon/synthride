@@ -75,7 +75,7 @@ def test_a_fresh_press_in_mid_air_jumps_once_more() -> None:
     physics = ShipPhysics(CONFIG)
     ship = make_ship()
     physics.apply(ship, ShipInput(jump=True), gravity=10, dt=0.01)
-    physics.apply(ship, ShipInput(), gravity=10, dt=0.01)
+    physics.apply(ship, ShipInput(), gravity=10, dt=0.1)  # slows below a double jump's climb
     assert physics.apply(ship, ShipInput(jump=True), gravity=10, dt=0.01) is GameEvent.DOUBLE_JUMPED
     assert ship.velocity.y == pytest.approx(CONFIG.double_jump_velocity - 0.1)
     physics.apply(ship, ShipInput(), gravity=10, dt=0.01)
@@ -117,3 +117,16 @@ def test_pushers_drift_the_ship_sideways(surface: TileType, direction: int) -> N
     ship.surface = surface
     ShipPhysics(CONFIG).apply(ship, ShipInput(), gravity=0, dt=0.1)
     assert ship.velocity.x == direction * CONFIG.push_speed
+
+
+def test_a_mid_air_press_never_slows_a_faster_climb() -> None:
+    physics = ShipPhysics(CONFIG)
+    ship = make_ship()
+    physics.apply(ship, ShipInput(), gravity=10, dt=0.01)
+    ship.grounded = False
+    ship.velocity = ship.velocity.with_y(CONFIG.launch_velocity)  # just thrown up by a jump pad
+    assert physics.apply(ship, ShipInput(jump=True), gravity=10, dt=0.01) is None
+    assert ship.velocity.y == pytest.approx(CONFIG.launch_velocity - 0.1)
+    ship.velocity = ship.velocity.with_y(0.0)  # at the top of the arc, the double jump is still there
+    physics.apply(ship, ShipInput(), gravity=10, dt=0.01)
+    assert physics.apply(ship, ShipInput(jump=True), gravity=10, dt=0.01) is GameEvent.DOUBLE_JUMPED

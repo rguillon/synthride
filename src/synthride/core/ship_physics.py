@@ -22,7 +22,8 @@ class ShipPhysics:
 
     On ice the ship only slowly gets the sideways speed the player asks for, so it keeps sliding. Pushers
     add a constant sideways drift. Holding jump on the ground keeps hopping, and a jump off a ramp keeps the
-    ramp's climb; once airborne, a fresh press gives one more jump, recharged on landing.
+    ramp's climb; once airborne, a fresh press gives one more jump, recharged on landing. That press does
+    nothing while the ship already climbs faster than it would, so it never cuts short a jump pad's launch.
     """
 
     PUSH_DIRECTIONS: ClassVar[dict[TileType, int]] = {TileType.PUSH_LEFT: -1, TileType.PUSH_RIGHT: 1}
@@ -38,7 +39,7 @@ class ShipPhysics:
         vertical = ship.velocity.y
         across, along = ship.ground_slope
         climb = lateral * across + speed * along
-        jump = self._jump(ship, ship_input)
+        jump = self._jump(ship, ship_input, rising=vertical)
         if jump is GameEvent.JUMPED:
             vertical = self._config.jump_velocity + climb
         elif jump is GameEvent.DOUBLE_JUMPED:
@@ -46,8 +47,7 @@ class ShipPhysics:
         ship.velocity = Vector3(lateral, vertical - gravity * dt, speed)
         return jump
 
-    @staticmethod
-    def _jump(ship: Ship, ship_input: ShipInput) -> GameEvent | None:
+    def _jump(self, ship: Ship, ship_input: ShipInput, rising: float) -> GameEvent | None:
         fresh_press = ship_input.jump and not ship.jump_held
         ship.jump_held = ship_input.jump
         if ship.grounded:
@@ -55,7 +55,7 @@ class ShipPhysics:
             if ship_input.jump:
                 ship.grounded = False
                 return GameEvent.JUMPED
-        elif fresh_press and ship.air_jump_ready:
+        elif fresh_press and ship.air_jump_ready and rising < self._config.double_jump_velocity:
             ship.air_jump_ready = False
             return GameEvent.DOUBLE_JUMPED
         return None

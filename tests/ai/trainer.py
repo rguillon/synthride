@@ -11,14 +11,13 @@ from typing import TYPE_CHECKING, ClassVar
 
 from tests.ai.brain import Brain
 from tests.ai.pilot import Pilot
-from tests.ai.ship_observer import ShipObserver
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
     from tests.ai.brain_store import BrainStore
+    from tests.ai.breeder import Breeder
     from tests.ai.episode_result import EpisodeResult
-    from tests.ai.evolution import Evolution
     from tests.ai.level_evaluator import LevelEvaluator
 
 
@@ -31,13 +30,13 @@ class Trainer:
     reliably beats one that won by luck.
     """
 
-    LAYER_SIZES: ClassVar[tuple[int, ...]] = (ShipObserver.SIZE, 16, Pilot.OUTPUTS)
+    LAYER_SIZES: ClassVar[tuple[int, ...]] = (Pilot.INPUTS, 32, 16, Pilot.OUTPUTS)
 
     def __init__(  # noqa: PLR0913
         self,
         store: BrainStore,
         evaluator: LevelEvaluator,
-        evolution: Evolution,
+        evolution: Breeder,
         *,
         rng: random.Random | None = None,
         report: Callable[[str], None] = print,

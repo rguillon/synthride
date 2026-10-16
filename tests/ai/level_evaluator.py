@@ -10,9 +10,11 @@ import signal
 from typing import TYPE_CHECKING, Any
 
 from synthride.core.level_catalog import LevelCatalog
+from synthride.core.level_parser import LevelParser
 from tests.ai.episode_runner import EpisodeRunner
 from tests.ai.neural_network import NeuralNetwork
 from tests.ai.pilot import Pilot
+from tests.ai.ship_observer import ShipObserver
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -23,6 +25,9 @@ if TYPE_CHECKING:
     from tests.ai.episode_result import EpisodeResult
 
 _runner: EpisodeRunner | None = None
+# Runners of the levels given as text, the most recent last: the generator plays one level many times, then moves on.
+_text_runners: dict[str, EpisodeRunner] = {}
+_TEXT_RUNNERS = 2
 
 
 def _load_levels() -> None:
@@ -41,6 +46,24 @@ def _play(task: tuple[tuple[int, ...], np.ndarray, int, int]) -> EpisodeResult:
     layer_sizes, weights, level_index, seed = task
     assert _runner is not None
     return _runner.run(Pilot(NeuralNetwork(layer_sizes, weights)), level_index, seed)
+
+
+def _text_runner(text: str) -> EpisodeRunner:
+    """Return the runner of the level file ``text``, parsed once per process while it is still played."""
+    runner = _text_runners.pop(text, None)
+    if runner is None:
+        if len(_text_runners) >= _TEXT_RUNNERS:
+            oldest = next(iter(_text_runners))
+            for level in _text_runners.pop(oldest).levels:
+                ShipObserver.forget(level.track)
+        runner = EpisodeRunner([LevelParser().parse(text)])
+    _text_runners[text] = runner
+    return runner
+
+
+def _play_text(task: tuple[tuple[int, ...], np.ndarray, str, int]) -> EpisodeResult:
+    layer_sizes, weights, text, seed = task
+    return _text_runner(text).run(Pilot(NeuralNetwork(layer_sizes, weights)), 0, seed)
 
 
 class LevelEvaluator:
@@ -78,6 +101,13 @@ class LevelEvaluator:
         if self._pool is None:
             return [_play(task) for task in work]
         return self._pool.map(_play, work, chunksize=4)
+
+    def play_level(self, network: NeuralNetwork, text: str, seeds: Sequence[int]) -> list[EpisodeResult]:
+        """Play the level file ``text`` once per seed of ``seeds`` with ``network`` and return the results in order."""
+        work = [(network.layer_sizes, network.weights, text, seed) for seed in seeds]
+        if self._pool is None:
+            return [_play_text(task) for task in work]
+        return self._pool.map(_play_text, work, chunksize=max(1, len(work) // (4 * self._workers)))
 
     def score(
         self, networks: Sequence[NeuralNetwork], seeds: Sequence[int], levels: Sequence[int] | None = None
