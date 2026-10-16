@@ -66,3 +66,17 @@ def test_keys_typed_in_a_form_field_are_left_to_it() -> None:
     bridge.window.dispatch("keydown", escape)
     assert field.blurred
     assert keyboard.consume_presses() == []
+
+
+def test_letters_follow_the_players_layout() -> None:
+    bridge = FakeJsBridge()
+    keyboard = BrowserKeyboard(bridge)
+    assert keyboard.letter("KeyW") == "w"  # not pressed yet: its QWERTY letter
+    bridge.window.dispatch("keydown", FakeKeyEvent("KeyW", key="z"))  # AZERTY: Z sits where QWERTY has W
+    bridge.window.dispatch("keydown", FakeKeyEvent("Semicolon", key="M"))  # AZERTY: M sits on the semicolon key
+    bridge.window.dispatch("keydown", FakeKeyEvent("Digit1", key="&"))
+    assert keyboard.letter("KeyW") == "z"
+    assert keyboard.letter("Semicolon") == "m"
+    assert keyboard.letter("Digit1") == ""
+    assert keyboard.letter("ArrowUp") == ""
+    assert keyboard.ship_input().accelerate  # steering still goes by position

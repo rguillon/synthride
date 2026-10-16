@@ -38,7 +38,8 @@ class GameLoop:
     LEFT = frozenset({"ArrowLeft", "KeyA"})
     RIGHT = frozenset({"ArrowRight", "KeyD"})
     HUD_PHASES = frozenset({GamePhase.PLAYING, GamePhase.DYING, GamePhase.LEVEL_WON})
-    EDIT = "KeyE"
+    EDIT = "e"
+    MUTE = "m"
     CUSTOM_MARK = "★ "
     # The stretch of track whose tunnel roofs the chase camera ducks under: from where it sits behind
     # the ship to a little ahead, so it is already low when the ship enters a tunnel.
@@ -140,12 +141,13 @@ class GameLoop:
     def handle_key(self, key: str) -> None:
         """React to a fresh key press in the menus."""
         session, phase = self.session, self.session.phase
-        if key == "KeyM":
+        letter = self._keyboard.letter(key)
+        if letter == self.MUTE:
             self._music.toggle_mute()
         elif phase is GamePhase.EDITOR:
             if self._editor is not None:
-                self._editor.handle_key(key)
-        elif key == self.EDIT and phase in (GamePhase.TITLE, GamePhase.LEVEL_SELECT) and self._editor is not None:
+                self._editor.handle_key(key, letter)
+        elif letter == self.EDIT and phase in (GamePhase.TITLE, GamePhase.LEVEL_SELECT) and self._editor is not None:
             self._open_editor(self._editor, from_level_select=phase is GamePhase.LEVEL_SELECT)
         elif session.riding and phase in (GamePhase.PLAYING, GamePhase.DYING) and key == "Escape":
             session.open_editor()

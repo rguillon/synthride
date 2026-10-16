@@ -198,6 +198,19 @@ def test_keys_pick_brushes_and_heights_and_ask_for_a_ride_or_to_leave(ed: Simple
     assert ed.screen.consume_actions() == []
 
 
+def test_letter_shortcuts_follow_the_layout(ed: SimpleNamespace) -> None:
+    stroke(ed, (0, 0), (0, 0))
+    ed.screen.handle_key("KeyW", "z")  # AZERTY Z: undo, not a scroll
+    assert not ed.screen.grid.can_undo
+    assert ed.screen._target_row == 0  # noqa: SLF001
+    ed.screen.handle_key("KeyA", "q")  # AZERTY Q: previous brush
+    assert ed.screen.tool is EditorScreen.TOOLS[-1]
+    ed.screen.handle_key("KeyZ", "w")  # AZERTY W does nothing
+    ed.screen.handle_key("Numpad3")
+    assert ed.screen.height == 3
+    assert ed.screen.consume_actions() == []
+
+
 def test_settings_fields(ed: SimpleNamespace) -> None:
     container = ed.element("editor")
     container.dispatch("change", SimpleNamespace(target=Target(" Neon Run ", field="name")))

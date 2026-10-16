@@ -115,7 +115,10 @@ class EditorScreen:
         "WHEEL / ↑ ↓ move &nbsp;·&nbsp; DRAG paint &nbsp;·&nbsp; RIGHT DRAG erase &nbsp;·&nbsp; 1-8 height"
         " &nbsp;·&nbsp; Q E brush &nbsp;·&nbsp; Z undo &nbsp;·&nbsp; T test ride &nbsp;·&nbsp; ESC back"
     )
-    SCROLL_KEYS: ClassVar[dict[str, float]] = {"ArrowUp": 4.0, "KeyW": 4.0, "ArrowDown": -4.0, "KeyS": -4.0}
+    SCROLL_KEYS: ClassVar[dict[str, float]] = {"ArrowUp": 4.0, "ArrowDown": -4.0}
+    # The shortcuts named after a letter, by the letter the key types on the player's layout.
+    LETTER_ACTIONS: ClassVar[dict[str, str]] = {"q": "previous_tool", "e": "next_tool", "z": "undo", "t": RIDE}
+    DIGITS: ClassVar[tuple[str, ...]] = ("Digit", "Numpad")
     ROWS_PER_WHEEL: ClassVar[float] = 0.04  # rows per pixel of wheel travel
     SCROLL_RATE: ClassVar[float] = 12.0
     VIEW_ROWS: ClassVar[int] = 6  # how far ahead of the camera's point the ground height is judged
@@ -244,19 +247,25 @@ class EditorScreen:
 
     # Keys and buttons
 
-    def handle_key(self, code: str) -> None:
-        """React to a key pressed in the editor."""
-        if code in self.SCROLL_KEYS:
-            self.scroll(self.SCROLL_KEYS[code])
-        elif code.startswith("Digit") and code[5:].isdigit() and 1 <= int(code[5:]) <= TrackParser.MAX_LEVEL:
-            self.act("height", value=code[5:])
-        elif code in ("KeyQ", "KeyE"):
-            index = self.TOOLS.index(self.tool) + (1 if code == "KeyE" else -1)
+    def handle_key(self, code: str, letter: str = "") -> None:
+        """React to the key at ``code`` pressed in the editor, typing ``letter`` on the player's layout.
+
+        Letter shortcuts follow the layout, so Z undoes on an AZERTY keyboard too; digits and arrows go by position.
+        Without a ``letter``, a letter key is taken to type its QWERTY letter.
+        """
+        if not letter and code.startswith("Key") and len(code) == len("KeyA"):
+            letter = code[3:].lower()
+        digit = next((code[len(prefix) :] for prefix in self.DIGITS if code.startswith(prefix)), "")
+        action = self.LETTER_ACTIONS.get(letter)
+        if action in ("previous_tool", "next_tool"):
+            index = self.TOOLS.index(self.tool) + (1 if action == "next_tool" else -1)
             self.act("tool", value=self.TOOLS[index % len(self.TOOLS)].name)
-        elif code == "KeyZ":
-            self.act("undo")
-        elif code == "KeyT":
-            self.act(self.RIDE)
+        elif action is not None:
+            self.act(action)
+        elif code in self.SCROLL_KEYS:
+            self.scroll(self.SCROLL_KEYS[code])
+        elif digit.isdigit() and 1 <= int(digit) <= TrackParser.MAX_LEVEL:
+            self.act("height", value=digit)
         elif code == "Escape":
             self.act(self.BACK)
 

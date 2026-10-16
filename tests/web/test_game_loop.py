@@ -7,6 +7,7 @@ import pytest
 
 from synthride.core.game_phase import GamePhase
 from synthride.core.game_session import GameSession
+from synthride.editor.track_grid import Brush, BrushKind, Rect
 from synthride.web.browser_keyboard import BrowserKeyboard
 from synthride.web.custom_level_store import CustomLevelStore
 from synthride.web.editor_screen import EditorScreen
@@ -251,3 +252,16 @@ def test_editor_actions_outside_the_editor_are_dropped(edited: SimpleNamespace) 
     edited.editor.act(EditorScreen.RIDE)
     edited.loop.tick(1 / 60)
     assert edited.session.phase is GamePhase.TITLE
+
+
+def test_letter_keys_follow_the_layout(edited: SimpleNamespace) -> None:
+    window = edited.bridge.window
+    window.dispatch("keydown", FakeKeyEvent("Semicolon", key="m"))
+    window.dispatch("keydown", FakeKeyEvent("KeyE", key="e"))
+    edited.loop.tick(1 / 60)
+    assert edited.loop._music.muted  # noqa: SLF001
+    assert edited.session.phase is GamePhase.EDITOR
+    edited.editor.grid.paint(Rect(0, 0, 0, 0), Brush(BrushKind.TILE, "I"))
+    window.dispatch("keydown", FakeKeyEvent("KeyW", key="z"))
+    edited.loop.tick(1 / 60)
+    assert not edited.editor.grid.can_undo
