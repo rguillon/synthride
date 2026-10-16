@@ -2,19 +2,19 @@
 
 ## Core
 
-::: synthride.core.game_session
-::: synthride.core.collision_resolver
-::: synthride.core.ship_physics
-::: synthride.core.tile_effect_applier
-::: synthride.core.level_parser
-::: synthride.core.track_parser
-::: synthride.core.track
+::: synthride.core.gameplay.game_session
+::: synthride.core.physics.collision_resolver
+::: synthride.core.physics.ship_physics
+::: synthride.core.physics.tile_effect_applier
+::: synthride.core.world.level_parser
+::: synthride.core.world.track_parser
+::: synthride.core.world.track
 
 ## Web
 
 ::: synthride.web.game_loop
-::: synthride.web.js_bridge
-::: synthride.web.scene_renderer
+::: synthride.web.browser.js_bridge
+::: synthride.web.rendering.scene_renderer
 
 ## Server
 

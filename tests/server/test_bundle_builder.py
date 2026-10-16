@@ -40,7 +40,7 @@ def test_build_produces_a_deterministic_zip(tmp_path: Path) -> None:
 
 def test_default_root_bundles_the_real_game() -> None:
     names = {path.as_posix() for path in BundleBuilder().files()}
-    assert "synthride/core/game_session.py" in names
+    assert "synthride/core/gameplay/game_session.py" in names
     assert "synthride/web/main.py" in names
     assert "synthride/levels/level_01.json" in names
     assert not any(name.startswith("synthride/server") for name in names)

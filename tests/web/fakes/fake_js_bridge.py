@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from synthride.web.js_bridge import JsBridge
+from synthride.web.browser.js_bridge import JsBridge
 from tests.web.fakes.fake_js_object import FakeJsObject
 from tests.web.fakes.fake_window import FakeWindow
 

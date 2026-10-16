@@ -10,15 +10,15 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from synthride.core.level import Level
-from synthride.core.level_parser import LevelParser
-from synthride.core.track import Track
-from synthride.core.track_parser import TrackParser
+from synthride.core.world.level import Level
+from synthride.core.world.level_parser import LevelParser
+from synthride.core.world.track import Track
+from synthride.core.world.track_parser import TrackParser
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
-    from synthride.core.tile import Tile
+    from synthride.core.world.tile import Tile
 
 Cell = str | None
 """A cell as written in level files (``N1``, ``I2f``, ``K1T``...), None for a gap."""

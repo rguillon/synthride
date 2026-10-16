@@ -5,24 +5,24 @@
 
 from __future__ import annotations
 
-from synthride.core.game_session import GameSession
-from synthride.core.level_catalog import LevelCatalog
-from synthride.web.browser_keyboard import BrowserKeyboard
-from synthride.web.editor_screen import EditorScreen
+from synthride.core.gameplay.game_session import GameSession
+from synthride.core.world.level_catalog import LevelCatalog
+from synthride.web.audio.sound_effects import SoundEffects
+from synthride.web.audio.synth_music import SynthMusic
+from synthride.web.audio.synth_voices import SynthVoices
+from synthride.web.browser.browser_keyboard import BrowserKeyboard
+from synthride.web.browser.js_bridge import JsBridge
 from synthride.web.game_loop import GameLoop
-from synthride.web.hud import Hud
-from synthride.web.js_bridge import JsBridge
-from synthride.web.menu_screen import MenuScreen
-from synthride.web.neon_lines import NeonLines
-from synthride.web.neon_sparks import NeonSparks
-from synthride.web.scene_renderer import SceneRenderer
-from synthride.web.ship_model import ShipModel
-from synthride.web.ship_reflection import ShipReflection
-from synthride.web.sound_effects import SoundEffects
-from synthride.web.space_backdrop import SpaceBackdrop
-from synthride.web.synth_music import SynthMusic
-from synthride.web.synth_voices import SynthVoices
-from synthride.web.track_mesh_builder import TrackMeshBuilder
+from synthride.web.rendering.neon_lines import NeonLines
+from synthride.web.rendering.neon_sparks import NeonSparks
+from synthride.web.rendering.scene_renderer import SceneRenderer
+from synthride.web.rendering.ship_model import ShipModel
+from synthride.web.rendering.ship_reflection import ShipReflection
+from synthride.web.rendering.space_backdrop import SpaceBackdrop
+from synthride.web.track_meshes.track_mesh_builder import TrackMeshBuilder
+from synthride.web.ui.editor_screen import EditorScreen
+from synthride.web.ui.hud import Hud
+from synthride.web.ui.menu_screen import MenuScreen
 
 
 class Main:

@@ -7,25 +7,25 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from synthride.core.game_event import GameEvent
-from synthride.core.game_phase import GamePhase
-from synthride.web.scene_renderer import SceneRenderer
-from synthride.web.space_scenery import SpaceScenery
+from synthride.core.gameplay.game_event import GameEvent
+from synthride.core.gameplay.game_phase import GamePhase
+from synthride.web.rendering.scene_renderer import SceneRenderer
+from synthride.web.rendering.space_scenery import SpaceScenery
 
 if TYPE_CHECKING:
-    from synthride.core.game_session import GameSession
-    from synthride.core.level import Level
-    from synthride.web.browser_keyboard import BrowserKeyboard
-    from synthride.web.editor_screen import EditorScreen
-    from synthride.web.hud import Hud
-    from synthride.web.js_bridge import JsBridge, JsObject
-    from synthride.web.menu_screen import MenuScreen
-    from synthride.web.neon_sparks import NeonSparks
-    from synthride.web.ship_model import ShipModel
-    from synthride.web.sound_effects import SoundEffects
-    from synthride.web.space_backdrop import SpaceBackdrop
-    from synthride.web.synth_music import SynthMusic
-    from synthride.web.track_mesh_builder import TrackMeshBuilder
+    from synthride.core.gameplay.game_session import GameSession
+    from synthride.core.world.level import Level
+    from synthride.web.audio.sound_effects import SoundEffects
+    from synthride.web.audio.synth_music import SynthMusic
+    from synthride.web.browser.browser_keyboard import BrowserKeyboard
+    from synthride.web.browser.js_bridge import JsBridge, JsObject
+    from synthride.web.rendering.neon_sparks import NeonSparks
+    from synthride.web.rendering.ship_model import ShipModel
+    from synthride.web.rendering.space_backdrop import SpaceBackdrop
+    from synthride.web.track_meshes.track_mesh_builder import TrackMeshBuilder
+    from synthride.web.ui.editor_screen import EditorScreen
+    from synthride.web.ui.hud import Hud
+    from synthride.web.ui.menu_screen import MenuScreen
 
 
 class GameLoop:

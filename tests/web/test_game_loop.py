@@ -5,23 +5,23 @@ from types import SimpleNamespace
 
 import pytest
 
-from synthride.core.game_phase import GamePhase
-from synthride.core.game_session import GameSession
+from synthride.core.gameplay.game_phase import GamePhase
+from synthride.core.gameplay.game_session import GameSession
 from synthride.editor.track_grid import Brush, BrushKind, Rect
-from synthride.web.browser_keyboard import BrowserKeyboard
-from synthride.web.editor_screen import EditorScreen
+from synthride.web.audio.sound_effects import SoundEffects
+from synthride.web.audio.synth_music import SynthMusic
+from synthride.web.audio.synth_voices import SynthVoices
+from synthride.web.browser.browser_keyboard import BrowserKeyboard
 from synthride.web.game_loop import GameLoop
-from synthride.web.hud import Hud
-from synthride.web.menu_screen import MenuScreen
-from synthride.web.neon_lines import NeonLines
-from synthride.web.neon_sparks import NeonSparks
-from synthride.web.scene_renderer import SceneRenderer
-from synthride.web.ship_model import ShipModel
-from synthride.web.sound_effects import SoundEffects
-from synthride.web.space_backdrop import SpaceBackdrop
-from synthride.web.synth_music import SynthMusic
-from synthride.web.synth_voices import SynthVoices
-from synthride.web.track_mesh_builder import TrackMeshBuilder
+from synthride.web.rendering.neon_lines import NeonLines
+from synthride.web.rendering.neon_sparks import NeonSparks
+from synthride.web.rendering.scene_renderer import SceneRenderer
+from synthride.web.rendering.ship_model import ShipModel
+from synthride.web.rendering.space_backdrop import SpaceBackdrop
+from synthride.web.track_meshes.track_mesh_builder import TrackMeshBuilder
+from synthride.web.ui.editor_screen import EditorScreen
+from synthride.web.ui.hud import Hud
+from synthride.web.ui.menu_screen import MenuScreen
 from tests.level_factory import make_level
 from tests.web.fakes.fake_audio_context import FakeAudioContext
 from tests.web.fakes.fake_element import FakeElement

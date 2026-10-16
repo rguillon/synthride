@@ -183,13 +183,21 @@ docker run --rm -p 8080:80 synthride    # then open http://127.0.0.1:8080
 
 | Package | Role |
 | --- | --- |
-| `synthride.core` | Pure Python game logic: tracks, physics, collisions, tile effects, lives, phases. No browser code. |
+| `synthride.core` | Pure Python game logic. No browser code. |
+| `synthride.core.world` | Tiles, slopes, tunnels, tracks, levels and their JSON parsers. |
+| `synthride.core.physics` | Vectors, bounding boxes, collisions, the ship's motion and tile effects. |
+| `synthride.core.gameplay` | The game session (phases, lives, events), the ship, its gauges and input, the tunables. |
 | `synthride.editor` | Pure Python editor model: the track grid, the brushes, undo, and picking the cell under the mouse. |
-| `synthride.web` | Browser adapters: Three.js rendering, keyboard, HUD/menus, the editor screen, procedural WebAudio music and SFX. Every browser object is injected through `JsBridge`, so it is unit-tested with fakes. |
+| `synthride.web` | Browser adapters, with `main` (boot) and `game_loop` (the frame loop) at the top. Every browser object is injected through `JsBridge`, so it is unit-tested with fakes. |
+| `synthride.web.browser` | `JsBridge` and the keyboard. |
+| `synthride.web.ui` | The DOM screens: menu, HUD, editor screen, FPS counter. |
+| `synthride.web.rendering` | The Three.js scene: renderer, palette, ship model, backdrop, neon lines and sparks. |
+| `synthride.web.track_meshes` | The track's geometry: tile boxes, tunnel shells and decals. |
+| `synthride.web.audio` | Procedural WebAudio music and SFX. |
 | `synthride.levels` | The level files. |
 | `synthride.server` | Desktop tooling: zips `core` + `editor` + `web` + `levels`, generates the HTML5 page, serves both, and in dev mode saves the levels posted by the editor. |
 
-The code has one class per file, and each source file has a matching test file under `tests/`.
+The code has one class per file, and each source file has a matching test file at the same path under `tests/`.
 
 ## Development
 

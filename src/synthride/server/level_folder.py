@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 from typing import ClassVar
 
-from synthride.core.level_parser import LevelParser
+from synthride.core.world.level_parser import LevelParser
 
 
 class LevelFolder:

@@ -8,9 +8,9 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING
 
-from synthride.core.tile import Tile
-from synthride.core.track import Track
-from synthride.core.track_parser import TrackParser
+from synthride.core.world.tile import Tile
+from synthride.core.world.track import Track
+from synthride.core.world.track_parser import TrackParser
 
 if TYPE_CHECKING:
     from synthride.editor.track_grid import TrackGrid

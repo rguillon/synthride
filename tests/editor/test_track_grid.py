@@ -5,9 +5,9 @@ import json
 
 import pytest
 
-from synthride.core.level_catalog import LevelCatalog
-from synthride.core.level_parser import LevelFormatError, LevelParser
-from synthride.core.tile_type import TileType
+from synthride.core.world.level_catalog import LevelCatalog
+from synthride.core.world.level_parser import LevelFormatError, LevelParser
+from synthride.core.world.tile_type import TileType
 from synthride.editor.track_grid import Brush, BrushKind, LevelSettings, Rect, TrackGrid
 
 NORMAL = Brush(BrushKind.TILE, "N")

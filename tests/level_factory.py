@@ -3,8 +3,8 @@
 
 """Builds levels for tests."""
 
-from synthride.core.level import Level
-from synthride.core.track_parser import TrackParser
+from synthride.core.world.level import Level
+from synthride.core.world.track_parser import TrackParser
 
 
 def make_level(*rows: str, name: str = "Untitled", **settings: float) -> Level:

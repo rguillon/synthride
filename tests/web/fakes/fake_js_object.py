@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from synthride.web.js_bridge import JsObject
+    from synthride.web.browser.js_bridge import JsObject
 
 
 class FakeJsObject:
