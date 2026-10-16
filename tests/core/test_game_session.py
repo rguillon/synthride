@@ -208,6 +208,16 @@ def test_air_jump_pad_ice_and_pusher_events() -> None:
     assert events.count(GameEvent.SKIDDED) == 1
 
 
+def test_jumping_as_the_ship_reaches_a_jump_pad_still_launches_it() -> None:
+    session = started(make_level(FLAT, "J1 J1 J1 J1 J1 J1 J1 J1", *[FLAT] * 20))
+    session.ship.position = session.ship.position.with_z(2.0 - 0.05)
+    session.ship.velocity = session.ship.velocity.with_z(CONFIG.max_speed)
+    events = run(session, 1 / 60, ShipInput(accelerate=True, jump=True))
+    assert GameEvent.JUMPED in events
+    assert GameEvent.LAUNCHED in events
+    assert session.ship.velocity.y > CONFIG.jump_velocity
+
+
 def test_ship_remembers_its_surface_until_airborne() -> None:
     session = started(make_level(*["I1 I1 I1 I1 I1 I1 I1 I1"] * 20))
     run(session, 0.1, ShipInput())

@@ -145,7 +145,9 @@ class GameSession:
         start_z = ship.position.z
         jump = self._physics.apply(ship, ship_input, self.level.gravity, dt)
         events = [] if jump is None else [jump]
-        events += self._handle_collisions(self._resolver.move(ship, dt), was_grounded=was_grounded)
+        events += self._handle_collisions(
+            self._resolver.move(ship, dt, took_off=jump is GameEvent.JUMPED), was_grounded=was_grounded
+        )
         if self.phase is not GamePhase.PLAYING:
             return events
         self.fuel.drain((ship.position.z - start_z) * self.config.fuel_per_unit)

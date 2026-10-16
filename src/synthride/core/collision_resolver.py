@@ -44,13 +44,16 @@ class CollisionResolver:
         self._track = track
         self._config = config
 
-    def move(self, ship: Ship, dt: float) -> list[CollisionReport]:
-        """Move the ship by its velocity for ``dt`` seconds and report what it hit."""
+    def move(self, ship: Ship, dt: float, *, took_off: bool = False) -> list[CollisionReport]:
+        """Move the ship by its velocity for ``dt`` seconds and report what it hit.
+
+        ``took_off`` tells the ship jumped off the ground this step, so the tile it leaves still has its effect.
+        """
         reports = self._move_laterally(ship, dt)
         reports += self._move_forward(ship, dt)
         if any(report.outcome is CollisionOutcome.CRASHED for report in reports):
             return reports
-        reports.extend(self._move_vertically(ship, dt))
+        reports.extend(self._move_vertically(ship, dt, took_off=took_off))
         if ship.position.y < self._config.fall_limit_y:
             reports.append(CollisionReport(CollisionOutcome.FELL))
         return reports
@@ -123,7 +126,7 @@ class CollisionResolver:
         nudged = target.with_x(self._clear_x(ship, blockers, toward_positive=sides.pop()))
         return None if self._blockers(ship.box_at(nudged)) else nudged
 
-    def _move_vertically(self, ship: Ship, dt: float) -> list[CollisionReport]:
+    def _move_vertically(self, ship: Ship, dt: float, *, took_off: bool) -> list[CollisionReport]:
         old_y = ship.position.y
         new_y = old_y + ship.velocity.y * dt
         box = ship.box_at(ship.position.with_y(new_y))
@@ -131,7 +134,8 @@ class CollisionResolver:
         supports = [(solid, top) for solid, top in tops if top <= old_y + self._config.step_tolerance]
         surface = max((top for _, top in supports), default=None)
         if new_y > old_y and (surface is None or new_y > surface):
-            return self._move_up(ship, old_y, new_y)
+            takeoff = self._take_off(ship, supports, surface) if took_off else []
+            return [*takeoff, *self._move_up(ship, old_y, new_y)]
         if surface is None or new_y > surface + (self._config.step_tolerance if ship.grounded else 0.0):
             if ship.grounded:
                 across, along = ship.ground_slope
@@ -171,6 +175,14 @@ class CollisionResolver:
         target = ship.position.with_x(x + direction * self._config.edge_drift_speed * dt)
         if not self._blockers(ship.box_at(target)):
             ship.position = target
+
+    def _take_off(
+        self, ship: Ship, supports: list[tuple[Solid, float]], surface: float | None
+    ) -> list[CollisionReport]:
+        """Report the tile a ship jumps from, so its effect still applies: a jump pad still launches it."""
+        if surface is None:
+            return []
+        return [CollisionReport(CollisionOutcome.LANDED, self._tile_beneath(ship, supports, surface))]
 
     def _move_up(self, ship: Ship, old_y: float, new_y: float) -> list[CollisionReport]:
         """Rises toward ``new_y``, stopping under any ceiling in the way."""
