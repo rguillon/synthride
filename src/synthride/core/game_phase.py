@@ -16,3 +16,4 @@ class GamePhase(Enum):
     LEVEL_WON = auto()
     GAME_OVER = auto()
     VICTORY = auto()
+    EDITOR = auto()
