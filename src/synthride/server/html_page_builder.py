@@ -7,10 +7,6 @@ from __future__ import annotations
 
 import json
 from string import Template
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
 
 
 class HtmlPageBuilder:
@@ -156,7 +152,6 @@ try {
   status.textContent = "Loading the cyberspace\\u2026";
   const response = await fetch("$bundle_url", { cache: "no-store" });
   pyodide.unpackArchive(await response.arrayBuffer(), "zip");
-  await pyodide.loadPackage($packages);
   pyodide.runPython($entry);
   document.getElementById("loading").remove();
 } catch (error) {
@@ -173,18 +168,11 @@ try {
         pyodide_version: str = PYODIDE_VERSION,
         three_version: str = THREE_VERSION,
         bundle_url: str = "synthride.zip",
-        packages: Sequence[str] = (),
-        entry: str = ENTRY,
     ) -> None:
-        """Use the given library versions and load the bundle from ``bundle_url``.
-
-        The page also loads the Pyodide ``packages`` the bundle needs, then runs the Python statement ``entry``.
-        """
+        """Use the given library versions and load the bundle from ``bundle_url``."""
         self._pyodide_version = pyodide_version
         self._three_version = three_version
         self._bundle_url = bundle_url
-        self._packages = tuple(packages)
-        self._entry = entry
 
     @property
     def pyodide_url(self) -> str:
@@ -202,6 +190,5 @@ try {
             pyodide_url=self.pyodide_url,
             three_url=self.three_url,
             bundle_url=self._bundle_url,
-            packages=json.dumps(list(self._packages)),
-            entry=json.dumps(self._entry),
+            entry=json.dumps(self.ENTRY),
         )

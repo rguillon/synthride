@@ -53,7 +53,7 @@ class Main:
         return GameLoop(
             bridge,
             session=session,
-            keyboard=self.keyboard(session),
+            keyboard=BrowserKeyboard(bridge),
             renderer=renderer,
             track_builder=TrackMeshBuilder(bridge, lines, reflection=reflection),
             ship_model=ShipModel(bridge, lines),
@@ -65,10 +65,6 @@ class Main:
             sound_effects=SoundEffects(SynthVoices(bridge, context, master)),
             editor=editor,
         )
-
-    def keyboard(self, session: GameSession) -> BrowserKeyboard:  # noqa: ARG002  (used by subclasses)
-        """Return what steers the ship in ``session``: the player's keyboard."""
-        return BrowserKeyboard(self._bridge)
 
 
 def main() -> GameLoop:
