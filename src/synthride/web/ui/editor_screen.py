@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
     from synthride.core.world.level import Level
     from synthride.web.browser.js_bridge import JsBridge, JsObject
+    from synthride.web.browser.local_levels import LocalLevels
 
 
 @dataclass(frozen=True)
@@ -132,18 +133,20 @@ class EditorScreen:
     LEVELS_URL: ClassVar[str] = "levels/"
     FILE_NAME: ClassVar[re.Pattern[str]] = re.compile(r"level_(\d+)\.json")
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         bridge: JsBridge,
         surface: JsObject,
         camera: JsObject,
         files: Sequence[str] = (),
         on_saved: Callable[[int, Level], object] | None = None,
+        *,
+        local: LocalLevels | None = None,
     ) -> None:
         """Render the toolbar into the ``editor`` element and paint with the mouse on ``surface``, seen by ``camera``.
 
-        ``files`` names the level files, in the order of the levels. Once the server has saved a level,
-        ``on_saved`` gets its index among them and the level.
+        ``files`` names the level files, in the order of the levels. Saves go to ``local``, in the browser, or to the
+        server when None. Once a level is saved, ``on_saved`` gets its index among them and the level.
         """
         self._bridge = bridge
         self._document = bridge.document
@@ -152,6 +155,7 @@ class EditorScreen:
         self._camera = camera
         self.files = list(files)
         self._on_saved = on_saved
+        self._local = local
         self.grid = TrackGrid.starter()
         self.settings = LevelSettings()
         self.index: int | None = None  # the level being edited, None for a new one
@@ -561,18 +565,23 @@ class EditorScreen:
         self._level = None
 
     def _save(self) -> None:
-        """Post the level file to the server."""
+        """Save the level file in the browser, or post it to the server."""
         if self._saving is not None:
             self.message = f"Still saving {self._saving[1]}…"
             return
         index = len(self.files) if self.index is None or self.index >= len(self.files) else self.index
         name = self.file
-        self._saving = (index, name, self.grid, self.level)
+        saving = self._saving = (index, name, self.grid, self.level)
+        text = self.settings.write(self.grid)
+        if self._local is not None:
+            if self._local.save(name, text):
+                self._saved(saving)
+            else:
+                self.on_save_refused("the browser storage is unavailable or full")
+            return
         self.message = f"Saving {name}…"
         bridge = self._bridge
-        options = bridge.obj(
-            method="POST", body=self.settings.write(self.grid), headers={"Content-Type": "application/json"}
-        )
+        options = bridge.obj(method="POST", body=text, headers={"Content-Type": "application/json"})
         bridge.window.fetch(f"{self.LEVELS_URL}{name}", options).then(self._saved_proxy).catch(self._failed_proxy)
 
     def on_save_response(self, response: JsObject) -> None:
@@ -582,19 +591,23 @@ class EditorScreen:
         if not response.ok:
             response.text().then(self._refused_proxy)
             return
-        index, name, grid, level = self._saving
+        self._saved(self._saving)
+
+    def _saved(self, saving: tuple[int, str, TrackGrid, Level]) -> None:
+        """Take in a saved level: its file, its index and the game's copy of it."""
+        index, name, grid, level = saving
         self._saving = None
         if index == len(self.files):
             self.files.append(name)
         if grid is self.grid:
             self.index = index
-        self.message = f"Saved {name}"
+        self.message = f"Saved {name}" if self._local is None else f"Saved {name} in this browser"
         if self._on_saved is not None:
             self._on_saved(index, level)
         self.refresh()
 
     def on_save_refused(self, text: str) -> None:
-        """Show why the server refused a save."""
+        """Show why a save was refused, by the server or the browser."""
         self._saving = None
         self.message = f"Not saved: {text}".strip()
         self.refresh()

@@ -20,8 +20,9 @@ HTML5 page that boots [Pyodide](https://pyodide.org) (CPython compiled to WebAss
 
 ## Features
 
-- **28 levels**, from *Neon Highway* to *Terminal Velocity*, each under its own sky: nebula colours, a planet and
-  sometimes a moon.
+- **32 levels**, from *Neon Highway* to *Terminal Velocity*, each under its own sky: nebula colours, a planet and
+  sometimes a moon. Eight easy, eight medium, eight hard, then eight that get harder and harder, the last one
+  almost impossible. Tracks get longer as they get harder, and some split into two or three separate lanes.
 - **Tracks built from blocks** 8 wide and up to 8 high: boost and slow strips, ice, kill blocks, jump pads, side
   pushers, refuel and oxygen pads, ramps and banked corners, square and round tunnels.
 - **Arcade physics**: per-level gravity, jumps with one double jump, ramps that launch you over gaps, and corner
@@ -29,8 +30,8 @@ HTML5 page that boots [Pyodide](https://pyodide.org) (CPython compiled to WebAss
 - **Neon visuals**: bloom glow, animated markings on the special blocks, the ship mirrored in the track, and sparks.
 - **Procedural sound**: a synthwave song sequenced live with WebAudio (bass, pad, lead and drums), plus synthesized
   sound effects.
-- **A 3D level editor**: paint the track with brushes, test-ride it at once, and save it straight into the game's
-  level files.
+- **A 3D level editor**: paint the track with brushes, test-ride it at once, and save it in your browser, or straight
+  into the game's level files with the dev server.
 
 ## Play
 
@@ -80,11 +81,7 @@ Press `Enter` on the title screen, choose a level with the arrow keys and press 
 
 ## Level editor
 
-```bash
-make serve-dev      # or: uv run synthride serve --dev
-```
-
-The dev server adds the level editor. Press `E` on the title screen to start a new track, or on a level in the
+Press `E` on the title screen to start a new track, or on a level in the
 level select to edit that level. The editor shows the track in 3D from a raised camera, with the brushes below.
 
 ![The level editor](data/screenshot-editor.jpg)
@@ -120,11 +117,20 @@ the start, or no finish line. The buttons below are **Undo**, **Test ride**, **S
 
 Letter shortcuts follow your keyboard layout, so `Z` undoes on AZERTY keyboards too.
 
-**Save** sends the track to the dev server, which checks it and writes it into `src/synthride/levels/`: over the
-edited level's file, or as a new `level_NN.json` after the last one. The level is playable right away, and stays in
-the game from then on. Saving rewrites the file, so comments written by hand in it are lost.
+**Save** keeps the track in your browser's local storage: over the edited level, or as a new level after the last
+one. The level is playable right away, and comes back each time you open the game in that browser. Clearing the
+site data loses it.
 
-Without `--dev` there is no editor, and the server refuses every `POST`, so the level files stay read-only.
+To change the game's own levels, run the dev server:
+
+```bash
+make serve-dev      # or: uv run synthride serve --dev
+```
+
+There, **Save** sends the track to the server instead, which checks it and writes it into `src/synthride/levels/`:
+over the edited level's file, or as a new `level_NN.json` after the last one. Saving rewrites the file, so comments
+written by hand in it are lost. The dev server ignores the levels saved in the browser. Without `--dev` the server
+refuses every `POST`, so the level files stay read-only.
 
 ## Level files
 
@@ -173,7 +179,7 @@ A ship leaving the top of a ramp keeps its climb, so a ramp that ends over a gap
 ## Host it
 
 `make site` (or `uv run synthride build --out dist/web`) writes a static `index.html` + `synthride.zip` that can be
-hosted anywhere, GitHub Pages included. The static site has no editor.
+hosted anywhere, GitHub Pages included. Its editor saves in the browser, like the non-dev server's.
 
 The `Dockerfile` serves that site with nginx:
 

@@ -67,7 +67,7 @@ def test_unknown_path_is_404(server: GameServer) -> None:
     assert error.value.code == 404
 
 
-def test_the_page_turns_the_editor_on_in_dev_mode_only(server: GameServer, dev_server: GameServer) -> None:
+def test_the_page_saves_to_the_server_in_dev_mode_only(server: GameServer, dev_server: GameServer) -> None:
     assert b"main(dev=True)" not in fetch(server.url)[1]
     assert b"main(dev=True)" in fetch(dev_server.url)[1]
 

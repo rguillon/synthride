@@ -172,7 +172,7 @@ try {
         *,
         dev: bool = False,
     ) -> None:
-        """Use the given library versions and load the bundle from ``bundle_url``; ``dev`` turns the editor on."""
+        """Use the given library versions and load the bundle from ``bundle_url``; ``dev`` saves edits to the server."""
         self._dev = dev
         self._pyodide_version = pyodide_version
         self._three_version = three_version

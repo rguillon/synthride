@@ -25,7 +25,7 @@ serve: ## Serve the game at http://127.0.0.1:8000
 	@uv run synthride serve
 
 .PHONY: serve-dev
-serve-dev: ## Serve the game with the level editor, whose saves write the level files
+serve-dev: ## Serve the game with the level editor saving to the level files, not the browser
 	@uv run synthride serve --dev
 
 .PHONY: screenshots

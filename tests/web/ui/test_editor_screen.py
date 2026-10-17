@@ -7,12 +7,14 @@ from types import SimpleNamespace
 import pytest
 
 from synthride.core.world.slope import Slope
+from synthride.web.browser.local_levels import LocalLevels
 from synthride.web.ui.editor_screen import EditorScreen
 from tests.level_factory import make_level
 from tests.web.fakes.fake_element import FakeElement
 from tests.web.fakes.fake_fetch import FakeFetch
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
 from tests.web.fakes.fake_js_object import FakeJsObject
+from tests.web.fakes.fake_local_storage import FakeLocalStorage
 
 
 class Target:
@@ -284,6 +286,32 @@ def test_a_refused_or_failed_save_is_reported(ed: SimpleNamespace) -> None:
     assert "server is unreachable" in html(ed, "editor-status")
     ed.screen.on_save_response(SimpleNamespace(ok=True))
     assert ed.saved == []
+
+
+def test_without_dev_mode_saves_stay_in_the_browser(ed: SimpleNamespace) -> None:
+    storage = ed.bridge.window.localStorage = FakeLocalStorage()
+    saved: list[int] = []
+    files = ["level_01.json", "level_02.json"]
+    screen = EditorScreen(
+        ed.bridge,
+        FakeElement("canvas", "canvas"),
+        ed.screen._camera,  # noqa: SLF001
+        files,
+        lambda index, _level: saved.append(index),
+        local=LocalLevels(ed.bridge),
+    )
+    screen.show()
+    screen.act("save")
+    assert ed.fetch.requests == []
+    assert saved == [2]
+    assert screen.index == 2
+    assert screen.files[-1] == "level_03.json"
+    assert "Saved level_03.json in this browser" in html(ed, "editor-status")
+    assert json.loads(json.loads(storage.items[LocalLevels.KEY])["level_03.json"])["track"]
+    storage.full = True
+    screen.act("save")
+    assert "Not saved: the browser storage is unavailable or full" in html(ed, "editor-status")
+    assert saved == [2]
 
 
 def test_warnings_for_a_missing_start_or_finish(ed: SimpleNamespace) -> None:

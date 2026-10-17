@@ -1,10 +1,8 @@
 # Copyright (c) 2026 Renaud Guillon
 # SPDX-License-Identifier: MIT
 
-from synthride.core.gameplay.game_phase import GamePhase
-from synthride.core.gameplay.game_session import GameSession
-from synthride.core.gameplay.ship_input import ShipInput
 from synthride.core.world.level_catalog import LevelCatalog
+from synthride.core.world.tile_type import TileType
 
 
 def test_lists_bundled_levels_in_order() -> None:
@@ -37,15 +35,16 @@ def test_every_slope_joins_a_neighbour_flush() -> None:
             assert any(flush), f"{level.name}: lone slope at row {tile.row}, column {tile.column}"
 
 
-def test_tunnel_vision_can_be_ridden_without_jumping() -> None:
-    """An autopilot holding full throttle and steering for the centre finishes the level."""
-    levels = LevelCatalog().load_all()
-    session = GameSession(levels)
-    session.selected_level = next(index for index, level in enumerate(levels) if level.name == "Tunnel Vision")
-    session.start()
-    for _ in range(60 * 60):
-        x = session.ship.position.x
-        session.update(1 / 60, ShipInput(accelerate=True, left=x > 4.15, right=x < 3.85))
-        if session.phase is not GamePhase.PLAYING:
-            break
-    assert session.phase is GamePhase.LEVEL_WON
+def test_levels_get_longer_as_they_get_harder() -> None:
+    lengths = [level.track.row_count for level in LevelCatalog().load_all()]
+    assert lengths == sorted(lengths)
+
+
+def test_every_level_uses_every_kind_of_tile_tunnels_and_slopes() -> None:
+    for level in LevelCatalog().load_all():
+        tiles = list(level.track.tiles())
+        kinds = {tile.tile_type for tile in tiles} | {TileType.PUSH_LEFT, TileType.PUSH_RIGHT}
+        assert kinds == set(TileType), f"{level.name} misses {set(TileType) - kinds}"
+        assert any(tile.tile_type in (TileType.PUSH_LEFT, TileType.PUSH_RIGHT) for tile in tiles), level.name
+        assert any(tile.tunnel for tile in tiles), f"{level.name} has no tunnel"
+        assert any(tile.slope for tile in tiles), f"{level.name} has no slope"

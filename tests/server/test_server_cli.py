@@ -42,10 +42,10 @@ def test_serve_runs_until_interrupted(capsys: pytest.CaptureFixture[str]) -> Non
     assert "http://localhost:9000/" in capsys.readouterr().out
 
 
-def test_serve_dev_turns_the_editor_on(capsys: pytest.CaptureFixture[str]) -> None:
+def test_serve_dev_saves_the_editor_tracks_to_the_level_files(capsys: pytest.CaptureFixture[str]) -> None:
     assert ServerCli(StubServer).run(["serve", "--dev"]) == 0
     assert StubServer.instances[-1].dev
-    assert "level editor on" in capsys.readouterr().out
+    assert "level editor saving to the level files" in capsys.readouterr().out
 
 
 def test_requires_a_command() -> None:

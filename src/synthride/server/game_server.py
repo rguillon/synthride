@@ -16,7 +16,7 @@ from synthride.server.level_folder import LevelFolder
 class GameServer(ThreadingHTTPServer):
     """A small HTTP server delivering the HTML5 page and the Python bundle it runs.
 
-    In dev mode the page has the level editor, and the editor's saves are written into the level files.
+    In dev mode the level editor's saves are written into the level files; otherwise they stay in the browser.
     """
 
     daemon_threads = True

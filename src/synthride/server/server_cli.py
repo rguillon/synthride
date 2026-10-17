@@ -31,7 +31,9 @@ class ServerCli:
         serve = commands.add_parser("serve", help="serve the game on a local web server")
         serve.add_argument("--host", default="127.0.0.1")
         serve.add_argument("--port", type=int, default=8000)
-        serve.add_argument("--dev", action="store_true", help="turn the level editor on, saving to the level files")
+        serve.add_argument(
+            "--dev", action="store_true", help="make the level editor save to the level files, not the browser"
+        )
         build = commands.add_parser("build", help="write a static site (index.html + synthride.zip)")
         build.add_argument("--out", type=Path, default=Path("dist/web"))
         return parser
@@ -52,9 +54,9 @@ class ServerCli:
         return 0
 
     def serve(self, host: str, port: int, *, dev: bool = False) -> int:
-        """Serve the game until interrupted, with the level editor when ``dev``."""
+        """Serve the game until interrupted, the level editor saving to the level files when ``dev``."""
         with self._server_factory(host, port, dev=dev) as server:
-            mode = ", level editor on" if dev else ""
+            mode = ", level editor saving to the level files" if dev else ""
             print(f"SynthRide running at {server.url}{mode} (Ctrl+C to stop)")  # noqa: T201
             try:
                 server.serve_forever()

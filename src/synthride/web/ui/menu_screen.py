@@ -23,7 +23,7 @@ class MenuScreen:
     KEYS = "↑ ↓ accelerate / brake &nbsp;·&nbsp; ← → strafe &nbsp;·&nbsp; SPACE jump, again in mid-air"
     KEYS_EXTRA = "ESC menu &nbsp;·&nbsp; M mute"
     EDITOR_KEY = " &nbsp;·&nbsp; E level editor"
-    LEVELS_PER_COLUMN = 7
+    LEVELS_PER_COLUMN = 8
     REPO_URL = "https://github.com/rguillon/synthride"
     # (tile types sharing a line, the pattern drawn on them, what they do)
     LEGEND: ClassVar[tuple[tuple[tuple[TileType, ...], str, str], ...]] = (
