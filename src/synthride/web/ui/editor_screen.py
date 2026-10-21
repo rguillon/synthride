@@ -313,7 +313,7 @@ class EditorScreen:
     def on_click(self, event: JsObject) -> None:
         """Carry out the action of the clicked button."""
         element = event.target.closest("[data-action]")
-        if element is not None:
+        if element:  # a lookup that finds nothing gives jsnull, falsy but not None
             self.act(self._data(element, "action"), self._data(element, "value"))
 
     def on_change(self, event: JsObject) -> None:

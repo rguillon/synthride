@@ -80,3 +80,19 @@ def test_letters_follow_the_players_layout() -> None:
     assert keyboard.letter("Digit1") == ""
     assert keyboard.letter("ArrowUp") == ""
     assert keyboard.ship_input().accelerate  # steering still goes by position
+
+
+def test_other_inputs_hold_release_and_press_keys() -> None:
+    _, keyboard = make_keyboard()
+    keyboard.hold("ArrowLeft")
+    keyboard.hold("ArrowLeft")  # already held: not a fresh press
+    keyboard.hold("Space")
+    assert keyboard.ship_input() == ShipInput(left=True, jump=True)
+    assert keyboard.consume_presses() == ["ArrowLeft", "Space"]
+    keyboard.release("ArrowLeft")
+    assert keyboard.ship_input() == ShipInput(jump=True)
+    keyboard.press("Escape")
+    assert keyboard.consume_presses() == ["Escape"]
+    assert keyboard.ship_input() == ShipInput(jump=True)
+    keyboard.release_all()
+    assert keyboard.ship_input() == ShipInput()

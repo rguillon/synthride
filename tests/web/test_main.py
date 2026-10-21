@@ -9,6 +9,7 @@ import pytest
 from synthride.web import main as main_module
 from synthride.web.game_loop import GameLoop
 from synthride.web.main import Main
+from tests.web.fakes.fake_audio_context import FakeAudioContext
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
 from tests.web.fakes.fake_js_object import FakeJsObject
 from tests.web.fakes.fake_window import FakeWindow
@@ -20,6 +21,16 @@ def test_build_wires_a_game_loop_with_bundled_levels() -> None:
     assert isinstance(loop, GameLoop)
     assert len(loop.session.levels) >= 3
     assert loop._editor is None  # noqa: SLF001
+
+
+def test_the_first_touch_unlocks_the_game_audio() -> None:
+    bridge = FakeJsBridge()
+    context = FakeAudioContext()
+    bridge.window.AudioContext = SimpleNamespace(new=lambda: context)
+    Main(bridge).build()
+    assert context.resume.calls == []
+    bridge.window.dispatch("touchend")
+    assert context.resume.calls == [()]
 
 
 def test_dev_mode_adds_the_editor_saving_to_the_level_files() -> None:

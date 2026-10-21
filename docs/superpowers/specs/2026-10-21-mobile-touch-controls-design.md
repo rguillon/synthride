@@ -5,7 +5,8 @@ Date: 2026-10-21 · Branch: `mobile`
 ## Goal
 
 Someone opening <https://rguillon.github.io/synthride/> on a phone can go from the title screen through level
-select to a full ride with touch alone, holding the phone in landscape.
+select to a full ride with touch alone, holding the phone in landscape. Every menu screen (title, level select,
+game over, victory) is usable by tap, including going back and muting.
 
 Success: a level can be completed comfortably with touch on a mid-range phone in landscape; desktop play is
 unchanged.
@@ -39,21 +40,25 @@ Gains a public API so any input source can drive the same state the key handlers
 
 `TouchControls(bridge, keyboard, unlock_audio)`:
 
-- Listens to `touchstart` on `window` (passive). On the first one it adds the `touch` class to `<body>` and asks
-  for full screen (`document.documentElement.requestFullscreen()`, if present; failure is ignored). Later
-  touches do nothing more.
-- Calls `unlock_audio()` from inside a `touchend` handler on `window`, until it has been called once. iOS Safari only
-  lets an `AudioContext` resume inside such a gesture handler, while the game resumes it later, from the animation
-  frame (`SynthMusic.start`); `Main` passes the context's `resume`.
+- Listens to `touchstart` on `window` (passive). On the first one it adds the `touch` class to `<body>`.
+- Calls `unlock_audio()` from inside every `touchend` handler on `window`. iOS Safari only lets an `AudioContext`
+  resume inside such a gesture handler, while the game resumes it later, from the animation frame
+  (`SynthMusic.start`), and suspends it again when the app is left; `Main` passes the context's `resume`. The first
+  `touchend` also asks for full screen (`document.documentElement.requestFullscreen()`, if present; failure is
+  ignored): a touch's start is not a gesture browsers grant it to.
 - Finds the `#touch` overlay in the page and listens on it (delegated) for `pointerdown`, `pointerup`,
   `pointercancel` and `pointerleave` (the last on each pad). Each pad is a `<button data-code="…">`:
   ◀ `ArrowLeft`, ▶ `ArrowRight`, ▲ `ArrowUp`, ▼ `ArrowDown`, JUMP `Space`.
+- `pointerup` and `pointercancel` are listened to on `window`: the finger may be lifted over the menu once it covers
+  the pads. `blur` forgets every pointer, as a hidden page does.
 - Tracks which code each `pointerId` holds. `pointerdown` on a pad holds its code; `pointerup`, `pointercancel` and
   `pointerleave` release the pointer's code unless another pointer still holds it. Pointer capture is
   released on `pointerdown` so a thumb sliding onto the neighbouring pad leaves the first (`pointerleave`) and
   enters the second (`pointerenter`, also handled as a hold while the pointer is down).
-- Two small buttons, `data-press="Escape"` (⏸) and `data-press="KeyM"` (🔇), call `keyboard.press`. For `KeyM`
-  this goes through `BrowserKeyboard.letter`, which falls back to the QWERTY letter `m`, so mute works.
+- Listens for `click` on `<body>` (delegated) on buttons carrying `data-press`, and calls `keyboard.press` with
+  it: ⏸ (`data-press="Escape"`, in `#touch`, riding only) and 🔇 (`data-press="KeyM"`, the fixed `#mute` button,
+  on every screen). For `KeyM` the press goes through `BrowserKeyboard.letter`, which falls back to the QWERTY
+  letter `m`, so mute works.
 - Releases every pointer and held code on `visibilitychange` to hidden. (The keyboard's `blur` handler already
   covers focus loss.)
 - Calls `preventDefault()` on pad `pointerdown` events; the CSS sets `touch-action: none` and
@@ -65,7 +70,10 @@ Gains a public API so any input source can drive the same state the key handlers
 - The title, game over and victory screens contain both texts, `<span class="key-text">PRESS ENTER</span>` and
   `<span class="touch-text">TAP TO START</span>`; CSS shows one according to `body.touch`.
 - Listens once for `click` on `#menu` and queues a tap: the level index when the click is inside a
-  `[data-level]` item, otherwise "anywhere". Clicks on links (the GitHub link) are left alone and not queued.
+  `[data-level]` item, "back" when inside a `[data-back]` element, otherwise "anywhere". Clicks on links (the
+  GitHub link) are left alone and not queued.
+- The level select has a `<button class="menu-back" data-back>◀ BACK</button>` at its top left, shown on touch only
+  (desktop keeps the `ESC back` hint).
 - `consume_taps()` returns the queued taps, oldest first, and empties the queue.
 
 Mouse clicks go through the same path, so desktop menus become clickable too.
@@ -75,28 +83,42 @@ Mouse clicks go through the same path, so desktop menus become clickable too.
 In `tick`, after consuming key presses, it consumes the menu taps:
 
 - tap on a level `i` in `LEVEL_SELECT`: `session.selected_level = i`, then start the ride as `Enter` does;
+- "back" tap in `LEVEL_SELECT`: handled as `Escape` (back to the title);
 - tap anywhere in `TITLE`, `GAME_OVER` or `VICTORY`: handled as `Enter`;
 - any other tap is ignored.
 
 ### `Main` (changed)
 
-Builds `TouchControls(bridge, keyboard, context.resume)` around the keyboard it passes to `GameLoop`. `GameLoop` never learns about
-touch.
+Builds `TouchControls(bridge, keyboard, context.resume)` around the keyboard it passes to `GameLoop`. `GameLoop`
+never learns about touch.
 
 ### Page (`html_page_builder.py`, changed)
 
 - The viewport meta tag gains `viewport-fit=cover`.
-- New markup: a `#touch` overlay holding the pad buttons and the ⏸ / 🔇 buttons, and a `#rotate` overlay
-  ("ROTATE YOUR PHONE ⟲").
+- New markup: a `#touch` overlay holding the pad buttons and ⏸, a fixed `#mute` button (🔇), and a `#rotate`
+  overlay ("ROTATE YOUR PHONE ⟲").
 - New CSS, all under `body.touch` so desktop is unchanged:
   - `#touch` is shown only while the HUD is shown (`body.touch #hud:not([hidden]) ~ #touch`), so pads never cover the
     menus or the editor.
   - Pads are about 64–72 px, semi-transparent neon outlines that glow pink while pressed; JUMP is the widest. They
     sit inside `env(safe-area-inset-*)` margins.
   - The HUD gauges (`.hud-bottom`) move from the bottom to a strip under the top bar; ⏸ and 🔇 sit at the top right.
+  - `#mute` is shown on touch on every screen (menus and riding), above the menu overlay; ⏸ only while riding.
   - `.keys` help lines and `.key-text` are hidden; `.touch-text` is shown.
   - `@media (orientation: portrait)` shows `#rotate` above everything.
-  - Level items get `cursor: pointer`.
+  - Level items get `cursor: pointer`, and `:active` gives the tapped one the pink "selected" look at once.
+  - `.menu-back` is shown.
+
+### Menus on a phone (CSS)
+
+Under `body.touch` and `@media (max-height: 500px)` (a landscape phone), the level select is made compact:
+
+- `.level-columns` becomes a grid of `repeat(auto-fill, minmax(15rem, 1fr))`, so the levels flow into as many columns
+  as the width allows rather than the fixed 7-row columns; each `li` keeps a 44 px minimum height for tapping.
+- The legend sits under the list in 3 columns; the subtitle and logo shrink.
+- The overlay keeps scrolling vertically. A scroll gesture fires no `click`, so scrolling never starts a level.
+
+Desktop keeps its 7-row columns: `LEVELS_PER_COLUMN` still drives the arrow keys there.
 
 ## Data flow
 
@@ -123,11 +145,14 @@ menu click ─► MenuScreen queue ─► GameLoop.tick ─► consume_taps()
 
 - Unit tests with the existing fakes (`FakeJsBridge`, `FakeWindow`, `FakeElement`, plus a new fake pointer event):
   - `BrowserKeyboard.hold` / `release` / `release_all` / `press`;
-  - `TouchControls`: first touch adds `body.touch`; the first `touchend` unlocks audio, once; pad down/up maps to `ShipInput`; two pointers on two pads;
-    sliding from one pad to the other; cancel and hidden page release; ⏸ / 🔇 queue `Escape` / `KeyM`;
-  - `MenuScreen`: `data-level` markup, `click` inside a level or elsewhere queues the right tap, link clicks don't;
-  - `GameLoop`: tap on the title opens level select; tap on level `i` rides level `i`; tap on game over returns.
+  - `TouchControls`: first touch adds `body.touch`; the first `touchend` unlocks audio, once; pad down/up maps to
+    `ShipInput`; two pointers on two pads; sliding from one pad to the other; cancel and hidden page release;
+    ⏸ / 🔇 clicks queue `Escape` / `KeyM`;
+  - `MenuScreen`: `data-level` and `data-back` markup; a `click` inside a level, on BACK or elsewhere queues the
+    right tap; link clicks don't;
+  - `GameLoop`: tap on the title opens level select; tap on level `i` rides level `i`; back in level select returns
+    to the title; tap on game over opens level select.
 - Phone smoke test: a Playwright script beside `tests/screenshots.py`, with a landscape phone viewport
-  (`has_touch=True`, `is_mobile=True`), taps title → level select → a level, holds ▲, and saves
-  `data/screenshot-mobile.jpg` for checking the layout.
+  (`has_touch=True`, `is_mobile=True`), taps title → level select (saving `data/screenshot-mobile-menu.jpg`) → a
+  level, holds ▲, and saves `data/screenshot-mobile.jpg` for checking both layouts.
 - Real device: after merging, Pages redeploys and the game is tried on a phone.

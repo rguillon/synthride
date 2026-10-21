@@ -14,17 +14,26 @@ from synthride.web.rendering.palette import Palette
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from synthride.web.browser.js_bridge import JsBridge
+    from synthride.web.browser.js_bridge import JsBridge, JsObject
 
 
 class MenuScreen:
-    """Full-screen overlays: title, level select, level clear, game over and victory."""
+    """Full-screen overlays: title, level select, level clear, game over and victory.
+
+    Clicks on them, by touch or mouse, are queued as taps: a level's index, :attr:`BACK` or :attr:`ANYWHERE`.
+    """
 
     KEYS = "↑ ↓ accelerate / brake &nbsp;·&nbsp; ← → strafe &nbsp;·&nbsp; SPACE jump, again in mid-air"
     KEYS_EXTRA = "ESC menu &nbsp;·&nbsp; M mute"
     EDITOR_KEY = " &nbsp;·&nbsp; E level editor"
     LEVELS_PER_COLUMN = 7
     REPO_URL = "https://github.com/rguillon/synthride"
+    # The prompt to go on, in words for the keyboard and for touch: the page shows the one that fits
+    PROMPT = (
+        '<p class="prompt"><span class="key-text">PRESS ENTER</span><span class="touch-text">TAP TO START</span></p>'
+    )
+    BACK = "back"
+    ANYWHERE = "anywhere"
     # (tile types sharing a line, the pattern drawn on them, what they do)
     LEGEND: ClassVar[tuple[tuple[tuple[TileType, ...], str, str], ...]] = (
         ((TileType.NORMAL,), "■", "solid ground"),
@@ -44,6 +53,8 @@ class MenuScreen:
         self._container = bridge.document.getElementById("menu")
         self._current: str | None = None
         self._editor_key = self.EDITOR_KEY if editor else ""
+        self._taps: list[int | str] = []
+        self._container.addEventListener("click", bridge.proxy(self.on_click))
 
     @property
     def current(self) -> str | None:
@@ -55,8 +66,7 @@ class MenuScreen:
         self._show(
             "title",
             '<h1 class="logo">SYNTHRIDE</h1><p class="subtitle">RIDE THE NEON GRID</p>'
-            '<p class="prompt">PRESS ENTER</p>'
-            f'<p class="keys">{self.KEYS}<br>{self.KEYS_EXTRA}{self._editor_key}</p>',
+            f'{self.PROMPT}<p class="keys">{self.KEYS}<br>{self.KEYS_EXTRA}{self._editor_key}</p>',
         )
 
     def show_level_select(self, names: Sequence[str], selected: int, *, editor: bool = False) -> None:
@@ -65,7 +75,8 @@ class MenuScreen:
         With an ``editor``, the keys tell how to edit the selected level.
         """
         items = [
-            f'<li class="{"selected" if index == selected else ""}">{index + 1:02d} · {escape(name.upper())}</li>'
+            f'<li class="{"selected" if index == selected else ""}" data-level="{index}">'
+            f"{index + 1:02d} · {escape(name.upper())}</li>"
             for index, name in enumerate(names)
         ]
         columns = "".join(
@@ -75,7 +86,7 @@ class MenuScreen:
         edit = " &nbsp;·&nbsp; E edit" if editor else ""
         self._show(
             f"select:{selected}:{editor}:{'|'.join(names)}",
-            '<p class="subtitle">SELECT LEVEL</p>'
+            '<button class="menu-back" data-back>◀ BACK</button><p class="subtitle">SELECT LEVEL</p>'
             f'<div class="level-columns">{columns}</div>{self.legend()}'
             f'<p class="keys">↑ ↓ ← → choose &nbsp;·&nbsp; ENTER ride{edit} &nbsp;·&nbsp; ESC back</p>'
             f'<a class="repo-link" href="{self.REPO_URL}" target="_blank" rel="noopener">SOURCE ON GITHUB</a>',
@@ -102,14 +113,32 @@ class MenuScreen:
 
     def show_game_over(self) -> None:
         """Show the game over screen."""
-        self._show("game-over", '<h2 class="headline">GAME OVER</h2><p class="prompt">PRESS ENTER</p>')
+        self._show("game-over", f'<h2 class="headline">GAME OVER</h2>{self.PROMPT}')
 
     def show_victory(self) -> None:
         """Show the victory screen."""
         self._show(
             "victory",
-            '<h1 class="logo">YOU WIN</h1><p class="subtitle">ALL GRIDS CONQUERED</p><p class="prompt">PRESS ENTER</p>',
+            f'<h1 class="logo">YOU WIN</h1><p class="subtitle">ALL GRIDS CONQUERED</p>{self.PROMPT}',
         )
+
+    def on_click(self, event: JsObject) -> None:
+        """Queue the tap a click makes: on a level, on the back button or anywhere else; links are left to open."""
+        target = event.target  # a lookup that finds nothing gives jsnull, falsy but not None
+        if target.closest("a"):
+            return
+        level = target.closest("[data-level]")
+        if level:
+            self._taps.append(int(level.dataset.level))
+        elif target.closest("[data-back]"):
+            self._taps.append(self.BACK)
+        else:
+            self._taps.append(self.ANYWHERE)
+
+    def consume_taps(self) -> list[int | str]:
+        """Return the taps made since the last call, oldest first."""
+        taps, self._taps = self._taps, []
+        return taps
 
     def hide(self) -> None:
         """Hide the menus."""

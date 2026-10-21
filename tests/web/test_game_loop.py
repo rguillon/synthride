@@ -108,7 +108,7 @@ def test_menu_navigation_to_playing_and_back(game: SimpleNamespace) -> None:
     assert game.session.phase is GamePhase.LEVEL_SELECT
     assert game.context.resume.calls == [()]
     press(game, "ArrowDown")
-    assert '<li class="selected">02' in menu_html(game)
+    assert '<li class="selected" data-level="1">02' in menu_html(game)
     press(game, "ArrowUp", "ArrowUp")
     assert game.session.selected_level == 1
     press(game, "Enter")
@@ -158,6 +158,41 @@ def test_end_screens_return_to_level_select(game: SimpleNamespace, phase: GamePh
     assert "PRESS ENTER" in menu_html(game)
     press(game, "Enter")
     assert game.session.phase is GamePhase.LEVEL_SELECT
+
+
+def tap(game: SimpleNamespace, target: FakeElement) -> None:
+    game.bridge.document.getElementById("menu").dispatch("click", SimpleNamespace(target=target))
+    game.loop.tick(1 / 60)
+
+
+def test_taps_walk_the_menus(game: SimpleNamespace) -> None:
+    tap(game, FakeElement())
+    assert game.session.phase is GamePhase.LEVEL_SELECT
+    assert game.context.resume.calls == [()]
+    tap(game, FakeElement(tag="button", back=""))
+    assert game.session.phase is GamePhase.TITLE
+    tap(game, FakeElement())
+    tap(game, FakeElement(tag="li", level="1"))
+    assert game.session.phase is GamePhase.PLAYING
+    assert game.session.level_index == 1
+
+
+@pytest.mark.parametrize("phase", [GamePhase.GAME_OVER, GamePhase.VICTORY])
+def test_a_tap_on_an_end_screen_opens_the_level_select(game: SimpleNamespace, phase: GamePhase) -> None:
+    game.session.phase = phase
+    tap(game, FakeElement())
+    assert game.session.phase is GamePhase.LEVEL_SELECT
+
+
+def test_taps_out_of_place_are_ignored(game: SimpleNamespace) -> None:
+    tap(game, FakeElement())  # level select
+    tap(game, FakeElement(tag="li", level="9"))  # no such level
+    tap(game, FakeElement())  # anywhere on the level select
+    assert game.session.phase is GamePhase.LEVEL_SELECT
+    assert game.session.selected_level == 0
+    game.session.start()
+    tap(game, FakeElement())  # a stray tap while riding
+    assert game.session.phase is GamePhase.PLAYING
 
 
 def play_until(game: SimpleNamespace, phase: GamePhase, *codes: str) -> None:

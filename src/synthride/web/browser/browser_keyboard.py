@@ -36,7 +36,7 @@ class BrowserKeyboard:
         window = bridge.window
         window.addEventListener("keydown", bridge.proxy(self.on_key_down))
         window.addEventListener("keyup", bridge.proxy(self.on_key_up))
-        window.addEventListener("blur", bridge.proxy(lambda _event: self._held.clear()))
+        window.addEventListener("blur", bridge.proxy(lambda _event: self.release_all()))
 
     def on_key_down(self, event: JsObject) -> None:
         """Record a pressed key, keeping the page from scrolling on game keys.
@@ -51,16 +51,33 @@ class BrowserKeyboard:
             return
         if code in self.CAPTURED:
             event.preventDefault()
-        if not event.repeat:
-            self._presses.append(code)
         character = getattr(event, "key", None)
         if isinstance(character, str):
             self._characters[code] = character
-        self._held.add(code)
+        if not event.repeat:
+            self.hold(code)
 
     def on_key_up(self, event: JsObject) -> None:
         """Record a released key."""
-        self._held.discard(event.code)
+        self.release(event.code)
+
+    def hold(self, code: str) -> None:
+        """Hold the key at ``code``, queueing it as a fresh press unless it is already held."""
+        if code not in self._held:
+            self._held.add(code)
+            self._presses.append(code)
+
+    def release(self, code: str) -> None:
+        """Release the key at ``code``."""
+        self._held.discard(code)
+
+    def release_all(self) -> None:
+        """Release every key."""
+        self._held.clear()
+
+    def press(self, code: str) -> None:
+        """Queue the key at ``code`` as a fresh press without holding it."""
+        self._presses.append(code)
 
     def ship_input(self) -> ShipInput:
         """Return the ship commands for the keys held right now."""

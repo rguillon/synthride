@@ -12,6 +12,7 @@ from synthride.web.audio.synth_music import SynthMusic
 from synthride.web.audio.synth_voices import SynthVoices
 from synthride.web.browser.browser_keyboard import BrowserKeyboard
 from synthride.web.browser.js_bridge import JsBridge
+from synthride.web.browser.touch_controls import TouchControls
 from synthride.web.game_loop import GameLoop
 from synthride.web.rendering.neon_lines import NeonLines
 from synthride.web.rendering.neon_sparks import NeonSparks
@@ -47,6 +48,8 @@ class Main:
         reflection = ShipReflection(bridge)
         session = GameSession(self._catalog.load_all())
         renderer = SceneRenderer(bridge, bridge.document.getElementById("stage"), lines, reflection=reflection)
+        keyboard = BrowserKeyboard(bridge)
+        TouchControls(bridge, keyboard, context.resume)  # kept alive by its listeners
         editor = None
         if self._dev:
             files = self._catalog.file_names()
@@ -54,7 +57,7 @@ class Main:
         return GameLoop(
             bridge,
             session=session,
-            keyboard=BrowserKeyboard(bridge),
+            keyboard=keyboard,
             renderer=renderer,
             track_builder=TrackMeshBuilder(bridge, lines, reflection=reflection),
             ship_model=ShipModel(bridge, lines),

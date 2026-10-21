@@ -22,7 +22,7 @@ class HtmlPageBuilder:
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SynthRide</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&display=swap">
@@ -117,6 +117,53 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
 .editor-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; }
 #editor .keys { margin: 0; }
 #loading { z-index: 4; }
+.level-list li { cursor: pointer; }
+/* Touch: shown once the page has seen a touch, which adds the "touch" class to the body */
+#touch, #mute, #rotate, .menu-back, .touch-text { display: none; }
+#touch { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+#touch, #touch button, #mute { touch-action: none; user-select: none; -webkit-user-select: none;
+  -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+body.touch #hud:not([hidden]) ~ #touch { display: block; }
+.pad-group { position: absolute; bottom: max(16px, env(safe-area-inset-bottom)); display: flex; gap: 12px; }
+.pad-left { left: max(16px, env(safe-area-inset-left)); }
+.pad-right { right: max(16px, env(safe-area-inset-right)); flex-wrap: wrap; justify-content: flex-end;
+  width: calc(68px * 2 + 12px); }
+.pad, .touch-button { pointer-events: auto; font: inherit; font-weight: 800; color: var(--cyan);
+  background: rgba(11,0,20,0.25); border: 2px solid rgba(0,240,255,0.55); border-radius: 14px;
+  text-shadow: 0 0 8px currentColor; box-shadow: 0 0 10px rgba(0,240,255,0.35); padding: 0; }
+.pad { width: 68px; height: 68px; font-size: 1.5rem; }
+.pad-jump { width: 100%; font-size: 1rem; letter-spacing: 0.3em; color: var(--pink);
+  border-color: rgba(255,43,214,0.6); }
+.pad.held { color: var(--pink); border-color: var(--pink); background: rgba(255,43,214,0.25);
+  box-shadow: 0 0 20px var(--pink); }
+.touch-button { position: fixed; top: max(10px, env(safe-area-inset-top)); width: 44px; height: 44px;
+  font-size: 1.1rem; }
+#mute { right: max(16px, env(safe-area-inset-right)); z-index: 4; }
+.touch-menu { right: calc(max(16px, env(safe-area-inset-right)) + 56px); }
+body.touch #mute { display: block; }
+body.touch .hud-top, body.touch .progress { margin-right: 112px; }
+body.touch .hud-bottom { top: 4.2rem; bottom: auto; right: 16px; }
+body.touch .keys, body.touch .key-text { display: none; }
+body.touch .touch-text { display: inline; }
+body.touch .menu-back { display: block; align-self: flex-start; flex-shrink: 0; font: inherit; font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  color: var(--cyan); background: rgba(11,0,20,0.5); border: 1px solid rgba(0,240,255,0.5); min-height: 44px;
+  padding: 0 1rem; text-shadow: 0 0 8px var(--cyan); }
+body.touch .level-list li:active { border-color: var(--pink); color: var(--pink); box-shadow: 0 0 16px var(--pink);
+  text-shadow: 0 0 8px var(--pink); }
+#rotate { z-index: 6; }
+@media (orientation: portrait) { body.touch #rotate { display: flex; } }
+@media (max-height: 500px) {
+  body.touch .overlay { gap: 0.7rem; padding-top: max(16px, env(safe-area-inset-top)); }
+  body.touch .level-columns { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 0.5rem; width: 100%; padding: 0 max(16px, env(safe-area-inset-left)); }
+  body.touch .level-list { display: contents; }
+  body.touch .level-list li { min-height: 44px; display: flex; align-items: center; margin: 0; padding: 0 0.7rem;
+    overflow: hidden; }
+  body.touch .legend { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body.touch .logo { font-size: clamp(2rem, 8vw, 4rem); }
+  body.touch .subtitle { font-size: 0.85rem; }
+}
 @keyframes blink { to { visibility: hidden; } }
 @media (max-width: 600px) { .hud-bottom, .legend { grid-template-columns: 1fr; } }
 </style>
@@ -128,8 +175,22 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
 <body>
 <div id="stage"></div>
 <div id="hud" hidden></div>
+<div id="touch">
+  <div class="pad-group pad-left">
+    <button class="pad" data-code="ArrowLeft" aria-label="Left">&#9664;</button>
+    <button class="pad" data-code="ArrowRight" aria-label="Right">&#9654;</button>
+  </div>
+  <div class="pad-group pad-right">
+    <button class="pad" data-code="ArrowDown" aria-label="Brake">&#9660;</button>
+    <button class="pad" data-code="ArrowUp" aria-label="Accelerate">&#9650;</button>
+    <button class="pad pad-jump" data-code="Space">JUMP</button>
+  </div>
+  <button class="touch-button touch-menu" data-press="Escape" aria-label="Menu">II</button>
+</div>
 <div id="menu" class="overlay" hidden></div>
 <div id="editor" hidden></div>
+<button id="mute" class="touch-button" data-press="KeyM" aria-label="Mute">&#128263;</button>
+<div id="rotate" class="overlay"><h2 class="headline">ROTATE YOUR PHONE &#10226;</h2></div>
 <div id="loading" class="overlay">
   <h1 class="logo">SYNTHRIDE</h1>
   <p class="subtitle" id="loading-status">Booting Python&hellip;</p>
