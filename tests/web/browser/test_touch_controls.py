@@ -28,7 +28,10 @@ def make_touch() -> SimpleNamespace:
 
 def dispatch(t: SimpleNamespace, event_type: str, code: str, pointer_id: int) -> FakePointerEvent:
     event = FakePointerEvent(t.pads[code], pointer_id)
-    t.bridge.document.getElementById("touch").dispatch(event_type, event)
+    if event_type in ("pointerup", "pointercancel"):  # they bubble up to the window, which listens for them
+        t.bridge.window.dispatch(event_type, event)
+    else:
+        t.bridge.document.getElementById("touch").dispatch(event_type, event)
     return event
 
 
@@ -40,21 +43,28 @@ def up(t: SimpleNamespace, code: str, pointer_id: int) -> FakePointerEvent:
     return dispatch(t, "pointerup", code, pointer_id)
 
 
-def test_the_first_touch_turns_touch_mode_on_and_asks_for_full_screen() -> None:
+def test_the_first_touch_turns_touch_mode_on() -> None:
     t = make_touch()
     assert not t.touch.active
     t.bridge.window.dispatch("touchstart")
-    t.bridge.window.dispatch("touchstart")
     assert t.bridge.document.body.classList.contains("touch")
     assert t.touch.active
+
+
+def test_full_screen_is_asked_for_once_on_a_touchend() -> None:
+    t = make_touch()  # browsers only grant it inside a gesture's end, not its start
+    t.bridge.window.dispatch("touchstart")
+    assert t.bridge.document.documentElement.fullscreen_requests == 0
+    t.bridge.window.dispatch("touchend")
+    t.bridge.window.dispatch("touchend")
     assert t.bridge.document.documentElement.fullscreen_requests == 1
 
 
-def test_the_first_touchend_unlocks_audio_once() -> None:
-    t = make_touch()
+def test_every_touchend_unlocks_audio() -> None:
+    t = make_touch()  # iOS suspends audio again when the app is left
     t.bridge.window.dispatch("touchend")
     t.bridge.window.dispatch("touchend")
-    assert t.unlocks == 1
+    assert t.unlocks == 2
 
 
 def test_pads_hold_their_keys_while_pressed() -> None:
@@ -139,8 +149,9 @@ def test_menu_and_mute_buttons_press_their_keys() -> None:
 def test_touches_off_the_pads_do_nothing() -> None:
     t = make_touch()
     element = t.bridge.document.getElementById("touch")
-    for event_type in ("pointerdown", "pointerover", "pointerout", "pointerup"):
+    for event_type in ("pointerdown", "pointerover", "pointerout"):
         element.dispatch(event_type, FakePointerEvent(FakeElement(), 1))
+    t.bridge.window.dispatch("pointerup", FakePointerEvent(FakeElement(), 1))
     assert t.keyboard.ship_input() == ShipInput()
     assert t.keyboard.consume_presses() == []
 
@@ -150,5 +161,23 @@ def test_pads_are_told_apart_by_their_code_not_their_proxy() -> None:
     element = t.bridge.document.getElementById("touch")
     element.dispatch("pointerdown", FakePointerEvent(FakeElement(tag="button", code="ArrowUp"), 1))
     element.dispatch("pointerdown", FakePointerEvent(FakeElement(tag="button", code="ArrowUp"), 2))
-    element.dispatch("pointerup", FakePointerEvent(FakeElement(tag="button", code="ArrowUp"), 1))
+    t.bridge.window.dispatch("pointerup", FakePointerEvent(FakeElement(tag="button", code="ArrowUp"), 1))
     assert t.keyboard.ship_input() == ShipInput(accelerate=True)
+
+
+def test_a_finger_lifted_off_the_pads_still_releases_its_pad() -> None:
+    t = make_touch()  # the menu can cover the pads before the finger is lifted
+    down(t, "ArrowUp", 1)
+    t.bridge.window.dispatch("pointerup", FakePointerEvent(FakeElement("menu"), 1))
+    assert t.keyboard.ship_input() == ShipInput()
+    assert not t.pads["ArrowUp"].classList.contains("held")
+
+
+def test_losing_focus_forgets_the_pointers() -> None:
+    t = make_touch()
+    down(t, "ArrowLeft", 1)
+    t.bridge.window.dispatch("blur")
+    assert not t.pads["ArrowLeft"].classList.contains("held")
+    down(t, "ArrowLeft", 2)  # no stale pointer keeps the pad held after this one is lifted
+    up(t, "ArrowLeft", 2)
+    assert t.keyboard.ship_input() == ShipInput()

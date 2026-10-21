@@ -19,7 +19,7 @@ class TouchControls:
 
     Each pad in ``#touch`` names its key in ``data-code`` and is held while a pointer is down on it; buttons naming a
     key in ``data-press`` press it once when clicked. The first touch turns touch mode on: it adds the ``touch`` class
-    to ``<body>``, which shows the pads and the touch layout, and asks for full screen.
+    to ``<body>``, which shows the pads and the touch layout; the end of the first touch asks for full screen.
     """
 
     PAD = "[data-code]"
@@ -29,14 +29,16 @@ class TouchControls:
     # found elements are tested for truth.
 
     def __init__(self, bridge: JsBridge, keyboard: BrowserKeyboard, unlock_audio: Callable[[], object]) -> None:
-        """Listen to touches on the window and pointers on the pads, calling ``unlock_audio`` on the first touchend.
+        """Listen to touches on the window and pointers on the pads, calling ``unlock_audio`` at every touchend.
 
-        iOS Safari only lets audio start inside a touch handler, while the game starts it from an animation frame.
+        iOS Safari only lets audio start inside a touch handler, while the game starts it from an animation frame; it
+        also suspends audio again whenever the player leaves the app.
         """
         self._bridge = bridge
         self._keyboard = keyboard
-        self._unlock_audio: Callable[[], object] | None = unlock_audio
+        self._unlock_audio = unlock_audio
         self.active = False
+        self._asked_full_screen = False
         self._pointers: dict[int, JsObject] = {}  # each pointer that is down, and the pad under it (None: no pad)
         window, document = bridge.window, bridge.document
         passive = bridge.obj(passive=True)
@@ -46,27 +48,30 @@ class TouchControls:
         pads.addEventListener("pointerdown", bridge.proxy(self.on_pointer_down))
         pads.addEventListener("pointerover", bridge.proxy(self.on_pointer_over))
         pads.addEventListener("pointerout", bridge.proxy(self.on_pointer_out))
-        pads.addEventListener("pointerup", bridge.proxy(self.on_pointer_end))
-        pads.addEventListener("pointercancel", bridge.proxy(self.on_pointer_end))
+        # A finger may be lifted over the menu, once it covers or hides the pads: listen for ends everywhere
+        window.addEventListener("pointerup", bridge.proxy(self.on_pointer_end))
+        window.addEventListener("pointercancel", bridge.proxy(self.on_pointer_end))
+        window.addEventListener("blur", bridge.proxy(lambda _event: self.release_all()))
         document.body.addEventListener("click", bridge.proxy(self.on_click))
         document.addEventListener("visibilitychange", bridge.proxy(self.on_visibility_change))
 
     def on_touch_start(self, _event: JsObject) -> None:
-        """Turn touch mode on at the first touch, and ask for full screen where the browser allows it."""
-        if self.active:
-            return
-        self.active = True
-        document = self._bridge.document
-        document.body.classList.toggle("touch", True)  # noqa: FBT003
-        request = getattr(document.documentElement, "requestFullscreen", None)
-        if request is not None:
-            request().catch(self._bridge.proxy(lambda _error: None))
+        """Turn touch mode on at the first touch."""
+        if not self.active:
+            self.active = True
+            self._bridge.document.body.classList.toggle("touch", True)  # noqa: FBT003
 
     def on_touch_end(self, _event: JsObject) -> None:
-        """Unlock audio, the first time."""
-        if self._unlock_audio is not None:
-            unlock, self._unlock_audio = self._unlock_audio, None
-            unlock()
+        """Unlock audio, and ask for full screen the first time, where the browser allows it.
+
+        Both need a user gesture, which the end of a touch is and its start is not.
+        """
+        self._unlock_audio()
+        if not self._asked_full_screen:
+            self._asked_full_screen = True
+            request = getattr(self._bridge.document.documentElement, "requestFullscreen", None)
+            if request is not None:
+                request().catch(self._bridge.proxy(lambda _error: None))
 
     def on_pointer_down(self, event: JsObject) -> None:
         """Hold the pad under a new pointer, letting the pointer go on to the next pad if the thumb slides."""
@@ -103,8 +108,11 @@ class TouchControls:
 
     def on_visibility_change(self, _event: JsObject) -> None:
         """Let go of everything when the page is hidden: the pointers' ends would never arrive."""
-        if self._bridge.document.visibilityState != "hidden":
-            return
+        if self._bridge.document.visibilityState == "hidden":
+            self.release_all()
+
+    def release_all(self) -> None:
+        """Let go of every pad and forget every pointer."""
         for pointer_id in list(self._pointers):
             self._leave(pointer_id)
         self._pointers.clear()

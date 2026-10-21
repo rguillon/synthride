@@ -40,15 +40,17 @@ Gains a public API so any input source can drive the same state the key handlers
 
 `TouchControls(bridge, keyboard, unlock_audio)`:
 
-- Listens to `touchstart` on `window` (passive). On the first one it adds the `touch` class to `<body>` and asks
-  for full screen (`document.documentElement.requestFullscreen()`, if present; failure is ignored). Later
-  touches do nothing more.
-- Calls `unlock_audio()` from inside a `touchend` handler on `window`, until it has been called once. iOS Safari only
-  lets an `AudioContext` resume inside such a gesture handler, while the game resumes it later, from the animation
-  frame (`SynthMusic.start`); `Main` passes the context's `resume`.
+- Listens to `touchstart` on `window` (passive). On the first one it adds the `touch` class to `<body>`.
+- Calls `unlock_audio()` from inside every `touchend` handler on `window`. iOS Safari only lets an `AudioContext`
+  resume inside such a gesture handler, while the game resumes it later, from the animation frame
+  (`SynthMusic.start`), and suspends it again when the app is left; `Main` passes the context's `resume`. The first
+  `touchend` also asks for full screen (`document.documentElement.requestFullscreen()`, if present; failure is
+  ignored): a touch's start is not a gesture browsers grant it to.
 - Finds the `#touch` overlay in the page and listens on it (delegated) for `pointerdown`, `pointerup`,
   `pointercancel` and `pointerleave` (the last on each pad). Each pad is a `<button data-code="…">`:
   ◀ `ArrowLeft`, ▶ `ArrowRight`, ▲ `ArrowUp`, ▼ `ArrowDown`, JUMP `Space`.
+- `pointerup` and `pointercancel` are listened to on `window`: the finger may be lifted over the menu once it covers
+  the pads. `blur` forgets every pointer, as a hidden page does.
 - Tracks which code each `pointerId` holds. `pointerdown` on a pad holds its code; `pointerup`, `pointercancel` and
   `pointerleave` release the pointer's code unless another pointer still holds it. Pointer capture is
   released on `pointerdown` so a thumb sliding onto the neighbouring pad leaves the first (`pointerleave`) and
