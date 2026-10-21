@@ -27,7 +27,7 @@ class FakeWindow(FakeJsObject):
         self.frame_callbacks: list[Callable] = []
         self.AudioContext = SimpleNamespace(new=FakeAudioContext)
 
-    def addEventListener(self, event_type: str, listener: Callable) -> None:  # noqa: N802
+    def addEventListener(self, event_type: str, listener: Callable, *_options: object) -> None:  # noqa: N802
         self.listeners.setdefault(event_type, []).append(listener)
 
     def dispatch(self, event_type: str, event: object = None) -> None:

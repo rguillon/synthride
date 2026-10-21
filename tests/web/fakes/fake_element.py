@@ -3,9 +3,11 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 from tests.web.fakes.fake_class_list import FakeClassList
+from tests.web.fakes.fake_fetch import FakePromise
 from tests.web.fakes.fake_js_object import FakeJsObject
 
 if TYPE_CHECKING:
@@ -13,9 +15,9 @@ if TYPE_CHECKING:
 
 
 class FakeElement:
-    """A DOM element with the properties the game touches."""
+    """A DOM element with the properties the game touches; keywords become its ``data-`` attributes."""
 
-    def __init__(self, element_id: str = "", tag: str = "div") -> None:
+    def __init__(self, element_id: str = "", tag: str = "div", **dataset: str) -> None:
         self.id = element_id
         self.tag = tag
         self.width = self.height = 0
@@ -28,7 +30,10 @@ class FakeElement:
         self.children: list = []
         self.value = ""
         self.clientWidth = self.clientHeight = 0
+        self.dataset = SimpleNamespace(**dataset)
         self.captured: list[int] = []
+        self.released: list[int] = []
+        self.fullscreen_requests = 0
         self.clicks = 0
         self.listeners: dict[str, list[Callable]] = {}
 
@@ -47,6 +52,19 @@ class FakeElement:
 
     def setPointerCapture(self, pointer_id: int) -> None:  # noqa: N802
         self.captured.append(pointer_id)
+
+    def releasePointerCapture(self, pointer_id: int) -> None:  # noqa: N802
+        self.released.append(pointer_id)
+
+    def requestFullscreen(self) -> FakePromise:  # noqa: N802
+        self.fullscreen_requests += 1
+        return FakePromise()
+
+    def closest(self, selector: str) -> FakeElement | None:
+        """Match ``[data-<name>]`` against the own ``data-`` attributes, or a tag name; ancestors are not modelled."""
+        if selector.startswith("[data-"):
+            return self if hasattr(self.dataset, selector[len("[data-") : -1]) else None
+        return self if selector == self.tag else None
 
     def click(self) -> None:
         self.clicks += 1
