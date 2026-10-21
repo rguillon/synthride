@@ -33,6 +33,11 @@ screenshots: ## Take an in-game and a level editor screenshot into data/ (1600x9
 	@uv run playwright install chromium-headless-shell
 	@uv run python -m tests.screenshots
 
+.PHONY: screenshots-phone
+screenshots-phone: ## Take phone-sized level select and in-game screenshots into data/ (844x390, touch)
+	@uv run playwright install chromium-headless-shell
+	@uv run python -m tests.phone_screenshots
+
 .PHONY: site
 site: ## Build a static site of the game into dist/web
 	@uv run synthride build --out dist/web

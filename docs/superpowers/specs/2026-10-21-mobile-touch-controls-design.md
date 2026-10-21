@@ -111,7 +111,7 @@ never learns about touch.
 
 Under `body.touch` and `@media (max-height: 500px)` (a landscape phone), the level select is made compact:
 
-- `.level-columns` becomes a grid of `repeat(auto-fill, minmax(11rem, 1fr))`, so the levels flow into as many columns
+- `.level-columns` becomes a grid of `repeat(auto-fill, minmax(15rem, 1fr))`, so the levels flow into as many columns
   as the width allows rather than the fixed 7-row columns; each `li` keeps a 44 px minimum height for tapping.
 - The legend sits under the list in 3 columns; the subtitle and logo shrink.
 - The overlay keeps scrolling vertically. A scroll gesture fires no `click`, so scrolling never starts a level.

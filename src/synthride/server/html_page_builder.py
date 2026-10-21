@@ -145,8 +145,8 @@ body.touch .hud-top, body.touch .progress { margin-right: 112px; }
 body.touch .hud-bottom { top: 4.2rem; bottom: auto; right: 16px; }
 body.touch .keys, body.touch .key-text { display: none; }
 body.touch .touch-text { display: inline; }
-body.touch .menu-back { display: block; position: absolute; top: max(10px, env(safe-area-inset-top));
-  left: max(16px, env(safe-area-inset-left)); font: inherit; font-size: 0.75rem; letter-spacing: 0.15em;
+body.touch .menu-back { display: block; align-self: flex-start; flex-shrink: 0; font: inherit; font-size: 0.75rem;
+  letter-spacing: 0.15em;
   color: var(--cyan); background: rgba(11,0,20,0.5); border: 1px solid rgba(0,240,255,0.5); min-height: 44px;
   padding: 0 1rem; text-shadow: 0 0 8px var(--cyan); }
 body.touch .level-list li:active { border-color: var(--pink); color: var(--pink); box-shadow: 0 0 16px var(--pink);
@@ -155,10 +155,11 @@ body.touch .level-list li:active { border-color: var(--pink); color: var(--pink)
 @media (orientation: portrait) { body.touch #rotate { display: flex; } }
 @media (max-height: 500px) {
   body.touch .overlay { gap: 0.7rem; padding-top: max(16px, env(safe-area-inset-top)); }
-  body.touch .level-columns { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  body.touch .level-columns { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
     gap: 0.5rem; width: 100%; padding: 0 max(16px, env(safe-area-inset-left)); }
   body.touch .level-list { display: contents; }
-  body.touch .level-list li { min-height: 44px; display: flex; align-items: center; margin: 0; padding: 0 0.7rem; }
+  body.touch .level-list li { min-height: 44px; display: flex; align-items: center; margin: 0; padding: 0 0.7rem;
+    overflow: hidden; }
   body.touch .legend { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   body.touch .logo { font-size: clamp(2rem, 8vw, 4rem); }
   body.touch .subtitle { font-size: 0.85rem; }
@@ -184,7 +185,7 @@ body.touch .level-list li:active { border-color: var(--pink); color: var(--pink)
     <button class="pad" data-code="ArrowUp" aria-label="Accelerate">&#9650;</button>
     <button class="pad pad-jump" data-code="Space">JUMP</button>
   </div>
-  <button class="touch-button touch-menu" data-press="Escape" aria-label="Menu">&#9208;</button>
+  <button class="touch-button touch-menu" data-press="Escape" aria-label="Menu">II</button>
 </div>
 <div id="menu" class="overlay" hidden></div>
 <div id="editor" hidden></div>

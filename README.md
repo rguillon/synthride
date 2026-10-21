@@ -36,6 +36,7 @@ HTML5 page that boots [Pyodide](https://pyodide.org) (CPython compiled to WebAss
 ## Play
 
 **[▶ Play SynthRide in your browser](https://rguillon.github.io/synthride/)**, nothing to install.
+On a phone, hold it sideways: on-screen pads appear at your first touch, and every menu works by tap.
 
 Or run it locally:
 
