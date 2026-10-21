@@ -38,6 +38,7 @@ class GameLoop:
     LEFT = frozenset({"ArrowLeft", "KeyA"})
     RIGHT = frozenset({"ArrowRight", "KeyD"})
     HUD_PHASES = frozenset({GamePhase.PLAYING, GamePhase.DYING, GamePhase.LEVEL_WON})
+    TAP_TO_GO_ON = frozenset({GamePhase.TITLE, GamePhase.GAME_OVER, GamePhase.VICTORY})
     EDIT = "e"
     MUTE = "m"
     # The stretch of track whose tunnel roofs the chase camera ducks under: from where it sits behind
@@ -106,6 +107,8 @@ class GameLoop:
         session = self.session
         for key in self._keyboard.consume_presses():
             self.handle_key(key)
+        for tap in self._menu.consume_taps():
+            self.handle_tap(tap)
         self._handle_editor_actions()
         events = session.update(dt, self._keyboard.ship_input())
         self._sound_effects.play(events)
@@ -158,6 +161,18 @@ class GameLoop:
             phase in (GamePhase.GAME_OVER, GamePhase.VICTORY) and key in self.CONFIRM
         ):
             session.open_level_select()
+
+    def handle_tap(self, tap: int | str) -> None:
+        """React to a tap on the menus, as the key it stands for: a level rides it, back is Escape, else Enter."""
+        session, phase = self.session, self.session.phase
+        if phase is GamePhase.LEVEL_SELECT:
+            if isinstance(tap, int) and 0 <= tap < len(session.levels):
+                session.selected_level = tap
+                self.handle_key("Enter")
+            elif tap == self._menu.BACK:
+                self.handle_key("Escape")
+        elif phase in self.TAP_TO_GO_ON and tap == self._menu.ANYWHERE:
+            self.handle_key("Enter")
 
     def _open_editor(self, editor: EditorScreen, *, from_level_select: bool) -> None:
         """Open the editor: on the selected level from the level select, on the last track from the title."""
