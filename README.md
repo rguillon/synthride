@@ -16,7 +16,8 @@ HTML5 page that boots [Pyodide](https://pyodide.org) (CPython compiled to WebAss
 [Three.js](https://threejs.org).
 
 - **GitHub repository**: <https://github.com/rguillon/synthride/>
-- **Documentation**: <https://rguillon.github.io/synthride/>
+- **Play online**: <https://rguillon.github.io/synthride/>
+- **Documentation**: <https://rguillon.github.io/synthride/docs/>
 
 ## Features
 

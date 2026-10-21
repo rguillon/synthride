@@ -24,7 +24,7 @@ synthride = "synthride.server.server_cli:main"
 [project.urls]
 Homepage = "https://rguillon.github.io/synthride/"
 Repository = "https://github.com/rguillon/synthride"
-Documentation = "https://rguillon.github.io/synthride/"
+Documentation = "https://rguillon.github.io/synthride/docs/"
 
 [dependency-groups]
 dev = [

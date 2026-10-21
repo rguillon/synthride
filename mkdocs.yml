@@ -1,6 +1,6 @@
 site_name: synthride
 repo_url: https://github.com/rguillon/synthride
-site_url: https://rguillon.github.io/synthride
+site_url: https://rguillon.github.io/synthride/docs/
 site_description: A SkyRoads-inspired synthwave 3D racer written in Python.
 site_author: Renaud Guillon
 edit_uri: edit/main/docs/
