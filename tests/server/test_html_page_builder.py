@@ -24,3 +24,16 @@ def test_page_has_the_game_containers() -> None:
 def test_dev_page_turns_the_editor_on() -> None:
     assert "main(dev=True)" in HtmlPageBuilder(dev=True).build()
     assert "main(dev=True)" not in HtmlPageBuilder().build()
+
+
+def test_page_has_the_touch_controls() -> None:
+    page = HtmlPageBuilder().build()
+    for code in ("ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space"):
+        assert f'data-code="{code}"' in page
+    for code in ("Escape", "KeyM"):
+        assert f'data-press="{code}"' in page
+    for element_id in ("touch", "mute", "rotate"):
+        assert f'id="{element_id}"' in page
+    assert page.index('id="hud"') < page.index('id="touch"')  # the pads show with the HUD: #hud ~ #touch
+    assert page.index('id="mute"') < page.index('id="loading"')  # the loading screen covers it
+    assert "viewport-fit=cover" in page
