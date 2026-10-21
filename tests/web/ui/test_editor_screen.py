@@ -12,6 +12,7 @@ from tests.level_factory import make_level
 from tests.web.fakes.fake_element import FakeElement
 from tests.web.fakes.fake_fetch import FakeFetch
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
+from tests.web.fakes.fake_js_null import JS_NULL, FakeJsNull
 from tests.web.fakes.fake_js_object import FakeJsObject
 
 
@@ -22,8 +23,8 @@ class Target:
         self.dataset = SimpleNamespace(**dataset)
         self.value = field_value
 
-    def closest(self, _selector: str) -> "Target | None":
-        return self if hasattr(self.dataset, "action") else None
+    def closest(self, _selector: str) -> "Target | FakeJsNull":
+        return self if hasattr(self.dataset, "action") else JS_NULL
 
 
 @pytest.fixture

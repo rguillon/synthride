@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from tests.web.fakes.fake_class_list import FakeClassList
 from tests.web.fakes.fake_fetch import FakePromise
+from tests.web.fakes.fake_js_null import JS_NULL, FakeJsNull
 from tests.web.fakes.fake_js_object import FakeJsObject
 
 if TYPE_CHECKING:
@@ -60,11 +61,11 @@ class FakeElement:
         self.fullscreen_requests += 1
         return FakePromise()
 
-    def closest(self, selector: str) -> FakeElement | None:
+    def closest(self, selector: str) -> FakeElement | FakeJsNull:
         """Match ``[data-<name>]`` against the own ``data-`` attributes, or a tag name; ancestors are not modelled."""
         if selector.startswith("[data-"):
-            return self if hasattr(self.dataset, selector[len("[data-") : -1]) else None
-        return self if selector == self.tag else None
+            return self if hasattr(self.dataset, selector[len("[data-") : -1]) else JS_NULL
+        return self if selector == self.tag else JS_NULL
 
     def click(self) -> None:
         self.clicks += 1

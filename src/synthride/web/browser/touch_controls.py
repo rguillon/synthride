@@ -25,6 +25,8 @@ class TouchControls:
     PAD = "[data-code]"
     BUTTON = "[data-press]"
     HELD = "held"
+    # A lookup that finds nothing gives JavaScript null, which Pyodide hands over as the falsy ``jsnull``, not None:
+    # found elements are tested for truth.
 
     def __init__(self, bridge: JsBridge, keyboard: BrowserKeyboard, unlock_audio: Callable[[], object]) -> None:
         """Listen to touches on the window and pointers on the pads, calling ``unlock_audio`` on the first touchend.
@@ -69,7 +71,7 @@ class TouchControls:
     def on_pointer_down(self, event: JsObject) -> None:
         """Hold the pad under a new pointer, letting the pointer go on to the next pad if the thumb slides."""
         pad = event.target.closest(self.PAD)
-        if pad is None:
+        if not pad:
             return
         event.preventDefault()
         pad.releasePointerCapture(event.pointerId)  # touch pointers are captured by their first element
@@ -79,7 +81,7 @@ class TouchControls:
     def on_pointer_over(self, event: JsObject) -> None:
         """Hold the pad a pointer that is down slides onto."""
         pad = event.target.closest(self.PAD)
-        if pad is not None and event.pointerId in self._pointers:
+        if pad and event.pointerId in self._pointers:
             self._enter(event.pointerId, pad)
 
     def on_pointer_out(self, event: JsObject) -> None:
@@ -96,7 +98,7 @@ class TouchControls:
     def on_click(self, event: JsObject) -> None:
         """Press the key of a clicked ``data-press`` button."""
         button = event.target.closest(self.BUTTON)
-        if button is not None:
+        if button:
             self._keyboard.press(str(button.dataset.press))
 
     def on_visibility_change(self, _event: JsObject) -> None:

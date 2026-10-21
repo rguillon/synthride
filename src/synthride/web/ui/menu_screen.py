@@ -124,13 +124,13 @@ class MenuScreen:
 
     def on_click(self, event: JsObject) -> None:
         """Queue the tap a click makes: on a level, on the back button or anywhere else; links are left to open."""
-        target = event.target
-        if target.closest("a") is not None:
+        target = event.target  # a lookup that finds nothing gives jsnull, falsy but not None
+        if target.closest("a"):
             return
         level = target.closest("[data-level]")
-        if level is not None:
+        if level:
             self._taps.append(int(level.dataset.level))
-        elif target.closest("[data-back]") is not None:
+        elif target.closest("[data-back]"):
             self._taps.append(self.BACK)
         else:
             self._taps.append(self.ANYWHERE)
