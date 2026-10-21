@@ -35,6 +35,10 @@ HTML5 page that boots [Pyodide](https://pyodide.org) (CPython compiled to WebAss
 
 ## Play
 
+**[▶ Play SynthRide in your browser](https://rguillon.github.io/synthride/)**, nothing to install.
+
+Or run it locally:
+
 ```bash
 make install        # once: create the virtual environment
 make serve          # then open http://127.0.0.1:8000
