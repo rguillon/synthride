@@ -108,7 +108,7 @@ def test_menu_navigation_to_playing_and_back(game: SimpleNamespace) -> None:
     assert game.session.phase is GamePhase.LEVEL_SELECT
     assert game.context.resume.calls == [()]
     press(game, "ArrowDown")
-    assert '<li class="selected">02' in menu_html(game)
+    assert '<li class="selected" data-level="1">02' in menu_html(game)
     press(game, "ArrowUp", "ArrowUp")
     assert game.session.selected_level == 1
     press(game, "Enter")
