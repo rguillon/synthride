@@ -67,7 +67,6 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
 #hud[hidden] { display: none; }
 .hud-top { display: flex; justify-content: space-between; gap: 1rem; letter-spacing: 0.15em; }
 .hud-fps { opacity: 0.6; letter-spacing: 0.1em; }
-.hud-lives { color: var(--pink); text-shadow: 0 0 8px var(--pink); letter-spacing: 0.3em; }
 .hud-bottom { position: absolute; left: 16px; right: 16px; bottom: 16px; display: grid;
   grid-template-columns: repeat(3, 1fr); gap: 0.8rem; }
 .gauge-label { display: block; margin-bottom: 0.3rem; letter-spacing: 0.2em; }
@@ -121,21 +120,42 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
 /* Touch: shown once the page has seen a touch, which adds the "touch" class to the body */
 #touch, #mute, #rotate, .menu-back, .touch-text { display: none; }
 #touch { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
-#touch, #touch button, #mute { touch-action: none; user-select: none; -webkit-user-select: none;
+#touch, #touch button, #touch .stick, #mute { touch-action: none; user-select: none; -webkit-user-select: none;
   -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
 body.touch #hud:not([hidden]) ~ #touch { display: block; }
-.pad-group { position: absolute; bottom: max(16px, env(safe-area-inset-bottom)); display: flex; gap: 12px; }
-.pad-left { left: max(16px, env(safe-area-inset-left)); }
-.pad-right { right: max(16px, env(safe-area-inset-right)); flex-wrap: wrap; justify-content: flex-end;
-  width: calc(68px * 2 + 12px); }
 .pad, .touch-button { pointer-events: auto; font: inherit; font-weight: 800; color: var(--cyan);
   background: rgba(11,0,20,0.25); border: 2px solid rgba(0,240,255,0.55); border-radius: 14px;
   text-shadow: 0 0 8px currentColor; box-shadow: 0 0 10px rgba(0,240,255,0.35); padding: 0; }
-.pad { width: 68px; height: 68px; font-size: 1.5rem; }
-.pad-jump { width: 100%; font-size: 1rem; letter-spacing: 0.3em; color: var(--pink);
-  border-color: rgba(255,43,214,0.6); }
-.pad.held { color: var(--pink); border-color: var(--pink); background: rgba(255,43,214,0.25);
-  box-shadow: 0 0 20px var(--pink); }
+/* The joystick: a ring with the four directions marked, and a knob that follows the thumb */
+.stick { position: absolute; left: max(20px, env(safe-area-inset-left));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: min(150px, 38vh); aspect-ratio: 1; border-radius: 50%; pointer-events: auto; color: var(--cyan);
+  border: 2px solid rgba(0,240,255,0.55); box-shadow: 0 0 14px rgba(0,240,255,0.35),
+  inset 0 0 22px rgba(0,240,255,0.18);
+  background: radial-gradient(circle, rgba(0,240,255,0.16) 0 24%, transparent 25%),
+    repeating-conic-gradient(from 22.5deg, rgba(0,240,255,0.22) 0 1deg, transparent 1deg 45deg),
+    radial-gradient(circle, rgba(11,0,20,0.3), rgba(11,0,20,0.1)); }
+.stick i { position: absolute; font-style: normal; font-size: 0.9rem; line-height: 1; opacity: 0.8;
+  text-shadow: 0 0 8px currentColor; }
+.stick .up { top: 9%; left: 50%; transform: translateX(-50%); }
+.stick .down { bottom: 9%; left: 50%; transform: translateX(-50%); }
+.stick .left { left: 9%; top: 50%; transform: translateY(-50%); }
+.stick .right { right: 9%; top: 50%; transform: translateY(-50%); }
+.knob { position: absolute; left: 50%; top: 50%; width: 42%; height: 42%; margin: -21% 0 0 -21%; border-radius: 50%;
+  pointer-events: none; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.55), rgba(0,240,255,0.35) 45%,
+  rgba(0,120,160,0.45)); border: 2px solid var(--cyan); box-shadow: 0 0 14px rgba(0,240,255,0.7); }
+.stick.held { color: var(--pink); border-color: var(--pink); box-shadow: 0 0 20px rgba(255,43,214,0.6),
+  inset 0 0 26px rgba(255,43,214,0.22); }
+.stick.held .knob { border-color: var(--pink); box-shadow: 0 0 18px var(--pink);
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(255,43,214,0.4) 45%,
+  rgba(130,0,110,0.5)); }
+.pad-jump { position: absolute; right: max(24px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  width: min(104px, 27vh); aspect-ratio: 1; border-radius: 50%; font-size: 0.85rem; letter-spacing: 0.15em;
+  color: var(--pink); border-color: rgba(255,43,214,0.6); box-shadow: 0 0 14px rgba(255,43,214,0.4),
+  inset 0 0 18px rgba(255,43,214,0.2); text-shadow: 0 0 8px currentColor; }
+.pad.held { color: #fff; border-color: var(--pink); background: rgba(255,43,214,0.35);
+  box-shadow: 0 0 24px var(--pink); }
 .touch-button { position: fixed; top: max(10px, env(safe-area-inset-top)); width: 44px; height: 44px;
   font-size: 1.1rem; }
 #mute { right: max(16px, env(safe-area-inset-right)); z-index: 4; }
@@ -151,6 +171,19 @@ body.touch .menu-back { display: block; align-self: flex-start; flex-shrink: 0; 
   padding: 0 1rem; text-shadow: 0 0 8px var(--cyan); }
 body.touch .level-list li:active { border-color: var(--pink); color: var(--pink); box-shadow: 0 0 16px var(--pink);
   text-shadow: 0 0 8px var(--pink); }
+/* Full screen: phones get it from their first touch, computers from this button or F */
+#fullscreen { display: none; position: fixed; top: 10px; right: 16px; z-index: 4; width: 44px; height: 44px;
+  padding: 0; font: inherit; font-size: 1.3rem; color: var(--cyan); background: rgba(11,0,20,0.25); cursor: pointer;
+  border: 2px solid rgba(0,240,255,0.55); border-radius: 14px; text-shadow: 0 0 8px currentColor;
+  box-shadow: 0 0 10px rgba(0,240,255,0.35); }
+body:not(.touch) #fullscreen { display: block; }
+/* On a phone it only shows to leave full screen: a small button above the jump pad */
+body.touch #fullscreen { top: auto; right: max(24px, env(safe-area-inset-right)); width: 34px; height: 34px;
+  font-size: 1rem; border-radius: 10px;
+  bottom: calc(max(20px, env(safe-area-inset-bottom)) + min(104px, 27vh) + 12px); }
+body.touch.fullscreen #fullscreen { display: block; }
+body:not(.touch) .hud-top, body:not(.touch) .progress { margin-right: 56px; }
+body.fullscreen #fullscreen { color: var(--pink); border-color: rgba(255,43,214,0.6); }
 #rotate { z-index: 6; }
 @media (orientation: portrait) { body.touch #rotate { display: flex; } }
 @media (max-height: 500px) {
@@ -176,20 +209,17 @@ body.touch .level-list li:active { border-color: var(--pink); color: var(--pink)
 <div id="stage"></div>
 <div id="hud" hidden></div>
 <div id="touch">
-  <div class="pad-group pad-left">
-    <button class="pad" data-code="ArrowLeft" aria-label="Left">&#9664;</button>
-    <button class="pad" data-code="ArrowRight" aria-label="Right">&#9654;</button>
+  <div class="stick" data-stick aria-label="Steer: left and right, accelerate and brake">
+    <i class="up">&#9650;</i><i class="down">&#9660;</i><i class="left">&#9664;</i><i class="right">&#9654;</i>
+    <div class="knob" data-knob></div>
   </div>
-  <div class="pad-group pad-right">
-    <button class="pad" data-code="ArrowDown" aria-label="Brake">&#9660;</button>
-    <button class="pad" data-code="ArrowUp" aria-label="Accelerate">&#9650;</button>
-    <button class="pad pad-jump" data-code="Space">JUMP</button>
-  </div>
+  <button class="pad pad-jump" data-code="Space">JUMP</button>
   <button class="touch-button touch-menu" data-press="Escape" aria-label="Menu">II</button>
 </div>
 <div id="menu" class="overlay" hidden></div>
 <div id="editor" hidden></div>
 <button id="mute" class="touch-button" data-press="KeyM" aria-label="Mute">&#128263;</button>
+<button id="fullscreen" aria-label="Full screen (F)" title="Full screen (F)">&#9974;</button>
 <div id="rotate" class="overlay"><h2 class="headline">ROTATE YOUR PHONE &#10226;</h2></div>
 <div id="loading" class="overlay">
   <h1 class="logo">SYNTHRIDE</h1>

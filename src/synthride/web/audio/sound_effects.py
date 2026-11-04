@@ -34,14 +34,13 @@ class SoundEffects:
             GameEvent.SKIDDED: self._skid,
             GameEvent.PUSHED: self._push,
             GameEvent.BUMPED: self._bump,
-            GameEvent.CRASHED: self._explode,
-            GameEvent.BURNED: self._explode,
-            GameEvent.FELL: self._fall,
-            GameEvent.OUT_OF_FUEL: self._power_down,
-            GameEvent.OUT_OF_OXYGEN: self._power_down,
+            GameEvent.CRASHED: self._death,
+            GameEvent.BURNED: self._death,
+            GameEvent.FELL: self._death,
+            GameEvent.OUT_OF_FUEL: self._death,
+            GameEvent.OUT_OF_OXYGEN: self._death,
             GameEvent.LEVEL_WON: self._fanfare,
             GameEvent.GAME_COMPLETED: self._fanfare,
-            GameEvent.GAME_OVER: self._game_over,
         }
 
     def play(self, events: Iterable[GameEvent]) -> None:
@@ -93,20 +92,9 @@ class SoundEffects:
     def _bump(self, now: float) -> None:
         self._voices.tone("square", 160, now, 0.1, 0.18, end_hz=90, cutoff_hz=900)
 
-    def _explode(self, now: float) -> None:
-        self._voices.noise(now, 0.5, 0.6)
-        self._voices.tone("sawtooth", 180, now, 0.7, 0.3, end_hz=30, cutoff_hz=900)
-
-    def _fall(self, now: float) -> None:
+    def _death(self, now: float) -> None:
         self._voices.tone("triangle", 880, now, 1.0, 0.2, end_hz=60)
-
-    def _power_down(self, now: float) -> None:
-        self._voices.tone("square", 440, now, 1.2, 0.15, end_hz=40, cutoff_hz=1500)
 
     def _fanfare(self, now: float) -> None:
         for index, note in enumerate((69, 73, 76, 81, 85, 88)):
             self._voices.tone("square", self._voices.frequency(note), now + index * 0.09, 0.3, 0.1, cutoff_hz=3500)
-
-    def _game_over(self, now: float) -> None:
-        for index, note in enumerate((64, 60, 57, 52)):
-            self._voices.tone("sawtooth", self._voices.frequency(note), now + index * 0.25, 0.4, 0.15, cutoff_hz=1200)

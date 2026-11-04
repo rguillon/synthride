@@ -107,27 +107,21 @@ def test_reaching_track_end_wins_then_next_level_then_victory() -> None:
     assert session.phase is GamePhase.VICTORY
 
 
-def test_falling_in_a_gap_costs_a_life_and_restarts_level() -> None:
+def test_falling_in_a_gap_restarts_level() -> None:
     session = started(make_level(FLAT, *[".. .. .. .. .. .. .. .."] * 30))
     events = run_until(session, GamePhase.DYING)
-    assert events[-2:] == [GameEvent.FELL, GameEvent.LIFE_LOST]
-    assert session.lives == CONFIG.lives - 1
+    assert events[-1:] == [GameEvent.FELL]
     assert session.phase is GamePhase.DYING
     assert run(session, CONFIG.dying_seconds + 0.1, ShipInput()) == [GameEvent.LEVEL_STARTED]
     assert session.ship.position.z < 1
 
 
-def test_losing_all_lives_is_game_over() -> None:
+def test_crashes_restart_the_level_for_ever() -> None:
     session = started(make_level(FLAT, *[".. .. .. .. .. .. .. .."] * 30))
-    events = []
-    for _ in range(CONFIG.lives):
-        events += run_until(session, GamePhase.DYING)
-        events += run(session, CONFIG.dying_seconds + 0.1)
-    assert session.lives == 0
-    assert events[-1] is GameEvent.GAME_OVER
-    assert session.phase is GamePhase.GAME_OVER
-    session.start()
-    assert session.lives == CONFIG.lives
+    for _ in range(10):
+        run_until(session, GamePhase.DYING)
+        assert run(session, CONFIG.dying_seconds + 0.1) == [GameEvent.LEVEL_STARTED]
+    assert session.phase is GamePhase.PLAYING
 
 
 def test_frontal_wall_crashes() -> None:
@@ -263,13 +257,12 @@ def test_a_test_ride_plays_only_that_level_then_returns_to_the_editor() -> None:
     assert session.level is not ride
 
 
-def test_a_test_ride_never_runs_out_of_lives() -> None:
+def test_a_test_ride_restarts_for_ever() -> None:
     session = GameSession([make_level(FLAT)])
     session.ride(make_level(FLAT, *[GAP] * 30))
-    for _ in range(CONFIG.lives + 1):
+    for _ in range(10):
         run_until(session, GamePhase.DYING)
         assert run(session, CONFIG.dying_seconds + 0.1, ShipInput()) == [GameEvent.LEVEL_STARTED]
-    assert session.lives == CONFIG.lives
     assert session.riding
 
 

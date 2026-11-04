@@ -40,6 +40,5 @@ class GameConfig:
     fall_limit_y: float = -4.0
 
     fuel_per_unit: float = 0.125
-    lives: int = 3
     dying_seconds: float = 1.6
     level_won_seconds: float = 2.5

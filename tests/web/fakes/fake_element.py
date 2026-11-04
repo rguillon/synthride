@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from tests.web.fakes.fake_class_list import FakeClassList
 from tests.web.fakes.fake_fetch import FakePromise
@@ -36,6 +36,9 @@ class FakeElement:
         self.released: list[int] = []
         self.fullscreen_requests = 0
         self.clicks = 0
+        self.blurs = 0
+        self.rect = SimpleNamespace(left=0, top=0, width=100, height=100)
+        self.knob: Any = FakeJsObject("knob")
         self.listeners: dict[str, list[Callable]] = {}
 
     def appendChild(self, child: object) -> None:  # noqa: N802
@@ -67,5 +70,14 @@ class FakeElement:
             return self if hasattr(self.dataset, selector[len("[data-") : -1]) else JS_NULL
         return self if selector == self.tag else JS_NULL
 
+    def getBoundingClientRect(self) -> SimpleNamespace:  # noqa: N802
+        return self.rect
+
+    def querySelector(self, _selector: str) -> FakeJsObject:  # noqa: N802
+        return self.knob
+
     def click(self) -> None:
         self.clicks += 1
+
+    def blur(self) -> None:
+        self.blurs += 1

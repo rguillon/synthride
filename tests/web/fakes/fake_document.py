@@ -6,6 +6,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from tests.web.fakes.fake_element import FakeElement
+from tests.web.fakes.fake_fetch import FakePromise
+from tests.web.fakes.fake_js_null import JS_NULL, FakeJsNull
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -23,6 +25,8 @@ class FakeDocument:
         self.body = FakeElement("body", tag="body")
         self.documentElement = FakeElement("html", tag="html")
         self.visibilityState = "visible"
+        self.fullscreenElement: FakeElement | FakeJsNull = JS_NULL
+        self.exits = 0
         self.listeners: dict[str, list[Callable]] = {}
 
     def addEventListener(self, event_type: str, listener: Callable, *_options: object) -> None:  # noqa: N802
@@ -39,3 +43,7 @@ class FakeDocument:
         element = FakeElement(tag=tag)
         self.created.append(element)
         return element
+
+    def exitFullscreen(self) -> FakePromise:  # noqa: N802
+        self.exits += 1
+        return FakePromise()

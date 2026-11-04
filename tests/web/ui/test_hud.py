@@ -23,14 +23,13 @@ def test_renders_layout_into_hud_container() -> None:
     assert 'id="hud-fuel-fill"' in hud.container.innerHTML
 
 
-def test_update_shows_level_lives_and_gauges() -> None:
+def test_update_shows_level_and_gauges() -> None:
     document, hud, session = make_hud()
     session.fuel.drain(session.fuel.capacity / 2)
     session.oxygen.drain(session.oxygen.capacity * 0.9)
     hud.update(session)
     element = document.getElementById
     assert element("hud-level").textContent == "01 · GRID ZERO"
-    assert element("hud-lives").textContent == Hud.LIFE_ICON * 3
     assert element("hud-fuel-fill").style.transform == "scaleX(0.500)"
     assert element("hud-speed-fill").style.transform == "scaleX(0.000)"
     assert element("hud-speed-label").textContent == "SPEED   0 KM/H"

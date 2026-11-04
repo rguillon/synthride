@@ -18,13 +18,12 @@ if TYPE_CHECKING:
 
 
 class Hud:
-    """The in-game overlay: level name, frame rate, lives, progress, gauges, and effect callouts."""
+    """The in-game overlay: level name, frame rate, progress, gauges, and effect callouts."""
 
     LAYOUT = """
       <div class="hud-top">
         <span id="hud-level"></span>
         <span id="hud-fps" class="hud-fps"></span>
-        <span id="hud-lives" class="hud-lives"></span>
       </div>
       <div class="progress"><div id="hud-progress" class="progress-fill"></div></div>
       <div class="hud-callout" id="hud-callout"></div>
@@ -39,7 +38,6 @@ class Hud:
     """
     ELEMENT_NAMES = (
         "level",
-        "lives",
         "progress",
         "speed",
         "speed-label",
@@ -63,7 +61,6 @@ class Hud:
         GameEvent.PUSHED: ("SIDE PUSH", Palette.tile_color(TileType.PUSH_LEFT)),
         GameEvent.BUMPED: ("MIND THE ROOF", Palette.TUNNEL),
     }
-    LIFE_ICON = "▲"
     KMH_PER_UNIT = 10  # speeds are doubled along the long tiles: keep the readout where it was
 
     def __init__(self, bridge: JsBridge) -> None:
@@ -85,7 +82,6 @@ class Hud:
         speed_fraction = min(1.0, ship.speed / (config.max_speed * config.boost_factor))
         number = "TEST RIDE" if session.riding else f"{session.level_index + 1:02d}"
         self._elements["level"].textContent = f"{number} · {session.level.name.upper()}"
-        self._elements["lives"].textContent = self.LIFE_ICON * session.lives
         self._elements["progress"].style.width = self._percent(session.progress)
         self._elements["speed-label"].textContent = f"SPEED {round(ship.speed * self.KMH_PER_UNIT):>3} KM/H"
         self._set_gauge("speed", speed_fraction, warn=False)

@@ -18,13 +18,13 @@ if TYPE_CHECKING:
 
 
 class MenuScreen:
-    """Full-screen overlays: title, level select, level clear, game over and victory.
+    """Full-screen overlays: title, level select, level clear and victory.
 
     Clicks on them, by touch or mouse, are queued as taps: a level's index, :attr:`BACK` or :attr:`ANYWHERE`.
     """
 
     KEYS = "↑ ↓ accelerate / brake &nbsp;·&nbsp; ← → strafe &nbsp;·&nbsp; SPACE jump, again in mid-air"
-    KEYS_EXTRA = "ESC menu &nbsp;·&nbsp; M mute"
+    KEYS_EXTRA = "ESC menu &nbsp;·&nbsp; M mute &nbsp;·&nbsp; F full screen"
     EDITOR_KEY = " &nbsp;·&nbsp; E level editor"
     LEVELS_PER_COLUMN = 7
     REPO_URL = "https://github.com/rguillon/synthride"
@@ -110,10 +110,6 @@ class MenuScreen:
         self._show(
             f"won:{name}", f'<h2 class="headline">LEVEL CLEAR</h2><p class="subtitle">{escape(name.upper())}</p>'
         )
-
-    def show_game_over(self) -> None:
-        """Show the game over screen."""
-        self._show("game-over", f'<h2 class="headline">GAME OVER</h2>{self.PROMPT}')
 
     def show_victory(self) -> None:
         """Show the victory screen."""

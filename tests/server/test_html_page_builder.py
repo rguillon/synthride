@@ -28,8 +28,9 @@ def test_dev_page_turns_the_editor_on() -> None:
 
 def test_page_has_the_touch_controls() -> None:
     page = HtmlPageBuilder().build()
-    for code in ("ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space"):
-        assert f'data-code="{code}"' in page
+    assert 'data-code="Space"' in page
+    assert "data-stick" in page
+    assert "data-knob" in page
     for code in ("Escape", "KeyM"):
         assert f'data-press="{code}"' in page
     for element_id in ("touch", "mute", "rotate"):
@@ -37,3 +38,9 @@ def test_page_has_the_touch_controls() -> None:
     assert page.index('id="hud"') < page.index('id="touch"')  # the pads show with the HUD: #hud ~ #touch
     assert page.index('id="mute"') < page.index('id="loading"')  # the loading screen covers it
     assert "viewport-fit=cover" in page
+
+
+def test_page_has_the_full_screen_button() -> None:
+    page = HtmlPageBuilder().build()
+    assert 'id="fullscreen"' in page
+    assert page.index('id="fullscreen"') < page.index('id="loading"')  # the loading screen covers it

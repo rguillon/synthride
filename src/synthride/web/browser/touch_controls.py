@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -20,7 +20,16 @@ class TouchControls:
     Each pad in ``#touch`` names its key in ``data-code`` and is held while a pointer is down on it; buttons naming a
     key in ``data-press`` press it once when clicked. The first touch turns touch mode on: it adds the ``touch`` class
     to ``<body>``, which shows the pads and the touch layout; the end of the first touch asks for full screen.
+
+    The element marked ``data-stick`` is a joystick: a pointer down on it holds the arrow keys matching where the
+    thumb is from its center, up to two at once for the corners, and none in the dead zone around the center. The
+    ``data-knob`` element inside it follows the thumb.
     """
+
+    STICK = "[data-stick]"
+    DEAD_ZONE = 0.22  # of the radius
+    DIAGONAL = 0.38  # an axis counts when its share of the distance is over this: sin 22.5 degrees, eight sectors
+    ARROWS: ClassVar[dict[str, tuple[str, str]]] = {"x": ("ArrowLeft", "ArrowRight"), "y": ("ArrowUp", "ArrowDown")}
 
     PAD = "[data-code]"
     BUTTON = "[data-press]"
@@ -39,6 +48,9 @@ class TouchControls:
         self._unlock_audio = unlock_audio
         self.active = False
         self._asked_full_screen = False
+        self._stick: JsObject | None = None  # the joystick while a pointer is down on it
+        self._stick_pointer = -1
+        self._stick_codes: set[str] = set()
         self._pointers: dict[int, JsObject] = {}  # each pointer that is down, and the pad under it (None: no pad)
         window, document = bridge.window, bridge.document
         passive = bridge.obj(passive=True)
@@ -50,6 +62,7 @@ class TouchControls:
         pads.addEventListener("pointerout", bridge.proxy(self.on_pointer_out))
         # A finger may be lifted over the menu, once it covers or hides the pads: listen for ends everywhere
         window.addEventListener("pointerup", bridge.proxy(self.on_pointer_end))
+        window.addEventListener("pointermove", bridge.proxy(self.on_pointer_move))
         window.addEventListener("pointercancel", bridge.proxy(self.on_pointer_end))
         window.addEventListener("blur", bridge.proxy(lambda _event: self.release_all()))
         document.body.addEventListener("click", bridge.proxy(self.on_click))
@@ -75,6 +88,14 @@ class TouchControls:
 
     def on_pointer_down(self, event: JsObject) -> None:
         """Hold the pad under a new pointer, letting the pointer go on to the next pad if the thumb slides."""
+        stick = event.target.closest(self.STICK)
+        if stick:
+            event.preventDefault()
+            self._stick = stick
+            self._stick_pointer = event.pointerId
+            stick.classList.toggle(self.HELD, True)  # noqa: FBT003
+            self._aim(stick, event)
+            return
         pad = event.target.closest(self.PAD)
         if not pad:
             return
@@ -94,8 +115,15 @@ class TouchControls:
         if event.pointerId in self._pointers:
             self._leave(event.pointerId)
 
+    def on_pointer_move(self, event: JsObject) -> None:
+        """Steer with the pointer that is down on the joystick."""
+        if self._stick is not None and event.pointerId == self._stick_pointer:
+            self._aim(self._stick, event)
+
     def on_pointer_end(self, event: JsObject) -> None:
-        """Let go of the pad under a lifted or cancelled pointer, and forget the pointer."""
+        """Let go of the pad or joystick under a lifted or cancelled pointer, and forget the pointer."""
+        if self._stick is not None and event.pointerId == self._stick_pointer:
+            self._release_stick(self._stick)
         if event.pointerId in self._pointers:
             self._leave(event.pointerId)
             del self._pointers[event.pointerId]
@@ -116,7 +144,42 @@ class TouchControls:
         for pointer_id in list(self._pointers):
             self._leave(pointer_id)
         self._pointers.clear()
+        if self._stick is not None:
+            self._release_stick(self._stick)
         self._keyboard.release_all()
+
+    def _aim(self, stick: JsObject, event: JsObject) -> None:
+        """Hold the arrows the thumb points at, and move the knob under it."""
+        rect = stick.getBoundingClientRect()
+        radius = float(rect.width) / 2
+        dx = float(event.clientX) - (float(rect.left) + radius)
+        dy = float(event.clientY) - (float(rect.top) + radius)
+        distance = (dx * dx + dy * dy) ** 0.5
+        scale = min(1.0, radius / distance) if distance else 0.0  # the knob stays inside the ring
+        knob = stick.querySelector("[data-knob]")
+        if knob:
+            knob.style.transform = f"translate({dx * scale:.1f}px, {dy * scale:.1f}px)"
+        wanted: set[str] = set()
+        if distance > radius * self.DEAD_ZONE:
+            for axis, offset in (("x", dx), ("y", dy)):
+                if abs(offset) > distance * self.DIAGONAL:
+                    wanted.add(self.ARROWS[axis][offset > 0])
+        for code in self._stick_codes - wanted:
+            self._keyboard.release(code)
+        for code in wanted - self._stick_codes:
+            self._keyboard.hold(code)
+        self._stick_codes = wanted
+
+    def _release_stick(self, stick: JsObject) -> None:
+        for code in self._stick_codes:
+            self._keyboard.release(code)
+        self._stick_codes = set()
+        knob = stick.querySelector("[data-knob]")
+        if knob:
+            knob.style.transform = "translate(0px, 0px)"
+        stick.classList.toggle(self.HELD, False)  # noqa: FBT003
+        self._stick = None
+        self._stick_pointer = -1
 
     def _enter(self, pointer_id: int, pad: JsObject) -> None:
         self._leave(pointer_id)

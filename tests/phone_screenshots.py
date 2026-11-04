@@ -15,12 +15,15 @@ VIEWPORT = ViewportSize(width=844, height=390)  # a phone held sideways
 PROGRESS = 2.0  # percent of the track to ride before the in-game screenshot
 
 
-def hold_pad(page: Page, code: str) -> None:
-    """Put a finger down on the pad for ``code`` and leave it there."""
+def push_stick(page: Page, dx: float, dy: float) -> None:
+    """Put a finger down on the joystick, ``dx`` and ``dy`` radii from its center."""
     page.evaluate(
-        """code => document.querySelector(`[data-code="${code}"]`).dispatchEvent(
-            new PointerEvent("pointerdown", {pointerId: 1, pointerType: "touch", bubbles: true, cancelable: true}))""",
-        code,
+        """([dx, dy]) => {
+            const stick = document.querySelector("[data-stick]"), r = stick.getBoundingClientRect();
+            stick.dispatchEvent(new PointerEvent("pointerdown", {pointerId: 1, pointerType: "touch", bubbles: true,
+                cancelable: true, clientX: r.left + r.width / 2 * (1 + dx), clientY: r.top + r.height / 2 * (1 + dy)}))
+        }""",
+        [dx, dy],
     )
 
 
@@ -39,7 +42,7 @@ def take(url: str) -> None:
         snap(page, "screenshot-mobile-menu.jpg")
         page.tap('[data-level="0"]')
         page.wait_for_selector("#hud:not([hidden])")
-        hold_pad(page, "ArrowUp")
+        push_stick(page, 0.6, -0.8)  # accelerating, steering right
         page.wait_for_function(f"parseFloat(document.getElementById('hud-progress').style.width) >= {PROGRESS}")
         snap(page, "screenshot-mobile.jpg")
         browser.close()
