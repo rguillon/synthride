@@ -94,7 +94,7 @@ class TouchControls:
             self._stick = stick
             self._stick_pointer = event.pointerId
             stick.classList.toggle(self.HELD, True)  # noqa: FBT003
-            self._aim(event)
+            self._aim(stick, event)
             return
         pad = event.target.closest(self.PAD)
         if not pad:
@@ -118,12 +118,12 @@ class TouchControls:
     def on_pointer_move(self, event: JsObject) -> None:
         """Steer with the pointer that is down on the joystick."""
         if self._stick is not None and event.pointerId == self._stick_pointer:
-            self._aim(event)
+            self._aim(self._stick, event)
 
     def on_pointer_end(self, event: JsObject) -> None:
         """Let go of the pad or joystick under a lifted or cancelled pointer, and forget the pointer."""
         if self._stick is not None and event.pointerId == self._stick_pointer:
-            self._release_stick()
+            self._release_stick(self._stick)
         if event.pointerId in self._pointers:
             self._leave(event.pointerId)
             del self._pointers[event.pointerId]
@@ -145,14 +145,11 @@ class TouchControls:
             self._leave(pointer_id)
         self._pointers.clear()
         if self._stick is not None:
-            self._release_stick()
+            self._release_stick(self._stick)
         self._keyboard.release_all()
 
-    def _aim(self, event: JsObject) -> None:
+    def _aim(self, stick: JsObject, event: JsObject) -> None:
         """Hold the arrows the thumb points at, and move the knob under it."""
-        stick = self._stick
-        if stick is None:
-            return
         rect = stick.getBoundingClientRect()
         radius = float(rect.width) / 2
         dx = float(event.clientX) - (float(rect.left) + radius)
@@ -173,10 +170,7 @@ class TouchControls:
             self._keyboard.hold(code)
         self._stick_codes = wanted
 
-    def _release_stick(self) -> None:
-        stick = self._stick
-        if stick is None:
-            return
+    def _release_stick(self, stick: JsObject) -> None:
         for code in self._stick_codes:
             self._keyboard.release(code)
         self._stick_codes = set()
