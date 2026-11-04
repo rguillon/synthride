@@ -14,6 +14,5 @@ class GamePhase(Enum):
     PLAYING = auto()
     DYING = auto()
     LEVEL_WON = auto()
-    GAME_OVER = auto()
     VICTORY = auto()
     EDITOR = auto()

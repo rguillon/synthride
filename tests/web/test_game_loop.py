@@ -151,7 +151,7 @@ def test_mute_toggle(game: SimpleNamespace) -> None:
     assert game.loop._music.muted  # noqa: SLF001
 
 
-@pytest.mark.parametrize("phase", [GamePhase.GAME_OVER, GamePhase.VICTORY])
+@pytest.mark.parametrize("phase", [GamePhase.VICTORY])
 def test_end_screens_return_to_level_select(game: SimpleNamespace, phase: GamePhase) -> None:
     game.session.phase = phase
     game.loop.tick(0.016)
@@ -177,7 +177,7 @@ def test_taps_walk_the_menus(game: SimpleNamespace) -> None:
     assert game.session.level_index == 1
 
 
-@pytest.mark.parametrize("phase", [GamePhase.GAME_OVER, GamePhase.VICTORY])
+@pytest.mark.parametrize("phase", [GamePhase.VICTORY])
 def test_a_tap_on_an_end_screen_opens_the_level_select(game: SimpleNamespace, phase: GamePhase) -> None:
     game.session.phase = phase
     tap(game, FakeElement())

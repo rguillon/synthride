@@ -56,9 +56,9 @@ def test_level_select_redraws_when_the_levels_change() -> None:
 
 def test_does_not_rewrite_unchanged_screen() -> None:
     container, menu = make_menu()
-    menu.show_game_over()
+    menu.show_victory()
     container.innerHTML = "sentinel"
-    menu.show_game_over()
+    menu.show_victory()
     assert container.innerHTML == "sentinel"
 
 
@@ -116,7 +116,7 @@ def test_clicks_on_links_are_not_taps() -> None:
 
 def test_prompts_have_a_key_and_a_touch_text() -> None:
     container, menu = make_menu()
-    for show in (menu.show_title, menu.show_game_over, menu.show_victory):
+    for show in (menu.show_title, menu.show_victory):
         show()
         assert (
             '<span class="key-text">PRESS ENTER</span><span class="touch-text">TAP TO START</span>'

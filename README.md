@@ -80,9 +80,9 @@ Press `Enter` on the title screen, choose a level with the arrow keys and press 
   stop you, jumping inside bumps your head on the roof, flying into its front edge is a crash, and you can ride
   on top of it.
 - Fuel burns as you travel and oxygen runs out with time; the HUD shows both, with your speed and progress.
-- Falling off the track, hitting a block head-on, riding a kill block, or running out of fuel or oxygen costs a life
-  and restarts the level. Clipping a block with only a corner of the ship nudges you sideways instead.
-- You have 3 lives. Finishing a level takes you to the next one, and finishing the last level wins the game.
+- Falling off the track, hitting a block head-on, riding a kill block, or running out of fuel or oxygen restarts
+  the level, as often as you need. Clipping a block with only a corner of the ship nudges you sideways instead.
+- Finishing a level takes you to the next one, and finishing the last level wins the game.
 
 ## Level editor
 
@@ -121,7 +121,7 @@ the start, or no finish line. The buttons below are **Undo**, **Test ride**, **S
 | `1`–`8` | brush height |
 | `Q` `E` | previous / next brush |
 | `Z` | undo |
-| `T` | test ride: unlimited lives, a crash restarts the ride, `Esc` or the finish line brings you back |
+| `T` | test ride: a crash restarts the ride, `Esc` or the finish line brings you back |
 | `Esc` | back to the level select |
 
 Letter shortcuts follow your keyboard layout, so `Z` undoes on AZERTY keyboards too.
@@ -196,7 +196,7 @@ docker run --rm -p 8080:80 synthride    # then open http://127.0.0.1:8080
 | `synthride.core` | Pure Python game logic. No browser code. |
 | `synthride.core.world` | Tiles, slopes, tunnels, tracks, levels and their JSON parsers. |
 | `synthride.core.physics` | Vectors, bounding boxes, collisions, the ship's motion and tile effects. |
-| `synthride.core.gameplay` | The game session (phases, lives, events), the ship, its gauges and input, the tunables. |
+| `synthride.core.gameplay` | The game session (phases, events), the ship, its gauges and input, the tunables. |
 | `synthride.editor` | Pure Python editor model: the track grid, the brushes, undo, and picking the cell under the mouse. |
 | `synthride.web` | Browser adapters, with `main` (boot) and `game_loop` (the frame loop) at the top. Every browser object is injected through `JsBridge`, so it is unit-tested with fakes. |
 | `synthride.web.browser` | `JsBridge` and the keyboard. |

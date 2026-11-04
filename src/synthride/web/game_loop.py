@@ -38,7 +38,7 @@ class GameLoop:
     LEFT = frozenset({"ArrowLeft", "KeyA"})
     RIGHT = frozenset({"ArrowRight", "KeyD"})
     HUD_PHASES = frozenset({GamePhase.PLAYING, GamePhase.DYING, GamePhase.LEVEL_WON})
-    TAP_TO_GO_ON = frozenset({GamePhase.TITLE, GamePhase.GAME_OVER, GamePhase.VICTORY})
+    TAP_TO_GO_ON = frozenset({GamePhase.TITLE, GamePhase.VICTORY})
     EDIT = "e"
     MUTE = "m"
     # The stretch of track whose tunnel roofs the chase camera ducks under: from where it sits behind
@@ -158,7 +158,7 @@ class GameLoop:
         elif phase is GamePhase.LEVEL_SELECT:
             self._handle_level_select_key(key)
         elif (phase in (GamePhase.PLAYING, GamePhase.DYING) and key == "Escape") or (
-            phase in (GamePhase.GAME_OVER, GamePhase.VICTORY) and key in self.CONFIRM
+            phase is GamePhase.VICTORY and key in self.CONFIRM
         ):
             session.open_level_select()
 
@@ -236,8 +236,6 @@ class GameLoop:
                 self._menu.show_level_select(names, session.selected_level, editor=self._editor is not None)
             case GamePhase.LEVEL_WON:
                 self._menu.show_level_won(session.level.name)
-            case GamePhase.GAME_OVER:
-                self._menu.show_game_over()
             case GamePhase.VICTORY:
                 self._menu.show_victory()
             case _:

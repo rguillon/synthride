@@ -11,6 +11,7 @@ from synthride.web.audio.sound_effects import SoundEffects
 from synthride.web.audio.synth_music import SynthMusic
 from synthride.web.audio.synth_voices import SynthVoices
 from synthride.web.browser.browser_keyboard import BrowserKeyboard
+from synthride.web.browser.full_screen import FullScreen
 from synthride.web.browser.js_bridge import JsBridge
 from synthride.web.browser.touch_controls import TouchControls
 from synthride.web.game_loop import GameLoop
@@ -50,6 +51,7 @@ class Main:
         renderer = SceneRenderer(bridge, bridge.document.getElementById("stage"), lines, reflection=reflection)
         keyboard = BrowserKeyboard(bridge)
         TouchControls(bridge, keyboard, context.resume)  # kept alive by its listeners
+        FullScreen(bridge)  # likewise
         editor = None
         if self._dev:
             files = self._catalog.file_names()

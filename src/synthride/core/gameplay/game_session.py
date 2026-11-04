@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Renaud Guillon
 # SPDX-License-Identifier: MIT
 
-"""The game session: phase machine, lives and level simulation."""
+"""The game session: phase machine and level simulation."""
 
 from __future__ import annotations
 
@@ -28,10 +28,10 @@ if TYPE_CHECKING:
 
 
 class GameSession:
-    """The whole game state: phase machine, lives, current level and its fixed-step simulation.
+    """The whole game state: phase machine, current level and its fixed-step simulation.
 
-    A test ride from the editor plays one level with no limit on lives, and goes back to the editor when the level is
-    won or left.
+    A crash restarts the level, as many times as it takes. A test ride from the editor plays one level the same way,
+    and goes back to the editor when the level is won or left.
     """
 
     MAX_STEPS_PER_UPDATE = 30
@@ -45,7 +45,6 @@ class GameSession:
         self.levels = tuple(levels)
         self._test_level: Level | None = None
         self.phase = GamePhase.TITLE
-        self.lives = self.config.lives
         self.selected_level = 0
         self._physics = ShipPhysics(self.config)
         self._effects = TileEffectApplier(self.config)
@@ -112,8 +111,7 @@ class GameSession:
         self.selected_level = min((column + step) % columns * column_size + row, len(self.levels) - 1)
 
     def start(self) -> list[GameEvent]:
-        """Start a new game with full lives at the selected level."""
-        self.lives = self.config.lives
+        """Start a new game at the selected level."""
         return self._begin_level(self.selected_level)
 
     def return_to_title(self) -> None:
@@ -195,11 +193,9 @@ class GameSession:
         return [] if event is None else [event]
 
     def _die(self, cause: GameEvent) -> list[GameEvent]:
-        if not self.riding:
-            self.lives -= 1
         self.phase = GamePhase.DYING
         self._phase_timer = self.config.dying_seconds
-        return [cause, GameEvent.LIFE_LOST]
+        return [cause]
 
     def _win(self) -> list[GameEvent]:
         self.phase = GamePhase.LEVEL_WON
@@ -213,10 +209,7 @@ class GameSession:
             self.open_editor()
             return []
         if self.phase is GamePhase.DYING:
-            if self.lives > 0:
-                return self._begin_level(self.level_index)
-            self.phase = GamePhase.GAME_OVER
-            return [GameEvent.GAME_OVER]
+            return self._begin_level(self.level_index)
         if self.level_index + 1 < len(self.levels):
             return self._begin_level(self.level_index + 1)
         self.phase = GamePhase.VICTORY

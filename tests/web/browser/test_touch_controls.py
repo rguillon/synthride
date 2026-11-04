@@ -8,9 +8,10 @@ from synthride.web.browser.browser_keyboard import BrowserKeyboard
 from synthride.web.browser.touch_controls import TouchControls
 from tests.web.fakes.fake_element import FakeElement
 from tests.web.fakes.fake_js_bridge import FakeJsBridge
+from tests.web.fakes.fake_js_null import JS_NULL
 from tests.web.fakes.fake_pointer_event import FakePointerEvent
 
-CODES = ("ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space")
+CODES = ("ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space")  # the arrows are pads of their own in tests
 
 
 def make_touch() -> SimpleNamespace:
@@ -48,6 +49,8 @@ def test_the_first_touch_turns_touch_mode_on() -> None:
     assert not t.touch.active
     t.bridge.window.dispatch("touchstart")
     assert t.bridge.document.body.classList.contains("touch")
+    assert t.touch.active
+    t.bridge.window.dispatch("touchstart")  # later touches change nothing
     assert t.touch.active
 
 
@@ -181,3 +184,76 @@ def test_losing_focus_forgets_the_pointers() -> None:
     down(t, "ArrowLeft", 2)  # no stale pointer keeps the pad held after this one is lifted
     up(t, "ArrowLeft", 2)
     assert t.keyboard.ship_input() == ShipInput()
+
+
+def make_stick() -> tuple[SimpleNamespace, FakeElement]:
+    t = make_touch()
+    stick = FakeElement(tag="div", stick="")  # a 100 px wide joystick whose center is at (50, 50)
+    return t, stick
+
+
+def stick_event(
+    t: SimpleNamespace, stick: FakeElement, event_type: str, point: tuple[float, float], pointer_id: int = 1
+) -> None:
+    event = FakePointerEvent(stick, pointer_id, *point)
+    target = t.bridge.window if event_type != "pointerdown" else t.bridge.document.getElementById("touch")
+    target.dispatch(event_type, event)
+
+
+def test_the_stick_holds_the_arrows_it_points_at() -> None:
+    t, stick = make_stick()
+    expected = {
+        (50, 5): ShipInput(accelerate=True),
+        (50, 95): ShipInput(brake=True),
+        (5, 50): ShipInput(left=True),
+        (95, 50): ShipInput(right=True),
+        (80, 20): ShipInput(accelerate=True, right=True),
+        (20, 80): ShipInput(brake=True, left=True),
+        (50, 55): ShipInput(),  # the dead zone around the center
+    }
+    stick_event(t, stick, "pointerdown", (50, 50))
+    for (x, y), ship_input in expected.items():
+        stick_event(t, stick, "pointermove", (x, y))
+        assert t.keyboard.ship_input() == ship_input, (x, y)
+
+
+def test_the_stick_follows_the_thumb_and_lets_go() -> None:
+    t, stick = make_stick()
+    stick_event(t, stick, "pointerdown", (50, 50))
+    assert stick.classList.contains("held")
+    stick_event(t, stick, "pointermove", (250, 50))
+    assert stick.knob.style.transform == "translate(50.0px, 0.0px)"  # the knob stays on the ring
+    assert t.keyboard.ship_input() == ShipInput(right=True)
+    stick_event(t, stick, "pointermove", (0, 0), 2)  # another pointer does not steer it
+    assert t.keyboard.ship_input() == ShipInput(right=True)
+    stick_event(t, stick, "pointerup", (250, 50))
+    assert t.keyboard.ship_input() == ShipInput()
+    assert not stick.classList.contains("held")
+    assert stick.knob.style.transform == "translate(0px, 0px)"
+
+
+def test_the_stick_and_jump_work_together() -> None:
+    t, stick = make_stick()
+    stick_event(t, stick, "pointerdown", (50, 5))
+    down(t, "Space", 2)
+    assert t.keyboard.ship_input() == ShipInput(accelerate=True, jump=True)
+    t.bridge.window.dispatch("blur")
+    assert t.keyboard.ship_input() == ShipInput()
+    assert not stick.classList.contains("held")
+
+
+def test_a_browser_without_full_screen_is_not_asked() -> None:
+    t = make_touch()
+    t.bridge.document.documentElement = SimpleNamespace()  # iPhone Safari has no requestFullscreen
+    t.bridge.window.dispatch("touchend")
+    assert t.unlocks == 1
+
+
+def test_a_stick_without_a_knob_still_steers() -> None:
+    t, stick = make_stick()
+    stick.knob = JS_NULL
+    stick_event(t, stick, "pointerdown", (95, 50))
+    assert t.keyboard.ship_input() == ShipInput(right=True)
+    stick_event(t, stick, "pointerup", (95, 50))
+    assert t.keyboard.ship_input() == ShipInput()
+    assert not stick.classList.contains("held")

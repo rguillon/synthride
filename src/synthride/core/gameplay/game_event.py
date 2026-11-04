@@ -29,7 +29,5 @@ class GameEvent(Enum):
     BURNED = auto()
     OUT_OF_FUEL = auto()
     OUT_OF_OXYGEN = auto()
-    LIFE_LOST = auto()
     LEVEL_WON = auto()
-    GAME_OVER = auto()
     GAME_COMPLETED = auto()
