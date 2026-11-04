@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SynthRide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&display=swap">
+<style>
+:root {
+  --night: #0b0014;
+  --violet: #2a0845;
+  --pink: #ff2bd6;
+  --cyan: #00f0ff;
+  --sun: #ffb347;
+  --text: #f6e9ff;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--night); color: var(--text);
+  font-family: "Orbitron", system-ui, sans-serif; }
+body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 5;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,0.18) 2px 3px); }
+#stage, #stage canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+.overlay { position: fixed; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center;
+  justify-content: safe center; gap: 1.2rem; text-align: center; padding: 16px; overflow-y: auto;
+  background: radial-gradient(ellipse at center, rgba(42,8,69,0.55), rgba(11,0,20,0.85)); }
+.overlay[hidden] { display: none; }
+.logo { font-size: clamp(2.6rem, 11vw, 7rem); font-weight: 800; letter-spacing: 0.08em; margin: 0;
+  background: linear-gradient(180deg, var(--sun) 0%, var(--pink) 60%, #7b2cff 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 18px rgba(255,43,214,0.7)); }
+.subtitle { color: var(--cyan); letter-spacing: 0.4em; text-shadow: 0 0 10px var(--cyan); margin: 0; }
+.prompt { animation: blink 1.1s steps(2, start) infinite; color: var(--text); text-shadow: 0 0 8px var(--pink); }
+.keys { font-size: 0.75rem; opacity: 0.75; line-height: 1.8; }
+.level-columns { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 0 1.2rem; }
+.level-list { list-style: none; padding: 0; margin: 0; width: min(300px, 90vw); }
+.level-list li { padding: 0.6rem 0.7rem; margin: 0 0 0.6rem; border: 1px solid rgba(0,240,255,0.25);
+  font-size: 0.75rem; letter-spacing: 0.1em; white-space: nowrap; }
+.level-list li.selected { border-color: var(--pink); color: var(--pink); box-shadow: 0 0 16px var(--pink);
+  text-shadow: 0 0 8px var(--pink); }
+.repo-link { font-size: 0.7rem; letter-spacing: 0.2em; color: var(--cyan); text-decoration: none;
+  text-shadow: 0 0 8px var(--cyan); }
+.repo-link:hover, .repo-link:focus-visible { color: var(--pink); text-shadow: 0 0 8px var(--pink); }
+.headline { font-size: clamp(1.8rem, 7vw, 4rem); margin: 0; color: var(--pink); text-shadow: 0 0 20px var(--pink); }
+#hud { position: fixed; inset: 0; z-index: 2; pointer-events: none; padding: 16px; font-size: 0.8rem;
+  text-shadow: 0 0 6px var(--cyan); }
+#hud[hidden] { display: none; }
+.hud-top { display: flex; justify-content: space-between; gap: 1rem; letter-spacing: 0.15em; }
+.hud-fps { opacity: 0.6; letter-spacing: 0.1em; }
+.hud-bottom { position: absolute; left: 16px; right: 16px; bottom: 16px; display: grid;
+  grid-template-columns: repeat(3, 1fr); gap: 0.8rem; }
+.gauge-label { display: block; margin-bottom: 0.3rem; letter-spacing: 0.2em; }
+.gauge { height: 10px; border: 1px solid currentColor; box-shadow: 0 0 8px currentColor; }
+.gauge-fill { height: 100%; width: 100%; background: currentColor; transform-origin: left; }
+.gauge-speed { color: var(--cyan); }
+.gauge-fuel { color: var(--sun); }
+.gauge-oxygen { color: #7dff9b; }
+.gauge.low .gauge-fill { animation: blink 0.4s steps(2, start) infinite; }
+.progress { margin-top: 0.6rem; height: 4px; background: rgba(255,255,255,0.12); }
+.progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--cyan), var(--pink)); }
+.legend { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem 1.4rem; font-size: 0.7rem; letter-spacing: 0.12em; text-align: left; opacity: 0.9; }
+.legend li { display: flex; align-items: center; gap: 0.6rem; white-space: nowrap; }
+.swatch { display: inline-block; min-width: 2.4em; text-align: center; font-weight: 800;
+  text-shadow: 0 0 8px currentColor; }
+.hud-callout { position: absolute; top: 26%; left: 0; right: 0; text-align: center; opacity: 0;
+  font-size: clamp(1.3rem, 5vw, 2.6rem); font-weight: 800; letter-spacing: 0.25em;
+  text-shadow: 0 0 14px currentColor, 0 0 30px currentColor; }
+#editor { position: fixed; inset: 0; z-index: 3; pointer-events: none; display: flex; flex-direction: column;
+  justify-content: space-between; padding: 12px 16px; font-size: 0.72rem; letter-spacing: 0.1em; }
+#editor[hidden] { display: none; }
+.editor-top, .editor-bottom { pointer-events: auto; display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem;
+  align-items: center; justify-content: center; padding: 0.6rem 0.8rem; background: rgba(11,0,20,0.72);
+  border: 1px solid rgba(0,240,255,0.25); }
+.editor-bottom { flex-direction: column; gap: 0.5rem; }
+.editor-name { font: inherit; font-size: 0.95rem; background: transparent; color: var(--pink); letter-spacing: 0.1em;
+  border: 1px solid rgba(255,43,214,0.5); padding: 0.35rem 0.6rem; width: min(280px, 100%); }
+.editor-settings { display: flex; flex-wrap: wrap; gap: 0.8rem; color: var(--cyan); }
+.editor-settings input { font: inherit; width: 4.5rem; background: transparent; color: var(--text);
+  border: 1px solid rgba(0,240,255,0.4); padding: 0.25rem 0.4rem; }
+.editor-status { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; align-items: center; }
+.editor-warning { color: var(--sun); }
+.editor-message { color: #7dff9b; }
+.editor-tools { display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem; align-items: center; justify-content: center; }
+.tool-group { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; }
+.tool-caption { color: var(--cyan); margin-right: 0.3rem; }
+.tool-name { min-width: 14rem; color: var(--pink); text-shadow: 0 0 8px var(--pink); }
+#editor button { font: inherit; color: var(--text); background: rgba(42,8,69,0.7); cursor: pointer;
+  border: 1px solid rgba(0,240,255,0.35); padding: 0.35rem 0.6rem; letter-spacing: 0.1em; }
+#editor button.tool { font-size: 1.15rem; width: 2.3rem; height: 2.3rem; padding: 0; font-weight: 800;
+  text-shadow: 0 0 8px currentColor; }
+#editor button.height { width: 2rem; padding: 0.35rem 0; }
+#editor button.selected { border-color: var(--pink); box-shadow: 0 0 12px var(--pink);
+  background: rgba(255,43,214,0.18); }
+#editor button:hover, #editor button:focus-visible { border-color: var(--pink); }
+.editor-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; }
+#editor .keys { margin: 0; }
+#loading { z-index: 4; }
+.level-list li { cursor: pointer; }
+.pause { display: flex; flex-direction: column; align-items: center; gap: 1.2rem; margin: auto 0; }
+.menu-button { font: inherit; font-size: 1.1rem; letter-spacing: 0.2em; color: var(--cyan); cursor: pointer;
+  background: rgba(11,0,20,0.5); border: 2px solid rgba(0,240,255,0.55); border-radius: 14px; min-width: 15rem;
+  min-height: 52px; padding: 0 1.4rem; text-shadow: 0 0 8px var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,0.35); }
+.menu-button:hover, .menu-button:focus-visible { color: var(--pink); border-color: var(--pink);
+  text-shadow: 0 0 8px var(--pink); }
+/* Touch: shown once the page has seen a touch, which adds the "touch" class to the body */
+#touch, #mute, .menu-back, .touch-text { display: none; }
+#touch { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+#touch, #touch button, #touch .stick, #mute { touch-action: none; user-select: none; -webkit-user-select: none;
+  -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+body.touch #hud:not([hidden]) ~ #touch { display: block; }
+.pad, .touch-button { pointer-events: auto; font: inherit; font-weight: 800; color: var(--cyan);
+  background: rgba(11,0,20,0.25); border: 2px solid rgba(0,240,255,0.55); border-radius: 14px;
+  text-shadow: 0 0 8px currentColor; box-shadow: 0 0 10px rgba(0,240,255,0.35); padding: 0; }
+/* The joystick: a ring with the four directions marked, and a knob that follows the thumb */
+.stick { position: absolute; left: max(20px, env(safe-area-inset-left));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: min(150px, 38vh); aspect-ratio: 1; border-radius: 50%; pointer-events: auto; color: var(--cyan);
+  border: 2px solid rgba(0,240,255,0.55); box-shadow: 0 0 14px rgba(0,240,255,0.35),
+  inset 0 0 22px rgba(0,240,255,0.18);
+  background: radial-gradient(circle, rgba(0,240,255,0.16) 0 24%, transparent 25%),
+    repeating-conic-gradient(from 22.5deg, rgba(0,240,255,0.22) 0 1deg, transparent 1deg 45deg),
+    radial-gradient(circle, rgba(11,0,20,0.3), rgba(11,0,20,0.1)); }
+.stick i { position: absolute; font-style: normal; font-size: 0.9rem; line-height: 1; opacity: 0.8;
+  text-shadow: 0 0 8px currentColor; }
+.stick .up { top: 9%; left: 50%; transform: translateX(-50%); }
+.stick .down { bottom: 9%; left: 50%; transform: translateX(-50%); }
+.stick .left { left: 9%; top: 50%; transform: translateY(-50%); }
+.stick .right { right: 9%; top: 50%; transform: translateY(-50%); }
+.knob { position: absolute; left: 50%; top: 50%; width: 42%; height: 42%; margin: -21% 0 0 -21%; border-radius: 50%;
+  pointer-events: none; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.55), rgba(0,240,255,0.35) 45%,
+  rgba(0,120,160,0.45)); border: 2px solid var(--cyan); box-shadow: 0 0 14px rgba(0,240,255,0.7); }
+.stick.held { color: var(--pink); border-color: var(--pink); box-shadow: 0 0 20px rgba(255,43,214,0.6),
+  inset 0 0 26px rgba(255,43,214,0.22); }
+.stick.held .knob { border-color: var(--pink); box-shadow: 0 0 18px var(--pink);
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(255,43,214,0.4) 45%,
+  rgba(130,0,110,0.5)); }
+.pad-jump { position: absolute; right: max(24px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  width: min(104px, 27vh); aspect-ratio: 1; border-radius: 50%; font-size: 0.85rem; letter-spacing: 0.15em;
+  color: var(--pink); border-color: rgba(255,43,214,0.6); box-shadow: 0 0 14px rgba(255,43,214,0.4),
+  inset 0 0 18px rgba(255,43,214,0.2); text-shadow: 0 0 8px currentColor; }
+.pad.held { color: #fff; border-color: var(--pink); background: rgba(255,43,214,0.35);
+  box-shadow: 0 0 24px var(--pink); }
+.touch-button { position: fixed; top: max(8px, env(safe-area-inset-top)); width: 40px; height: 40px;
+  font-size: 1rem; }
+#mute { right: max(12px, env(safe-area-inset-right)); z-index: 4; }
+.touch-menu { right: calc(max(12px, env(safe-area-inset-right)) + 48px); }
+body.touch #mute { display: block; }
+body.touch #hud { padding: 8px 12px; font-size: 0.65rem; }
+body.touch .hud-top, body.touch .progress { margin-right: 144px; }
+body.touch .progress { margin-top: 0.3rem; height: 3px; }
+body.touch .hud-bottom { top: 3.1rem; bottom: auto; right: 12px; left: auto; width: 11rem; grid-template-columns: 1fr;
+  gap: 0.3rem; }
+body.touch .gauge { height: 6px; }
+body.touch .gauge-label { margin-bottom: 0.1rem; letter-spacing: 0.15em; }
+body.touch .keys, body.touch .key-text { display: none; }
+body.touch .touch-text { display: inline; }
+body.touch .menu-back { display: block; align-self: flex-start; flex-shrink: 0; font: inherit; font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  color: var(--cyan); background: rgba(11,0,20,0.5); border: 1px solid rgba(0,240,255,0.5); min-height: 44px;
+  padding: 0 1rem; text-shadow: 0 0 8px var(--cyan); }
+body.touch .level-list li:active { border-color: var(--pink); color: var(--pink); box-shadow: 0 0 16px var(--pink);
+  text-shadow: 0 0 8px var(--pink); }
+/* Full screen: phones get it from their first touch, computers from this button or F */
+#fullscreen { display: none; position: fixed; top: 10px; right: 16px; z-index: 4; width: 44px; height: 44px;
+  padding: 0; font: inherit; font-size: 1.3rem; color: var(--cyan); background: rgba(11,0,20,0.25); cursor: pointer;
+  border: 2px solid rgba(0,240,255,0.55); border-radius: 14px; text-shadow: 0 0 8px currentColor;
+  box-shadow: 0 0 10px rgba(0,240,255,0.35); }
+body:not(.touch) #fullscreen { display: block; }
+/* On a phone it sits beside the mute button. Coarse pointers get that place from the start, not only once the first
+   touch adds the "touch" class: the button would move between that touch's start and end, and the tap would miss it */
+@media (pointer: coarse) {
+  #fullscreen { display: block; top: max(8px, env(safe-area-inset-top)); width: 40px; height: 40px;
+    right: calc(max(12px, env(safe-area-inset-right)) + 48px); }
+  #hud:not([hidden]) ~ #fullscreen { right: calc(max(12px, env(safe-area-inset-right)) + 96px); }
+}
+/* On a phone it sits beside the mute button, past the menu button while playing. It must stay shown from the first
+   touch: hiding it then would swallow the tap that is meant for it */
+body.touch #fullscreen { display: block; top: max(8px, env(safe-area-inset-top)); width: 40px; height: 40px;
+  right: calc(max(12px, env(safe-area-inset-right)) + 48px); }
+body.touch #hud:not([hidden]) ~ #fullscreen { right: calc(max(12px, env(safe-area-inset-right)) + 96px); }
+body:not(.touch) .hud-top, body:not(.touch) .progress { margin-right: 56px; }
+body.fullscreen #fullscreen { color: var(--pink); border-color: rgba(255,43,214,0.6); }
+/* Held upright, the buttons take a row of their own on top, and the HUD and menus start below it */
+@media (orientation: portrait) {
+  body.touch #hud { padding-top: calc(max(8px, env(safe-area-inset-top)) + 46px); }
+  body.touch .hud-top, body.touch .progress { margin-right: 0; }
+  body.touch .hud-bottom { top: calc(max(8px, env(safe-area-inset-top)) + 46px + 2.2rem); left: 12px; right: 12px;
+    width: auto; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+  body.touch .overlay { padding-top: calc(max(8px, env(safe-area-inset-top)) + 46px); justify-content: flex-start; }
+  body.touch .stick { width: min(150px, 38vw); }
+  body.touch .pad-jump { width: min(104px, 27vw); }
+  body.touch .level-columns { width: 100%; padding: 0 16px; box-sizing: border-box; }
+  body.touch .level-list li { min-height: 44px; display: flex; align-items: center; }
+  body.touch .legend li { white-space: normal; }
+}
+@media (max-height: 500px) {
+  body.touch .overlay { gap: 0.7rem; padding-top: max(16px, env(safe-area-inset-top)); }
+  body.touch .level-columns { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 0.5rem; width: 100%; padding: 0 max(16px, env(safe-area-inset-left)); }
+  body.touch .level-list { display: contents; }
+  body.touch .level-list li { min-height: 44px; display: flex; align-items: center; margin: 0; padding: 0 0.7rem;
+    overflow: hidden; }
+  body.touch .legend { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body.touch .logo { font-size: clamp(2rem, 8vw, 4rem); }
+  body.touch .subtitle { font-size: 0.85rem; }
+}
+@keyframes blink { to { visibility: hidden; } }
+@media (max-width: 600px) { .hud-bottom, .legend { grid-template-columns: 1fr; } }
+</style>
+<script type="importmap">
+{"imports": {"three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+</script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.29.5/full/pyodide.js"></script>
+</head>
+<body>
+<div id="stage"></div>
+<div id="hud" hidden></div>
+<div id="touch">
+  <div class="stick" data-stick aria-label="Steer: left and right, accelerate and brake">
+    <i class="up">&#9650;</i><i class="down">&#9660;</i><i class="left">&#9664;</i><i class="right">&#9654;</i>
+    <div class="knob" data-knob></div>
+  </div>
+  <button class="pad pad-jump" data-code="Space">JUMP</button>
+  <button class="touch-button touch-menu" data-press="Escape" aria-label="Menu">II</button>
+</div>
+<div id="menu" class="overlay" hidden></div>
+<div id="editor" hidden></div>
+<button id="mute" class="touch-button" data-press="KeyM" aria-label="Mute">&#128263;</button>
+<button id="fullscreen" aria-label="Full screen (F)" title="Full screen (F)">&#9974;</button>
+<div id="loading" class="overlay">
+  <h1 class="logo">SYNTHRIDE</h1>
+  <p class="subtitle" id="loading-status">Booting Python&hellip;</p>
+</div>
+<script type="module">
+import * as THREE from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
+import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
+import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+
+globalThis.THREE = {
+  ...THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, LineSegments2, LineSegmentsGeometry, LineMaterial,
+};
+const status = document.getElementById("loading-status");
+try {
+  const pyodide = await loadPyodide();
+  status.textContent = "Cyberspace loading\u2026";
+  const response = await fetch("synthride.zip", { cache: "no-store" });
+  pyodide.unpackArchive(await response.arrayBuffer(), "zip");
+  pyodide.runPython("from synthride.web.main import main; main()");
+  document.getElementById("loading").remove();
+} catch (error) {
+  status.textContent = "Failed to start: " + error.message;
+  console.error(error);
+}
+</script>
+</body>
+</html>
