@@ -40,6 +40,7 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
   text-shadow: 0 0 8px var(--pink); }
 .repo-link { font-size: 0.7rem; letter-spacing: 0.2em; color: var(--cyan); text-decoration: none;
   text-shadow: 0 0 8px var(--cyan); }
+.commit { margin: 0; font-size: 0.65rem; letter-spacing: 0.2em; opacity: 0.6; }
 .repo-link:hover, .repo-link:focus-visible { color: var(--pink); text-shadow: 0 0 8px var(--pink); }
 .headline { font-size: clamp(1.8rem, 7vw, 4rem); margin: 0; color: var(--pink); text-shadow: 0 0 20px var(--pink); }
 #hud { position: fixed; inset: 0; z-index: 2; pointer-events: none; padding: 16px; font-size: 0.8rem;
@@ -142,13 +143,18 @@ body.touch #hud:not([hidden]) ~ #touch { display: block; }
   inset 0 0 18px rgba(255,43,214,0.2); text-shadow: 0 0 8px currentColor; }
 .pad.held { color: #fff; border-color: var(--pink); background: rgba(255,43,214,0.35);
   box-shadow: 0 0 24px var(--pink); }
-.touch-button { position: fixed; top: max(10px, env(safe-area-inset-top)); width: 44px; height: 44px;
-  font-size: 1.1rem; }
-#mute { right: max(16px, env(safe-area-inset-right)); z-index: 4; }
-.touch-menu { right: calc(max(16px, env(safe-area-inset-right)) + 56px); }
+.touch-button { position: fixed; top: max(8px, env(safe-area-inset-top)); width: 40px; height: 40px;
+  font-size: 1rem; }
+#mute { right: max(12px, env(safe-area-inset-right)); z-index: 4; }
+.touch-menu { right: calc(max(12px, env(safe-area-inset-right)) + 48px); }
 body.touch #mute { display: block; }
-body.touch .hud-top, body.touch .progress { margin-right: 168px; }
-body.touch .hud-bottom { top: 4.2rem; bottom: auto; right: 16px; }
+body.touch #hud { padding: 8px 12px; font-size: 0.65rem; }
+body.touch .hud-top, body.touch .progress { margin-right: 144px; }
+body.touch .progress { margin-top: 0.3rem; height: 3px; }
+body.touch .hud-bottom { top: 3.1rem; bottom: auto; right: 12px; left: auto; width: 11rem; grid-template-columns: 1fr;
+  gap: 0.3rem; }
+body.touch .gauge { height: 6px; }
+body.touch .gauge-label { margin-bottom: 0.1rem; letter-spacing: 0.15em; }
 body.touch .keys, body.touch .key-text { display: none; }
 body.touch .touch-text { display: inline; }
 body.touch .menu-back { display: block; align-self: flex-start; flex-shrink: 0; font: inherit; font-size: 0.75rem;
@@ -163,19 +169,27 @@ body.touch .level-list li:active { border-color: var(--pink); color: var(--pink)
   border: 2px solid rgba(0,240,255,0.55); border-radius: 14px; text-shadow: 0 0 8px currentColor;
   box-shadow: 0 0 10px rgba(0,240,255,0.35); }
 body:not(.touch) #fullscreen { display: block; }
+/* On a phone it sits beside the mute button. Coarse pointers get that place from the start, not only once the first
+   touch adds the "touch" class: the button would move between that touch's start and end, and the tap would miss it */
+@media (pointer: coarse) {
+  #fullscreen { display: block; top: max(8px, env(safe-area-inset-top)); width: 40px; height: 40px;
+    right: calc(max(12px, env(safe-area-inset-right)) + 48px); }
+  #hud:not([hidden]) ~ #fullscreen { right: calc(max(12px, env(safe-area-inset-right)) + 96px); }
+}
 /* On a phone it sits beside the mute button, past the menu button while playing. It must stay shown from the first
    touch: hiding it then would swallow the tap that is meant for it */
-body.touch #fullscreen { display: block; top: max(10px, env(safe-area-inset-top)); width: 44px; height: 44px;
-  right: calc(max(16px, env(safe-area-inset-right)) + 56px); }
-body.touch #hud:not([hidden]) ~ #fullscreen { right: calc(max(16px, env(safe-area-inset-right)) + 112px); }
+body.touch #fullscreen { display: block; top: max(8px, env(safe-area-inset-top)); width: 40px; height: 40px;
+  right: calc(max(12px, env(safe-area-inset-right)) + 48px); }
+body.touch #hud:not([hidden]) ~ #fullscreen { right: calc(max(12px, env(safe-area-inset-right)) + 96px); }
 body:not(.touch) .hud-top, body:not(.touch) .progress { margin-right: 56px; }
 body.fullscreen #fullscreen { color: var(--pink); border-color: rgba(255,43,214,0.6); }
 /* Held upright, the buttons take a row of their own on top, and the HUD and menus start below it */
 @media (orientation: portrait) {
-  body.touch #hud { padding-top: calc(max(10px, env(safe-area-inset-top)) + 54px); }
+  body.touch #hud { padding-top: calc(max(8px, env(safe-area-inset-top)) + 46px); }
   body.touch .hud-top, body.touch .progress { margin-right: 0; }
-  body.touch .hud-bottom { top: calc(max(10px, env(safe-area-inset-top)) + 54px + 3.4rem); left: 16px; gap: 0.5rem; }
-  body.touch .overlay { padding-top: calc(max(10px, env(safe-area-inset-top)) + 54px); justify-content: flex-start; }
+  body.touch .hud-bottom { top: calc(max(8px, env(safe-area-inset-top)) + 46px + 2.2rem); left: 12px; right: 12px;
+    width: auto; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+  body.touch .overlay { padding-top: calc(max(8px, env(safe-area-inset-top)) + 46px); justify-content: flex-start; }
   body.touch .stick { width: min(150px, 38vw); }
   body.touch .pad-jump { width: min(104px, 27vw); }
   body.touch .level-columns { width: 100%; padding: 0 16px; box-sizing: border-box; }
@@ -201,7 +215,7 @@ body.fullscreen #fullscreen { color: var(--pink); border-color: rgba(255,43,214,
 </script>
 <script src="https://cdn.jsdelivr.net/pyodide/v0.29.5/full/pyodide.js"></script>
 </head>
-<body>
+<body data-commit="d20e7b7">
 <div id="stage"></div>
 <div id="hud" hidden></div>
 <div id="touch">
