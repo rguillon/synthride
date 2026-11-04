@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from tests.web.fakes.fake_class_list import FakeClassList
 from tests.web.fakes.fake_fetch import FakePromise
@@ -38,7 +38,7 @@ class FakeElement:
         self.clicks = 0
         self.blurs = 0
         self.rect = SimpleNamespace(left=0, top=0, width=100, height=100)
-        self.knob = FakeJsObject("knob")
+        self.knob: Any = FakeJsObject("knob")
         self.listeners: dict[str, list[Callable]] = {}
 
     def appendChild(self, child: object) -> None:  # noqa: N802

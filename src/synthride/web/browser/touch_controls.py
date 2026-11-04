@@ -150,13 +150,16 @@ class TouchControls:
 
     def _aim(self, event: JsObject) -> None:
         """Hold the arrows the thumb points at, and move the knob under it."""
-        rect = self._stick.getBoundingClientRect()
+        stick = self._stick
+        if stick is None:
+            return
+        rect = stick.getBoundingClientRect()
         radius = float(rect.width) / 2
         dx = float(event.clientX) - (float(rect.left) + radius)
         dy = float(event.clientY) - (float(rect.top) + radius)
         distance = (dx * dx + dy * dy) ** 0.5
         scale = min(1.0, radius / distance) if distance else 0.0  # the knob stays inside the ring
-        knob = self._stick.querySelector("[data-knob]")
+        knob = stick.querySelector("[data-knob]")
         if knob:
             knob.style.transform = f"translate({dx * scale:.1f}px, {dy * scale:.1f}px)"
         wanted: set[str] = set()
@@ -171,13 +174,16 @@ class TouchControls:
         self._stick_codes = wanted
 
     def _release_stick(self) -> None:
+        stick = self._stick
+        if stick is None:
+            return
         for code in self._stick_codes:
             self._keyboard.release(code)
         self._stick_codes = set()
-        knob = self._stick.querySelector("[data-knob]")
+        knob = stick.querySelector("[data-knob]")
         if knob:
             knob.style.transform = "translate(0px, 0px)"
-        self._stick.classList.toggle(self.HELD, False)  # noqa: FBT003
+        stick.classList.toggle(self.HELD, False)  # noqa: FBT003
         self._stick = None
         self._stick_pointer = -1
 

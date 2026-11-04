@@ -9,6 +9,7 @@ class FakeKeyEvent:
         self.code = code
         self.key = key
         self.repeat = repeat
+        self.ctrlKey = False
         self.prevented = False
         self.target: object = None
 
