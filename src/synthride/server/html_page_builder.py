@@ -161,7 +161,7 @@ body.touch #hud:not([hidden]) ~ #touch { display: block; }
 #mute { right: max(16px, env(safe-area-inset-right)); z-index: 4; }
 .touch-menu { right: calc(max(16px, env(safe-area-inset-right)) + 56px); }
 body.touch #mute { display: block; }
-body.touch .hud-top, body.touch .progress { margin-right: 112px; }
+body.touch .hud-top, body.touch .progress { margin-right: 168px; }
 body.touch .hud-bottom { top: 4.2rem; bottom: auto; right: 16px; }
 body.touch .keys, body.touch .key-text { display: none; }
 body.touch .touch-text { display: inline; }
@@ -177,11 +177,11 @@ body.touch .level-list li:active { border-color: var(--pink); color: var(--pink)
   border: 2px solid rgba(0,240,255,0.55); border-radius: 14px; text-shadow: 0 0 8px currentColor;
   box-shadow: 0 0 10px rgba(0,240,255,0.35); }
 body:not(.touch) #fullscreen { display: block; }
-/* On a phone it only shows to leave full screen: a small button above the jump pad */
-body.touch #fullscreen { top: auto; right: max(24px, env(safe-area-inset-right)); width: 34px; height: 34px;
-  font-size: 1rem; border-radius: 10px;
-  bottom: calc(max(20px, env(safe-area-inset-bottom)) + min(104px, 27vh) + 12px); }
-body.touch.fullscreen #fullscreen { display: block; }
+/* On a phone it sits beside the mute button, past the menu button while playing. It must stay shown from the first
+   touch: hiding it then would swallow the tap that is meant for it */
+body.touch #fullscreen { display: block; top: max(10px, env(safe-area-inset-top)); width: 44px; height: 44px;
+  right: calc(max(16px, env(safe-area-inset-right)) + 56px); }
+body.touch #hud:not([hidden]) ~ #fullscreen { right: calc(max(16px, env(safe-area-inset-right)) + 112px); }
 body:not(.touch) .hud-top, body:not(.touch) .progress { margin-right: 56px; }
 body.fullscreen #fullscreen { color: var(--pink); border-color: rgba(255,43,214,0.6); }
 #rotate { z-index: 6; }
