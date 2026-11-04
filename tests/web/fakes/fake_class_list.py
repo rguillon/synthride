@@ -8,6 +8,9 @@ class FakeClassList:
     def __init__(self) -> None:
         self.names: set[str] = set()
 
+    def add(self, name: str) -> None:
+        self.names.add(name)
+
     def toggle(self, name: str, force: bool) -> None:  # noqa: FBT001
         if force:
             self.names.add(name)

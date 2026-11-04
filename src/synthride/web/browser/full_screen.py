@@ -23,6 +23,8 @@ class FullScreen:
     FIELDS = frozenset({"INPUT", "SELECT", "TEXTAREA"})
     MODIFIERS = ("ctrlKey", "metaKey", "altKey")  # Ctrl+F finds in the page
     ACTIVE = "fullscreen"
+    UNSUPPORTED = "no-fullscreen"
+    REQUESTS = ("requestFullscreen", "webkitRequestFullscreen")  # Safari on iPad only has the prefixed one
     # A document out of full screen has a null ``fullscreenElement``, which Pyodide hands over as the falsy ``jsnull``
 
     def __init__(self, bridge: JsBridge) -> None:
@@ -30,6 +32,8 @@ class FullScreen:
         self._bridge = bridge
         document = bridge.document
         self._button = document.getElementById("fullscreen")
+        if self._request_method() is None:  # iPhones, Safari and Firefox alike, have no full screen for pages
+            document.body.classList.add(self.UNSUPPORTED)
         self._button.addEventListener("click", bridge.proxy(self.on_click))
         bridge.window.addEventListener("keydown", bridge.proxy(self.on_key_down))
         document.addEventListener("fullscreenchange", bridge.proxy(self.on_change))
@@ -46,9 +50,19 @@ class FullScreen:
         if document.fullscreenElement:
             document.exitFullscreen().catch(catch)
         else:
-            request = getattr(document.documentElement, "requestFullscreen", None)
+            request = self._request_method()
             if request is not None:
-                request().catch(catch)
+                result = request()
+                if result:  # the prefixed version may return nothing
+                    result.catch(catch)
+
+    def _request_method(self) -> JsObject | None:
+        root = self._bridge.document.documentElement
+        for name in self.REQUESTS:
+            request = getattr(root, name, None)
+            if request is not None:
+                return request
+        return None
 
     def on_key_down(self, event: JsObject) -> None:
         """Toggle full screen on F, whatever the layout puts under it, unless typed in a form field or as a shortcut."""

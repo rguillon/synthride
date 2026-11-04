@@ -56,6 +56,9 @@ class TouchControls:
         passive = bridge.obj(passive=True)
         window.addEventListener("touchstart", bridge.proxy(self.on_touch_start), passive)
         window.addEventListener("touchend", bridge.proxy(self.on_touch_end), passive)
+        # iOS Safari ignores user-scalable=no and touch-action for pinching: only cancelling its gesture events stops it
+        for name in ("gesturestart", "gesturechange"):
+            window.addEventListener(name, bridge.proxy(lambda event: event.preventDefault()))
         pads = document.getElementById("touch")
         pads.addEventListener("pointerdown", bridge.proxy(self.on_pointer_down))
         pads.addEventListener("pointerover", bridge.proxy(self.on_pointer_over))
