@@ -9724,7 +9724,11 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 <span class="normal">343</span>
 <span class="normal">344</span>
 <span class="normal">345</span>
-<span class="normal">346</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">HtmlPageBuilder</span><span class="p">:</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">HtmlPageBuilder</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Builds the HTML5 page that boots Pyodide, loads Three.js and hands control to the Python game."""</span>
 
     <span class="n">PYODIDE_VERSION</span> <span class="o">=</span> <span class="s2">"0.29.5"</span>
@@ -9737,7 +9741,10 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 <span class="s2">&lt;html lang="en"&gt;</span>
 <span class="s2">&lt;head&gt;</span>
 <span class="s2">&lt;meta charset="utf-8"&gt;</span>
-<span class="s2">&lt;meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"&gt;</span>
+<span class="s2">&lt;meta name="viewport"</span>
+<span class="s2">  content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no"&gt;</span>
+<span class="s2">&lt;meta name="apple-mobile-web-app-capable" content="yes"&gt;</span>
+<span class="s2">&lt;meta name="mobile-web-app-capable" content="yes"&gt;</span>
 <span class="s2">&lt;title&gt;SynthRide&lt;/title&gt;</span>
 <span class="s2">&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;</span>
 <span class="s2">&lt;link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&amp;display=swap"&gt;</span>
@@ -9751,8 +9758,8 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 <span class="s2">  --text: #f6e9ff;</span>
 <span class="s2">}</span>
 <span class="s2">* { box-sizing: border-box; }</span>
-<span class="s2">html, body { margin: 0; height: 100%; overflow: hidden; background: var(--night); color: var(--text);</span>
-<span class="s2">  font-family: "Orbitron", system-ui, sans-serif; }</span>
+<span class="s2">html, body { touch-action: pan-x pan-y; margin: 0; height: 100%; overflow: hidden; background: var(--night);</span>
+<span class="s2">  color: var(--text); font-family: "Orbitron", system-ui, sans-serif; }</span>
 <span class="s2">body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 5;</span>
 <span class="s2">  background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,0.18) 2px 3px); }</span>
 <span class="s2">#stage, #stage canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }</span>
@@ -9917,6 +9924,7 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 <span class="s2">  right: calc(max(12px, env(safe-area-inset-right)) + 48px); }</span>
 <span class="s2">body.touch #hud:not([hidden]) ~ #fullscreen { right: calc(max(12px, env(safe-area-inset-right)) + 96px); }</span>
 <span class="s2">body:not(.touch) .hud-top, body:not(.touch) .progress { margin-right: 56px; }</span>
+<span class="s2">body.no-fullscreen #fullscreen { display: none !important; }</span>
 <span class="s2">body.fullscreen #fullscreen { color: var(--pink); border-color: rgba(255,43,214,0.6); }</span>
 <span class="s2">/* Held upright, the buttons take a row of their own on top, and the HUD and menus start below it */</span>
 <span class="s2">@media (orientation: portrait) {</span>
@@ -10132,11 +10140,7 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/server/html_page_builder.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">291</span>
-<span class="normal">292</span>
-<span class="normal">293</span>
-<span class="normal">294</span>
-<span class="normal">295</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">295</span>
 <span class="normal">296</span>
 <span class="normal">297</span>
 <span class="normal">298</span>
@@ -10149,7 +10153,11 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 <span class="normal">305</span>
 <span class="normal">306</span>
 <span class="normal">307</span>
-<span class="normal">308</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">pyodide_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">PYODIDE_VERSION</span><span class="p">,</span>
     <span class="n">three_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">THREE_VERSION</span><span class="p">,</span>
@@ -10189,15 +10197,15 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/server/html_page_builder.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">338</span>
-<span class="normal">339</span>
-<span class="normal">340</span>
-<span class="normal">341</span>
-<span class="normal">342</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">342</span>
 <span class="normal">343</span>
 <span class="normal">344</span>
 <span class="normal">345</span>
-<span class="normal">346</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return the page's HTML."""</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEMPLATE</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span>
         <span class="n">pyodide_url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pyodide_url</span><span class="p">,</span>
@@ -10232,11 +10240,7 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/server/html_page_builder.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">310</span>
-<span class="normal">311</span>
-<span class="normal">312</span>
-<span class="normal">313</span>
-<span class="normal">314</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">314</span>
 <span class="normal">315</span>
 <span class="normal">316</span>
 <span class="normal">317</span>
@@ -10248,7 +10252,11 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 <span class="normal">323</span>
 <span class="normal">324</span>
 <span class="normal">325</span>
-<span class="normal">326</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">current_commit</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return the short SHA of the commit being built: ``GITHUB_SHA`` in CI, else git's HEAD, else ``unknown``."""</span>
     <span class="n">sha</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"GITHUB_SHA"</span><span class="p">)</span>
