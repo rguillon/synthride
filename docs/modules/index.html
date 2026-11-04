@@ -1053,10 +1053,54 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#synthride.web.game_loop.GameLoop.leave" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        leave
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#synthride.web.game_loop.GameLoop.on_frame" class="md-nav__link">
     <span class="md-ellipsis">
       
         on_frame
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#synthride.web.game_loop.GameLoop.on_visibility_change" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        on_visibility_change
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#synthride.web.game_loop.GameLoop.pause" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pause
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#synthride.web.game_loop.GameLoop.resume" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        resume
       
     </span>
   </a>
@@ -2316,10 +2360,54 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#synthride.web.game_loop.GameLoop.leave" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        leave
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#synthride.web.game_loop.GameLoop.on_frame" class="md-nav__link">
     <span class="md-ellipsis">
       
         on_frame
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#synthride.web.game_loop.GameLoop.on_visibility_change" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        on_visibility_change
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#synthride.web.game_loop.GameLoop.pause" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pause
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#synthride.web.game_loop.GameLoop.resume" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        resume
       
     </span>
   </a>
@@ -6727,7 +6815,55 @@ toward one corner). The height digit of a slope is its low side. The first row i
 <span class="normal">244</span>
 <span class="normal">245</span>
 <span class="normal">246</span>
-<span class="normal">247</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">GameLoop</span><span class="p">:</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">GameLoop</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Drives everything once per animation frame: menu keys, simulation, audio, visuals and overlays."""</span>
 
     <span class="n">MAX_FRAME_SECONDS</span> <span class="o">=</span> <span class="mf">0.1</span>
@@ -6780,7 +6916,10 @@ toward one corner). The height digit of a slope is its low side. The first row i
         <span class="bp">self</span><span class="o">.</span><span class="n">_track_group</span><span class="p">:</span> <span class="n">JsObject</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_last_timestamp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_time</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paused</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_frame_proxy</span> <span class="o">=</span> <span class="n">bridge</span><span class="o">.</span><span class="n">proxy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_frame</span><span class="p">)</span>
+        <span class="n">bridge</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">addEventListener</span><span class="p">(</span><span class="s2">"blur"</span><span class="p">,</span> <span class="n">bridge</span><span class="o">.</span><span class="n">proxy</span><span class="p">(</span><span class="k">lambda</span> <span class="n">_event</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pause</span><span class="p">()))</span>
+        <span class="n">bridge</span><span class="o">.</span><span class="n">document</span><span class="o">.</span><span class="n">addEventListener</span><span class="p">(</span><span class="s2">"visibilitychange"</span><span class="p">,</span> <span class="n">bridge</span><span class="o">.</span><span class="n">proxy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_visibility_change</span><span class="p">))</span>
         <span class="n">backdrop</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">renderer</span><span class="o">.</span><span class="n">scene</span><span class="p">)</span>
         <span class="n">renderer</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ship_model</span><span class="o">.</span><span class="n">group</span><span class="p">)</span>
         <span class="n">renderer</span><span class="o">.</span><span class="n">mirror</span><span class="p">(</span><span class="n">ship_model</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>  <span class="c1"># not the shadow: it would hide the mirror image</span>
@@ -6800,14 +6939,45 @@ toward one corner). The height digit of a slope is its low side. The first row i
         <span class="bp">self</span><span class="o">.</span><span class="n">tick</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAX_FRAME_SECONDS</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_bridge</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">requestAnimationFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_proxy</span><span class="p">)</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_visibility_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_event</span><span class="p">:</span> <span class="n">JsObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Pause when the page is hidden: another tab, or the phone's screen off."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bridge</span><span class="o">.</span><span class="n">document</span><span class="o">.</span><span class="n">visibilityState</span> <span class="o">==</span> <span class="s2">"hidden"</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pause</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">pause</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Freeze the ride, if one is on, behind the pause screen, and release the keys held."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">paused</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">phase</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GamePhase</span><span class="o">.</span><span class="n">PLAYING</span><span class="p">,</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">DYING</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paused</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_keyboard</span><span class="o">.</span><span class="n">release_all</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_music</span><span class="o">.</span><span class="n">pause</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">resume</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Go on with a paused ride."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">paused</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">paused</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_music</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">leave</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Quit a paused ride, back to the editor it was started from or to the level select."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">riding</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">open_editor</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">open_level_select</span><span class="p">()</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">tick</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Advance the whole game by ``dt`` seconds and render a frame."""</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_time</span> <span class="o">+=</span> <span class="n">dt</span>
+<span class="w">        </span><span class="sd">"""Advance the whole game by ``dt`` seconds and render a frame, or only redraw while paused."""</span>
         <span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keyboard</span><span class="o">.</span><span class="n">consume_presses</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">handle_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">tap</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_menu</span><span class="o">.</span><span class="n">consume_taps</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">handle_tap</span><span class="p">(</span><span class="n">tap</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">paused</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_overlays</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_renderer</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time</span> <span class="o">+=</span> <span class="n">dt</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_handle_editor_actions</span><span class="p">()</span>
         <span class="n">events</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keyboard</span><span class="o">.</span><span class="n">ship_input</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sound_effects</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">events</span><span class="p">)</span>
@@ -6845,26 +7015,37 @@ toward one corner). The height digit of a slope is its low side. The first row i
         <span class="n">letter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keyboard</span><span class="o">.</span><span class="n">letter</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">letter</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">MUTE</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_music</span><span class="o">.</span><span class="n">toggle_mute</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">paused</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_handle_pause_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">EDITOR</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_editor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_editor</span><span class="o">.</span><span class="n">handle_key</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">letter</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">letter</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">EDIT</span> <span class="ow">and</span> <span class="n">phase</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GamePhase</span><span class="o">.</span><span class="n">TITLE</span><span class="p">,</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">LEVEL_SELECT</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_editor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_open_editor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_editor</span><span class="p">,</span> <span class="n">from_level_select</span><span class="o">=</span><span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">LEVEL_SELECT</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">session</span><span class="o">.</span><span class="n">riding</span> <span class="ow">and</span> <span class="n">phase</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GamePhase</span><span class="o">.</span><span class="n">PLAYING</span><span class="p">,</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">DYING</span><span class="p">)</span> <span class="ow">and</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"Escape"</span><span class="p">:</span>
-            <span class="n">session</span><span class="o">.</span><span class="n">open_editor</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">phase</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GamePhase</span><span class="o">.</span><span class="n">PLAYING</span><span class="p">,</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">DYING</span><span class="p">)</span> <span class="ow">and</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"Escape"</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pause</span><span class="p">()</span>
         <span class="k">elif</span> <span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">TITLE</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CONFIRM</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_music</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
             <span class="n">session</span><span class="o">.</span><span class="n">open_level_select</span><span class="p">()</span>
         <span class="k">elif</span> <span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">LEVEL_SELECT</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_handle_level_select_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="p">(</span><span class="n">phase</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GamePhase</span><span class="o">.</span><span class="n">PLAYING</span><span class="p">,</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">DYING</span><span class="p">)</span> <span class="ow">and</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"Escape"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
-            <span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">VICTORY</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CONFIRM</span>
-        <span class="p">):</span>
+        <span class="k">elif</span> <span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">VICTORY</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CONFIRM</span><span class="p">:</span>
             <span class="n">session</span><span class="o">.</span><span class="n">open_level_select</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_handle_pause_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"Escape"</span><span class="p">,</span> <span class="s2">"Enter"</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"Backspace"</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">leave</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">handle_tap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tap</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""React to a tap on the menus, as the key it stands for: a level rides it, back is Escape, else Enter."""</span>
         <span class="n">session</span><span class="p">,</span> <span class="n">phase</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">phase</span>
-        <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">LEVEL_SELECT</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">paused</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tap</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_menu</span><span class="o">.</span><span class="n">RESUME</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">tap</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_menu</span><span class="o">.</span><span class="n">MAIN_MENU</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">leave</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">LEVEL_SELECT</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tap</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">tap</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">levels</span><span class="p">):</span>
                 <span class="n">session</span><span class="o">.</span><span class="n">selected_level</span> <span class="o">=</span> <span class="n">tap</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">handle_key</span><span class="p">(</span><span class="s2">"Enter"</span><span class="p">)</span>
@@ -6927,6 +7108,9 @@ toward one corner). The height digit of a slope is its low side. The first row i
         <span class="bp">self</span><span class="o">.</span><span class="n">_hud</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">visible</span><span class="o">=</span><span class="n">phase</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">HUD_PHASES</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">phase</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">HUD_PHASES</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hud</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">paused</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_menu</span><span class="o">.</span><span class="n">show_pause</span><span class="p">(</span><span class="n">riding</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">riding</span><span class="p">)</span>
+            <span class="k">return</span>
         <span class="k">match</span> <span class="n">phase</span><span class="p">:</span>
             <span class="k">case</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">TITLE</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_menu</span><span class="o">.</span><span class="n">show_title</span><span class="p">()</span>
@@ -7018,7 +7202,10 @@ toward one corner). The height digit of a slope is its low side. The first row i
 <span class="normal">88</span>
 <span class="normal">89</span>
 <span class="normal">90</span>
-<span class="normal">91</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">bridge</span><span class="p">:</span> <span class="n">JsBridge</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -7053,7 +7240,10 @@ toward one corner). The height digit of a slope is its low side. The first row i
     <span class="bp">self</span><span class="o">.</span><span class="n">_track_group</span><span class="p">:</span> <span class="n">JsObject</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_last_timestamp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_time</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">paused</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_frame_proxy</span> <span class="o">=</span> <span class="n">bridge</span><span class="o">.</span><span class="n">proxy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_frame</span><span class="p">)</span>
+    <span class="n">bridge</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">addEventListener</span><span class="p">(</span><span class="s2">"blur"</span><span class="p">,</span> <span class="n">bridge</span><span class="o">.</span><span class="n">proxy</span><span class="p">(</span><span class="k">lambda</span> <span class="n">_event</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pause</span><span class="p">()))</span>
+    <span class="n">bridge</span><span class="o">.</span><span class="n">document</span><span class="o">.</span><span class="n">addEventListener</span><span class="p">(</span><span class="s2">"visibilitychange"</span><span class="p">,</span> <span class="n">bridge</span><span class="o">.</span><span class="n">proxy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_visibility_change</span><span class="p">))</span>
     <span class="n">backdrop</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">renderer</span><span class="o">.</span><span class="n">scene</span><span class="p">)</span>
     <span class="n">renderer</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ship_model</span><span class="o">.</span><span class="n">group</span><span class="p">)</span>
     <span class="n">renderer</span><span class="o">.</span><span class="n">mirror</span><span class="p">(</span><span class="n">ship_model</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>  <span class="c1"># not the shadow: it would hide the mirror image</span>
@@ -7083,46 +7273,46 @@ toward one corner). The height digit of a slope is its low side. The first row i
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/web/game_loop.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span>
-<span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">handle_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">handle_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""React to a fresh key press in the menus."""</span>
     <span class="n">session</span><span class="p">,</span> <span class="n">phase</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">phase</span>
     <span class="n">letter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keyboard</span><span class="o">.</span><span class="n">letter</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">letter</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">MUTE</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_music</span><span class="o">.</span><span class="n">toggle_mute</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">paused</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_handle_pause_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">EDITOR</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_editor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_editor</span><span class="o">.</span><span class="n">handle_key</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">letter</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">letter</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">EDIT</span> <span class="ow">and</span> <span class="n">phase</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GamePhase</span><span class="o">.</span><span class="n">TITLE</span><span class="p">,</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">LEVEL_SELECT</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_editor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_open_editor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_editor</span><span class="p">,</span> <span class="n">from_level_select</span><span class="o">=</span><span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">LEVEL_SELECT</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">session</span><span class="o">.</span><span class="n">riding</span> <span class="ow">and</span> <span class="n">phase</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GamePhase</span><span class="o">.</span><span class="n">PLAYING</span><span class="p">,</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">DYING</span><span class="p">)</span> <span class="ow">and</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"Escape"</span><span class="p">:</span>
-        <span class="n">session</span><span class="o">.</span><span class="n">open_editor</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">phase</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GamePhase</span><span class="o">.</span><span class="n">PLAYING</span><span class="p">,</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">DYING</span><span class="p">)</span> <span class="ow">and</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"Escape"</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pause</span><span class="p">()</span>
     <span class="k">elif</span> <span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">TITLE</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CONFIRM</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_music</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
         <span class="n">session</span><span class="o">.</span><span class="n">open_level_select</span><span class="p">()</span>
     <span class="k">elif</span> <span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">LEVEL_SELECT</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_handle_level_select_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="p">(</span><span class="n">phase</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GamePhase</span><span class="o">.</span><span class="n">PLAYING</span><span class="p">,</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">DYING</span><span class="p">)</span> <span class="ow">and</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"Escape"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
-        <span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">VICTORY</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CONFIRM</span>
-    <span class="p">):</span>
+    <span class="k">elif</span> <span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">VICTORY</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CONFIRM</span><span class="p">:</span>
         <span class="n">session</span><span class="o">.</span><span class="n">open_level_select</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -7146,20 +7336,30 @@ toward one corner). The height digit of a slope is its low side. The first row i
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/web/game_loop.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">handle_tap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tap</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">handle_tap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tap</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""React to a tap on the menus, as the key it stands for: a level rides it, back is Escape, else Enter."""</span>
     <span class="n">session</span><span class="p">,</span> <span class="n">phase</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">phase</span>
-    <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">LEVEL_SELECT</span><span class="p">:</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">paused</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">tap</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_menu</span><span class="o">.</span><span class="n">RESUME</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">tap</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_menu</span><span class="o">.</span><span class="n">MAIN_MENU</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">leave</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">phase</span> <span class="ow">is</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">LEVEL_SELECT</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tap</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">tap</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">levels</span><span class="p">):</span>
             <span class="n">session</span><span class="o">.</span><span class="n">selected_level</span> <span class="o">=</span> <span class="n">tap</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">handle_key</span><span class="p">(</span><span class="s2">"Enter"</span><span class="p">)</span>
@@ -7167,6 +7367,41 @@ toward one corner). The height digit of a slope is its low side. The first row i
             <span class="bp">self</span><span class="o">.</span><span class="n">handle_key</span><span class="p">(</span><span class="s2">"Escape"</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">phase</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">TAP_TO_GO_ON</span> <span class="ow">and</span> <span class="n">tap</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_menu</span><span class="o">.</span><span class="n">ANYWHERE</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">handle_key</span><span class="p">(</span><span class="s2">"Enter"</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="synthride.web.game_loop.GameLoop.leave" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">leave</span><span class="p">()</span></code>
+
+<a href="#synthride.web.game_loop.GameLoop.leave" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Quit a paused ride, back to the editor it was started from or to the level select.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/synthride/web/game_loop.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">leave</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Quit a paused ride, back to the editor it was started from or to the level select."""</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">riding</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">open_editor</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">open_level_select</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -7189,17 +7424,112 @@ toward one corner). The height digit of a slope is its low side. The first row i
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/web/game_loop.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 97</span>
-<span class="normal"> 98</span>
-<span class="normal"> 99</span>
-<span class="normal">100</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">100</span>
 <span class="normal">101</span>
-<span class="normal">102</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">on_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">on_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Advance by the time since the last frame, then request the next one."""</span>
     <span class="n">dt</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_timestamp</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="n">timestamp</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_timestamp</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1000</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_last_timestamp</span> <span class="o">=</span> <span class="n">timestamp</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">tick</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAX_FRAME_SECONDS</span><span class="p">))</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_bridge</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">requestAnimationFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_proxy</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="synthride.web.game_loop.GameLoop.on_visibility_change" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">on_visibility_change</span><span class="p">(</span><span class="n">_event</span><span class="p">)</span></code>
+
+<a href="#synthride.web.game_loop.GameLoop.on_visibility_change" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Pause when the page is hidden: another tab, or the phone's screen off.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/synthride/web/game_loop.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">on_visibility_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_event</span><span class="p">:</span> <span class="n">JsObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Pause when the page is hidden: another tab, or the phone's screen off."""</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bridge</span><span class="o">.</span><span class="n">document</span><span class="o">.</span><span class="n">visibilityState</span> <span class="o">==</span> <span class="s2">"hidden"</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pause</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="synthride.web.game_loop.GameLoop.pause" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">pause</span><span class="p">()</span></code>
+
+<a href="#synthride.web.game_loop.GameLoop.pause" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Freeze the ride, if one is on, behind the pause screen, and release the keys held.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/synthride/web/game_loop.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">pause</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Freeze the ride, if one is on, behind the pause screen, and release the keys held."""</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">paused</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">phase</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GamePhase</span><span class="o">.</span><span class="n">PLAYING</span><span class="p">,</span> <span class="n">GamePhase</span><span class="o">.</span><span class="n">DYING</span><span class="p">):</span>
+        <span class="k">return</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">paused</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_keyboard</span><span class="o">.</span><span class="n">release_all</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_music</span><span class="o">.</span><span class="n">pause</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="synthride.web.game_loop.GameLoop.resume" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">resume</span><span class="p">()</span></code>
+
+<a href="#synthride.web.game_loop.GameLoop.resume" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Go on with a paused ride.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/synthride/web/game_loop.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">resume</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Go on with a paused ride."""</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">paused</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paused</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_music</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -7222,9 +7552,9 @@ toward one corner). The height digit of a slope is its low side. The first row i
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/web/game_loop.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">93</span>
-<span class="normal">94</span>
-<span class="normal">95</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">96</span>
+<span class="normal">97</span>
+<span class="normal">98</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Request the first animation frame."""</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_bridge</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">requestAnimationFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_proxy</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -7244,56 +7574,64 @@ toward one corner). The height digit of a slope is its low side. The first row i
 
     <div class="doc doc-contents ">
 
-        <p>Advance the whole game by <code>dt</code> seconds and render a frame.</p>
+        <p>Advance the whole game by <code>dt</code> seconds and render a frame, or only redraw while paused.</p>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/web/game_loop.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">134</span>
 <span class="normal">135</span>
 <span class="normal">136</span>
 <span class="normal">137</span>
 <span class="normal">138</span>
 <span class="normal">139</span>
 <span class="normal">140</span>
-<span class="normal">141</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">tick</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Advance the whole game by ``dt`` seconds and render a frame."""</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_time</span> <span class="o">+=</span> <span class="n">dt</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">tick</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Advance the whole game by ``dt`` seconds and render a frame, or only redraw while paused."""</span>
     <span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keyboard</span><span class="o">.</span><span class="n">consume_presses</span><span class="p">():</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">handle_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">tap</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_menu</span><span class="o">.</span><span class="n">consume_taps</span><span class="p">():</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">handle_tap</span><span class="p">(</span><span class="n">tap</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">paused</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_overlays</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_renderer</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+        <span class="k">return</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_time</span> <span class="o">+=</span> <span class="n">dt</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_handle_editor_actions</span><span class="p">()</span>
     <span class="n">events</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keyboard</span><span class="o">.</span><span class="n">ship_input</span><span class="p">())</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_sound_effects</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">events</span><span class="p">)</span>
@@ -7847,7 +8185,17 @@ faster than converting a list number by number.</p>
 <span class="normal">171</span>
 <span class="normal">172</span>
 <span class="normal">173</span>
-<span class="normal">174</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SceneRenderer</span><span class="p">:</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SceneRenderer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Owns the Three.js renderer, scene, chase camera and bloom post-processing."""</span>
 
     <span class="n">BASE_FOV</span> <span class="o">=</span> <span class="mf">68.0</span>
@@ -7933,6 +8281,16 @@ faster than converting a list number by number.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">updateProjectionMatrix</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_lines</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_vertical_fov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fov</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return ``fov``, widened for a window taller than it is wide so the track keeps room at the sides.</span>
+
+<span class="sd">        The field of view is vertical: held upright the view would shrink to a slit. The horizontal angle is kept</span>
+<span class="sd">        halfway, in tangent terms, between the landscape's and the square's.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">aspect</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fov</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">atan</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">fov</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">aspect</span><span class="p">)))</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">JsObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Add ``item`` to the scene."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
@@ -7979,7 +8337,7 @@ faster than converting a list number by number.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">_look</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">z</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">LOOK_AHEAD</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_eye</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">lookAt</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_look</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">fov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BASE_FOV</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">SPEED_FOV</span> <span class="o">*</span> <span class="n">speed_fraction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">fov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vertical_fov</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BASE_FOV</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">SPEED_FOV</span> <span class="o">*</span> <span class="n">speed_fraction</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">updateProjectionMatrix</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">overlook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">ground</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -7989,7 +8347,7 @@ faster than converting a list number by number.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">_camera_position</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eye</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_eye</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">lookAt</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_look</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">fov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BASE_FOV</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">fov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vertical_fov</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BASE_FOV</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">updateProjectionMatrix</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">reflect_on</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ship</span><span class="p">:</span> <span class="n">Ship</span><span class="p">,</span> <span class="n">deck</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -8163,9 +8521,9 @@ faster than converting a list number by number.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/web/rendering/scene_renderer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">JsObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">JsObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Add ``item`` to the scene."""</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -8192,17 +8550,7 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/web/rendering/scene_renderer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">137</span>
 <span class="normal">138</span>
 <span class="normal">139</span>
 <span class="normal">140</span>
@@ -8220,7 +8568,17 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 <span class="normal">152</span>
 <span class="normal">153</span>
 <span class="normal">154</span>
-<span class="normal">155</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">follow</span><span class="p">(</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">follow</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">ship</span><span class="p">:</span> <span class="n">Ship</span><span class="p">,</span> <span class="n">speed_fraction</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">snap</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">ceiling</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Eases the chase camera toward its spot behind the ship and widens the view with speed.</span>
@@ -8247,7 +8605,7 @@ ship is airborne the camera stays level with the ground it left, so a fall never
     <span class="bp">self</span><span class="o">.</span><span class="n">_look</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">z</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">LOOK_AHEAD</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_eye</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">lookAt</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_look</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">fov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BASE_FOV</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">SPEED_FOV</span> <span class="o">*</span> <span class="n">speed_fraction</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">fov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vertical_fov</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BASE_FOV</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">SPEED_FOV</span> <span class="o">*</span> <span class="n">speed_fraction</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">updateProjectionMatrix</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -8271,10 +8629,10 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/web/rendering/scene_renderer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">mirror</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">items</span><span class="p">:</span> <span class="n">JsObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">mirror</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">items</span><span class="p">:</span> <span class="n">JsObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Reflect ``items``, already in the scene, in the deck under the ship."""</span>
     <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reflection</span><span class="o">.</span><span class="n">include</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
@@ -8300,22 +8658,22 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/web/rendering/scene_renderer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">overlook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">ground</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">overlook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">ground</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Place the editor's camera raised behind the point ``(x, z)`` at ``ground`` height, looking down the track."""</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_eye</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ground</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">EDITOR_HEIGHT</span><span class="p">,</span> <span class="n">z</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">EDITOR_DISTANCE</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_look</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ground</span><span class="p">,</span> <span class="n">z</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">EDITOR_LOOK_AHEAD</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_camera_position</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eye</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_eye</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">lookAt</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_look</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">fov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BASE_FOV</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">fov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vertical_fov</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BASE_FOV</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">updateProjectionMatrix</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -8339,11 +8697,11 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/web/rendering/scene_renderer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">react</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">events</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">GameEvent</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">react</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">events</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">GameEvent</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Shake the camera on impacts."""</span>
     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">SHAKE_EVENTS</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">events</span><span class="p">):</span>
         <span class="n">hard</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">SHAKE_EVENTS</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">LIGHT_SHAKES</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">events</span><span class="p">)</span>
@@ -8370,9 +8728,9 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/web/rendering/scene_renderer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reflect_on</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ship</span><span class="p">:</span> <span class="n">Ship</span><span class="p">,</span> <span class="n">deck</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reflect_on</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ship</span><span class="p">:</span> <span class="n">Ship</span><span class="p">,</span> <span class="n">deck</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Mirror ``ship`` in the deck at height ``deck`` under it (None over a gap)."""</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">reflection</span><span class="o">.</span><span class="n">place</span><span class="p">((</span><span class="n">ship</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">ship</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="n">ship</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">z</span><span class="p">),</span> <span class="n">deck</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -8397,9 +8755,9 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/web/rendering/scene_renderer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">JsObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">JsObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Remove ``item`` from the scene."""</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -8424,10 +8782,10 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/web/rendering/scene_renderer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Render a frame: the ship's mirror image first, then the scene through post-processing."""</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">reflection</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">renderer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eye</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_look</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">composer</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>  <span class="c1"># each pass binds its own target, the mirror's included</span>
@@ -9352,7 +9710,22 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 <span class="normal">286</span>
 <span class="normal">287</span>
 <span class="normal">288</span>
-<span class="normal">289</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">HtmlPageBuilder</span><span class="p">:</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">HtmlPageBuilder</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Builds the HTML5 page that boots Pyodide, loads Three.js and hands control to the Python game."""</span>
 
     <span class="n">PYODIDE_VERSION</span> <span class="o">=</span> <span class="s2">"0.29.5"</span>
@@ -9460,8 +9833,14 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 <span class="s2">#editor .keys { margin: 0; }</span>
 <span class="s2">#loading { z-index: 4; }</span>
 <span class="s2">.level-list li { cursor: pointer; }</span>
+<span class="s2">.pause { display: flex; flex-direction: column; align-items: center; gap: 1.2rem; margin: auto 0; }</span>
+<span class="s2">.menu-button { font: inherit; font-size: 1.1rem; letter-spacing: 0.2em; color: var(--cyan); cursor: pointer;</span>
+<span class="s2">  background: rgba(11,0,20,0.5); border: 2px solid rgba(0,240,255,0.55); border-radius: 14px; min-width: 15rem;</span>
+<span class="s2">  min-height: 52px; padding: 0 1.4rem; text-shadow: 0 0 8px var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,0.35); }</span>
+<span class="s2">.menu-button:hover, .menu-button:focus-visible { color: var(--pink); border-color: var(--pink);</span>
+<span class="s2">  text-shadow: 0 0 8px var(--pink); }</span>
 <span class="s2">/* Touch: shown once the page has seen a touch, which adds the "touch" class to the body */</span>
-<span class="s2">#touch, #mute, #rotate, .menu-back, .touch-text { display: none; }</span>
+<span class="s2">#touch, #mute, .menu-back, .touch-text { display: none; }</span>
 <span class="s2">#touch { position: fixed; inset: 0; z-index: 2; pointer-events: none; }</span>
 <span class="s2">#touch, #touch button, #touch .stick, #mute { touch-action: none; user-select: none; -webkit-user-select: none;</span>
 <span class="s2">  -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }</span>
@@ -9527,8 +9906,18 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 <span class="s2">body.touch #hud:not([hidden]) ~ #fullscreen { right: calc(max(16px, env(safe-area-inset-right)) + 112px); }</span>
 <span class="s2">body:not(.touch) .hud-top, body:not(.touch) .progress { margin-right: 56px; }</span>
 <span class="s2">body.fullscreen #fullscreen { color: var(--pink); border-color: rgba(255,43,214,0.6); }</span>
-<span class="s2">#rotate { z-index: 6; }</span>
-<span class="s2">@media (orientation: portrait) { body.touch #rotate { display: flex; } }</span>
+<span class="s2">/* Held upright, the buttons take a row of their own on top, and the HUD and menus start below it */</span>
+<span class="s2">@media (orientation: portrait) {</span>
+<span class="s2">  body.touch #hud { padding-top: calc(max(10px, env(safe-area-inset-top)) + 54px); }</span>
+<span class="s2">  body.touch .hud-top, body.touch .progress { margin-right: 0; }</span>
+<span class="s2">  body.touch .hud-bottom { top: calc(max(10px, env(safe-area-inset-top)) + 54px + 3.4rem); left: 16px; gap: 0.5rem; }</span>
+<span class="s2">  body.touch .overlay { padding-top: calc(max(10px, env(safe-area-inset-top)) + 54px); justify-content: flex-start; }</span>
+<span class="s2">  body.touch .stick { width: min(150px, 38vw); }</span>
+<span class="s2">  body.touch .pad-jump { width: min(104px, 27vw); }</span>
+<span class="s2">  body.touch .level-columns { width: 100%; padding: 0 16px; box-sizing: border-box; }</span>
+<span class="s2">  body.touch .level-list li { min-height: 44px; display: flex; align-items: center; }</span>
+<span class="s2">  body.touch .legend li { white-space: normal; }</span>
+<span class="s2">}</span>
 <span class="s2">@media (max-height: 500px) {</span>
 <span class="s2">  body.touch .overlay { gap: 0.7rem; padding-top: max(16px, env(safe-area-inset-top)); }</span>
 <span class="s2">  body.touch .level-columns { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));</span>
@@ -9563,7 +9952,6 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 <span class="s2">&lt;div id="editor" hidden&gt;&lt;/div&gt;</span>
 <span class="s2">&lt;button id="mute" class="touch-button" data-press="KeyM" aria-label="Mute"&gt;&amp;#128263;&lt;/button&gt;</span>
 <span class="s2">&lt;button id="fullscreen" aria-label="Full screen (F)" title="Full screen (F)"&gt;&amp;#9974;&lt;/button&gt;</span>
-<span class="s2">&lt;div id="rotate" class="overlay"&gt;&lt;h2 class="headline"&gt;ROTATE YOUR PHONE &amp;#10226;&lt;/h2&gt;&lt;/div&gt;</span>
 <span class="s2">&lt;div id="loading" class="overlay"&gt;</span>
 <span class="s2">  &lt;h1 class="logo"&gt;SYNTHRIDE&lt;/h1&gt;</span>
 <span class="s2">  &lt;p class="subtitle" id="loading-status"&gt;Booting Python&amp;hellip;&lt;/p&gt;</span>
@@ -9706,19 +10094,19 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/server/html_page_builder.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span>
-<span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">pyodide_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">PYODIDE_VERSION</span><span class="p">,</span>
     <span class="n">three_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">THREE_VERSION</span><span class="p">,</span>
@@ -9753,14 +10141,14 @@ ship is airborne the camera stays level with the ground it left, so a fall never
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/synthride/server/html_page_builder.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">282</span>
-<span class="normal">283</span>
-<span class="normal">284</span>
-<span class="normal">285</span>
-<span class="normal">286</span>
-<span class="normal">287</span>
-<span class="normal">288</span>
-<span class="normal">289</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return the page's HTML."""</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEMPLATE</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span>
         <span class="n">pyodide_url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pyodide_url</span><span class="p">,</span>

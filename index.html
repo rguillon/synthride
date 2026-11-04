@@ -97,8 +97,14 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
 #editor .keys { margin: 0; }
 #loading { z-index: 4; }
 .level-list li { cursor: pointer; }
+.pause { display: flex; flex-direction: column; align-items: center; gap: 1.2rem; margin: auto 0; }
+.menu-button { font: inherit; font-size: 1.1rem; letter-spacing: 0.2em; color: var(--cyan); cursor: pointer;
+  background: rgba(11,0,20,0.5); border: 2px solid rgba(0,240,255,0.55); border-radius: 14px; min-width: 15rem;
+  min-height: 52px; padding: 0 1.4rem; text-shadow: 0 0 8px var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,0.35); }
+.menu-button:hover, .menu-button:focus-visible { color: var(--pink); border-color: var(--pink);
+  text-shadow: 0 0 8px var(--pink); }
 /* Touch: shown once the page has seen a touch, which adds the "touch" class to the body */
-#touch, #mute, #rotate, .menu-back, .touch-text { display: none; }
+#touch, #mute, .menu-back, .touch-text { display: none; }
 #touch { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
 #touch, #touch button, #touch .stick, #mute { touch-action: none; user-select: none; -webkit-user-select: none;
   -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
@@ -164,8 +170,18 @@ body.touch #fullscreen { display: block; top: max(10px, env(safe-area-inset-top)
 body.touch #hud:not([hidden]) ~ #fullscreen { right: calc(max(16px, env(safe-area-inset-right)) + 112px); }
 body:not(.touch) .hud-top, body:not(.touch) .progress { margin-right: 56px; }
 body.fullscreen #fullscreen { color: var(--pink); border-color: rgba(255,43,214,0.6); }
-#rotate { z-index: 6; }
-@media (orientation: portrait) { body.touch #rotate { display: flex; } }
+/* Held upright, the buttons take a row of their own on top, and the HUD and menus start below it */
+@media (orientation: portrait) {
+  body.touch #hud { padding-top: calc(max(10px, env(safe-area-inset-top)) + 54px); }
+  body.touch .hud-top, body.touch .progress { margin-right: 0; }
+  body.touch .hud-bottom { top: calc(max(10px, env(safe-area-inset-top)) + 54px + 3.4rem); left: 16px; gap: 0.5rem; }
+  body.touch .overlay { padding-top: calc(max(10px, env(safe-area-inset-top)) + 54px); justify-content: flex-start; }
+  body.touch .stick { width: min(150px, 38vw); }
+  body.touch .pad-jump { width: min(104px, 27vw); }
+  body.touch .level-columns { width: 100%; padding: 0 16px; box-sizing: border-box; }
+  body.touch .level-list li { min-height: 44px; display: flex; align-items: center; }
+  body.touch .legend li { white-space: normal; }
+}
 @media (max-height: 500px) {
   body.touch .overlay { gap: 0.7rem; padding-top: max(16px, env(safe-area-inset-top)); }
   body.touch .level-columns { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
@@ -200,7 +216,6 @@ body.fullscreen #fullscreen { color: var(--pink); border-color: rgba(255,43,214,
 <div id="editor" hidden></div>
 <button id="mute" class="touch-button" data-press="KeyM" aria-label="Mute">&#128263;</button>
 <button id="fullscreen" aria-label="Full screen (F)" title="Full screen (F)">&#9974;</button>
-<div id="rotate" class="overlay"><h2 class="headline">ROTATE YOUR PHONE &#10226;</h2></div>
 <div id="loading" class="overlay">
   <h1 class="logo">SYNTHRIDE</h1>
   <p class="subtitle" id="loading-status">Booting Python&hellip;</p>
