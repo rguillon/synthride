@@ -55,6 +55,10 @@ def ride(browser: Browser, url: str, viewport: ViewportSize, suffix: str) -> Non
     push_stick(page, 0.6, -0.8)  # accelerating, steering right
     page.wait_for_function(f"parseFloat(document.getElementById('hud-progress').style.width) >= {PROGRESS}")
     snap(page, f"screenshot-mobile{suffix}.jpg")
+    page.evaluate("window.dispatchEvent(new Event('blur'))")  # losing focus pauses the ride
+    page.wait_for_selector("[data-resume]")
+    page.wait_for_timeout(300)
+    snap(page, f"screenshot-mobile{suffix}-pause.jpg")
     page.close()
 
 

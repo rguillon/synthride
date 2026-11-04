@@ -127,3 +127,11 @@ def test_chorus_plays_a_melody() -> None:
     context, _, music = make_music()
     music.schedule_step(bar_of(CHORUS) * SynthMusic.STEPS_PER_BAR + 2, 1.0)
     assert sum(osc.type == "square" for osc in context.oscillators) == 1
+
+
+def test_pausing_freezes_the_audio_clock_and_resuming_runs_it() -> None:
+    context, _, music = make_music()
+    music.pause()
+    assert context.suspend.calls == [()]
+    music.resume()
+    assert context.resume.calls == [()]
