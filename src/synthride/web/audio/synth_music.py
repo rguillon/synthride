@@ -20,6 +20,11 @@ C_MAJOR = (48, 52, 55)
 G_MAJOR = (55, 59, 62)
 D_MINOR = (50, 53, 57)
 E_MAJOR = (52, 56, 59)
+BB_MAJOR = (46, 50, 53)
+D_MAJOR = (50, 54, 57)
+E_MINOR = (52, 55, 59)
+A_MAJOR = (57, 61, 64)
+B_MAJOR = (47, 51, 54)
 
 DRIVING_BASS = (0, 12, 0, 12, 7, 12, 0, 12, 0, 12, 0, 12, 7, 12, 10, 12)
 GALLOP_BASS = (0, None, 0, 12, 0, None, 0, 12, 0, None, 0, 12, 7, None, 10, 12)
@@ -49,6 +54,80 @@ COUNTER_MELODY = (
     _bar("D5 - - - B4 - - - G4 - - - . . . ."),
 )
 
+# Second part, in D minor
+BRIDGE_MELODY = (
+    _bar("D5 - - F5 - - A5 - - F5 - D5 - - - -"),
+    _bar("D5 - - F5 - - A#5 - - A5 - F5 - - - -"),
+    _bar("C5 - - F5 - - A5 - - C6 - A5 - - - -"),
+    _bar("G5 - - E5 - - C5 - - E5 - G5 - - - -"),
+)
+BRIDGE_RIFF = (
+    _bar("A5 . A5 . F5 . D5 . F5 - A5 - D6 - - -"),
+    _bar("A#5 . A#5 . F5 . D5 . F5 - A#5 - D6 - - -"),
+    _bar("A5 . A5 . F5 . C5 . F5 - A5 - C6 - - -"),
+    _bar("G5 . G5 . E5 . C5 . E5 - G5 - E5 - D5 -"),
+)
+BRIDGE_DREAM = (
+    _bar("F5 - - - - - - - D5 - - - C5 - - -"),
+    _bar("A5 - - - - - - - - - - - . . . ."),
+    _bar("G5 - - - - - - - E5 - - - D5 - - -"),
+    _bar("F5 - - - - - - - . . . . . . . ."),
+)
+BRIDGE_CHORUS = (
+    _bar("D5 - F5 - A#5 - - - A5 - F5 - D5 - - -"),
+    _bar("E5 - G5 - C6 - - - A#5 - G5 - E5 - - -"),
+    _bar("F5 - A5 - D6 - - - C6 - A5 - - - F5 -"),
+    _bar("A5 - - - - - - - . . G5 - F5 - E5 -"),
+    _bar("D5 - F5 - A#5 - - - A5 - F5 - D5 - - -"),
+    _bar("E5 - G5 - C6 - - - D6 - E6 - - - - -"),
+    _bar("F6 - - - E6 - C6 - A5 - - - C6 - - -"),
+    _bar("C#6 - - - - - - - A5 - - - E5 - G5 -"),
+)
+
+# Third part, lifted to E minor
+LIFT_MELODY = (
+    _bar("E5 - - G5 - - B5 - - G5 - E5 - - - -"),
+    _bar("E5 - - G5 - - C6 - - B5 - G5 - - - -"),
+    _bar("D5 - - G5 - - B5 - - D6 - B5 - - - -"),
+    _bar("A5 - - F#5 - - D5 - - F#5 - A5 - - - -"),
+)
+LIFT_CHORUS = (
+    _bar("G5 - E5 - C6 - - - B5 - G5 - E5 - - -"),
+    _bar("A5 - F#5 - D6 - - - B5 - A5 - F#5 - - -"),
+    _bar("B5 - G5 - E6 - - - D6 - B5 - - - G5 -"),
+    _bar("B5 - - - - - - - . . A5 - G5 - F#5 -"),
+    _bar("G5 - E5 - C6 - - - B5 - G5 - E5 - - -"),
+    _bar("A5 - F#5 - D6 - - - E6 - F#6 - - - - -"),
+    _bar("G6 - - - F#6 - D6 - B5 - - - D6 - - -"),
+    _bar("D#6 - - - - - - - B5 - - - F#5 - A5 -"),
+)
+LIFT_DREAM = (
+    _bar("E5 - - - - - - - G5 - - - F#5 - - -"),
+    _bar("D5 - - - - - - - F#5 - - - A5 - - -"),
+    _bar("B5 - - - - - - - G5 - - - E5 - - -"),
+    _bar("B4 - - - - - - - . . . . . . . ."),
+)
+LIFT_COUNTER = (
+    _bar("B5 . B5 . E6 . B5 . D6 - B5 - A5 . G5 ."),
+    _bar("G5 . G5 . C6 . G5 . B5 - G5 - E5 . D5 ."),
+    _bar("D5 . G5 . B5 . D6 . B5 - A5 - G5 . A5 ."),
+    _bar("A5 - - - F#5 - - - D5 - - - . . . ."),
+)
+
+# Fourth part, back to A minor
+HOME_MELODY = (
+    _bar("A5 - - C6 - - E6 - - C6 - A5 - - - -"),
+    _bar("G5 - - B5 - - D6 - - B5 - G5 - - - -"),
+    _bar("F5 - - A5 - - C6 - - A5 - F5 - - - -"),
+    _bar("E5 - - G#5 - - B5 - - G#5 - E5 - - - -"),
+)
+HOME_DREAM = (
+    _bar("A5 - - - - - - - C6 - - - B5 - - -"),
+    _bar("A5 - - - - - - - F5 - - - . . . ."),
+    _bar("G5 - - - - - - - E5 - - - D5 - - -"),
+    _bar("E5 - - - G#5 - - - B5 - - - . . . ."),
+)
+
 
 class SynthMusic:
     """A synthwave song sequenced live: saw bass, detuned pad, lead, and drums, looping over its sections.
@@ -63,6 +142,9 @@ class SynthMusic:
     VOLUME = 0.55
     LEAD_PATTERN = (0, None, 1, None, 2, None, 1, None, 2, None, 1, None, 0, None, None, None)
     VERSE = (A_MINOR, F_MAJOR, C_MAJOR, G_MAJOR)
+    BRIDGE = (D_MINOR, BB_MAJOR, F_MAJOR, C_MAJOR)
+    LIFT = (E_MINOR, C_MAJOR, G_MAJOR, D_MAJOR)
+    CADENCE = (A_MINOR, G_MAJOR, F_MAJOR, E_MAJOR)
     SONG = (
         MusicSection(4, VERSE, PULSE_BASS, snare=False, bass_cutoff_hz=500),  # intro
         MusicSection(8, VERSE, DRIVING_BASS, arpeggio=True),  # verse
@@ -92,6 +174,87 @@ class SynthMusic:
             open_hats=True,
         ),  # chorus, fuller
         MusicSection(8, VERSE, GALLOP_BASS, COUNTER_MELODY),  # second verse
+        # Part 2: D minor
+        MusicSection(8, BRIDGE, DRIVING_BASS, BRIDGE_MELODY, arpeggio=True),  # bridge
+        MusicSection(8, BRIDGE, GALLOP_BASS, BRIDGE_RIFF, open_hats=True),  # riff
+        MusicSection(
+            8,
+            (BB_MAJOR, F_MAJOR, C_MAJOR, D_MINOR),
+            SPARSE_BASS,
+            BRIDGE_DREAM,
+            kick=False,
+            snare=False,
+            bass_cutoff_hz=600,
+        ),  # breakdown
+        MusicSection(4, BRIDGE, PULSE_BASS, hats=False, roll=True),  # build-up
+        MusicSection(
+            8,
+            (BB_MAJOR, C_MAJOR, D_MINOR, D_MINOR, BB_MAJOR, C_MAJOR, F_MAJOR, A_MAJOR),
+            GALLOP_BASS,
+            BRIDGE_CHORUS,
+            open_hats=True,
+        ),  # chorus
+        MusicSection(
+            8,
+            (BB_MAJOR, C_MAJOR, D_MINOR, D_MINOR, BB_MAJOR, C_MAJOR, F_MAJOR, A_MAJOR),
+            DRIVING_BASS,
+            BRIDGE_CHORUS,
+            arpeggio=True,
+            open_hats=True,
+        ),  # chorus, fuller
+        MusicSection(4, BRIDGE, PULSE_BASS, kick=False, snare=False, hats=False, bass_cutoff_hz=500),  # drop
+        # Part 3: a tone up, in E minor
+        MusicSection(4, LIFT, PULSE_BASS, snare=False, bass_cutoff_hz=500),  # lift
+        MusicSection(8, LIFT, DRIVING_BASS, LIFT_MELODY, arpeggio=True),  # verse
+        MusicSection(
+            8,
+            (C_MAJOR, D_MAJOR, E_MINOR, E_MINOR, C_MAJOR, D_MAJOR, G_MAJOR, B_MAJOR),
+            GALLOP_BASS,
+            LIFT_CHORUS,
+            open_hats=True,
+        ),  # chorus
+        MusicSection(
+            8,
+            (C_MAJOR, D_MAJOR, E_MINOR, E_MINOR),
+            SPARSE_BASS,
+            LIFT_DREAM,
+            kick=False,
+            snare=False,
+            bass_cutoff_hz=600,
+        ),  # breakdown
+        MusicSection(4, LIFT, PULSE_BASS, hats=False, roll=True),  # build-up
+        MusicSection(
+            8,
+            (C_MAJOR, D_MAJOR, E_MINOR, E_MINOR, C_MAJOR, D_MAJOR, G_MAJOR, B_MAJOR),
+            DRIVING_BASS,
+            LIFT_CHORUS,
+            arpeggio=True,
+            open_hats=True,
+        ),  # chorus, fuller
+        MusicSection(8, LIFT, GALLOP_BASS, LIFT_COUNTER),  # verse, answered
+        # Part 4: home in A minor
+        MusicSection(8, CADENCE, DRIVING_BASS, HOME_MELODY, arpeggio=True),  # verse
+        MusicSection(8, VERSE, GALLOP_BASS, COUNTER_MELODY, open_hats=True),  # verse, answered
+        MusicSection(
+            8,
+            (D_MINOR, F_MAJOR, C_MAJOR, E_MAJOR),
+            SPARSE_BASS,
+            HOME_DREAM,
+            kick=False,
+            snare=False,
+            bass_cutoff_hz=600,
+        ),  # breakdown
+        MusicSection(4, VERSE, PULSE_BASS, hats=False, roll=True),  # build-up
+        MusicSection(
+            8,
+            (F_MAJOR, G_MAJOR, A_MINOR, A_MINOR, F_MAJOR, G_MAJOR, C_MAJOR, E_MAJOR),
+            DRIVING_BASS,
+            CHORUS_MELODY,
+            arpeggio=True,
+            open_hats=True,
+        ),  # finale, the first chorus again
+        MusicSection(8, CADENCE, DRIVING_BASS, HOME_MELODY, arpeggio=True, open_hats=True),  # finale, last verse
+        MusicSection(4, VERSE, PULSE_BASS, snare=False, bass_cutoff_hz=500),  # outro, back into the intro
     )
 
     def __init__(self, voices: SynthVoices) -> None:
