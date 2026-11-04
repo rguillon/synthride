@@ -6,10 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+# Pages is served from the gh-pages branch, where pull request previews live under pr-preview/
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 # Let a deployment in progress finish, but skip any queued between it and the latest push
 concurrency:
@@ -17,8 +16,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: https://rguillon.github.io/synthride/
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -32,21 +34,9 @@ jobs:
       - name: Build the documentation
         run: uv run mkdocs build --strict --site-dir _site/docs
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: _site
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: _site
+          clean-exclude: pr-preview/

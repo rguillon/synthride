@@ -92,3 +92,28 @@ jobs:
 
       - name: Check if documentation can be built
         run: uv run mkdocs build -s
+
+  preview:
+    # Only once everything above passed, and not for forks, whose token cannot push
+    needs: [quality, tests-and-type-check, check-docs]
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: preview-${{ github.ref }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-env
+
+      - name: Build the game
+        run: uv run synthride build --out _site
+
+      - name: Deploy the preview and comment its link on the pull request
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: _site

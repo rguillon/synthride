@@ -1,0 +1,25 @@
+name: pr-preview-cleanup
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: preview-${{ github.ref }}
+
+jobs:
+  remove:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Remove the preview of the closed pull request
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          action: remove
