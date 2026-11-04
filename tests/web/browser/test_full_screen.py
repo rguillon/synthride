@@ -89,3 +89,23 @@ def test_a_browser_without_full_screen_is_left_alone() -> None:
     t = make_full_screen()
     t.document.documentElement = SimpleNamespace()
     t.full_screen.toggle()
+
+
+def test_a_browser_without_full_screen_hides_the_button() -> None:
+    bridge = FakeJsBridge()
+    bridge.document.documentElement = SimpleNamespace()
+    FullScreen(bridge)
+    assert bridge.document.body.classList.contains("no-fullscreen")
+
+
+def test_a_browser_with_full_screen_keeps_the_button() -> None:
+    t = make_full_screen()
+    assert not t.document.body.classList.contains("no-fullscreen")
+
+
+def test_the_prefixed_request_is_used_and_may_return_nothing() -> None:
+    t = make_full_screen()
+    calls = []
+    t.document.documentElement = SimpleNamespace(webkitRequestFullscreen=lambda: calls.append(1))
+    t.full_screen.toggle()
+    assert calls == [1]
