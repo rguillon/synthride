@@ -15,12 +15,12 @@ def make_menu() -> tuple[FakeElement, MenuScreen]:
     return bridge.document.getElementById("menu"), MenuScreen(bridge)
 
 
-def test_title() -> None:
+def test_level_select_shows_the_logo_and_the_commit() -> None:
     container, menu = make_menu()
-    menu.show_title()
+    menu.show_level_select(["One"], selected=0)
     assert "SYNTHRIDE" in container.innerHTML
+    assert '<p class="commit">COMMIT abc1234</p>' in container.innerHTML
     assert not container.hidden
-    assert menu.current == "title"
 
 
 def test_level_select_highlights_and_escapes_names() -> None:
@@ -93,18 +93,11 @@ def click(container: FakeElement, target: FakeElement) -> None:
     container.dispatch("click", SimpleNamespace(target=target))
 
 
-def test_level_select_has_a_back_button() -> None:
-    container, menu = make_menu()
-    menu.show_level_select(["One", "Two"], selected=0)
-    assert '<button class="menu-back" data-back>◀ BACK</button>' in container.innerHTML
-
-
 def test_clicks_queue_taps() -> None:
     container, menu = make_menu()
     click(container, FakeElement(tag="li", level="3"))
-    click(container, FakeElement(tag="button", back=""))
     click(container, FakeElement())
-    assert menu.consume_taps() == [3, MenuScreen.BACK, MenuScreen.ANYWHERE]
+    assert menu.consume_taps() == [3, MenuScreen.ANYWHERE]
     assert menu.consume_taps() == []
 
 
@@ -129,9 +122,7 @@ def test_clicks_on_links_are_not_taps() -> None:
 
 def test_prompts_have_a_key_and_a_touch_text() -> None:
     container, menu = make_menu()
-    for show in (menu.show_title, menu.show_victory):
-        show()
-        assert (
-            '<span class="key-text">PRESS ENTER</span><span class="touch-text">TAP TO START</span>'
-            in container.innerHTML
-        )
+    menu.show_victory()
+    assert (
+        '<span class="key-text">PRESS ENTER</span><span class="touch-text">TAP TO START</span>' in container.innerHTML
+    )

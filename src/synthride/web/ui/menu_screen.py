@@ -18,21 +18,19 @@ if TYPE_CHECKING:
 
 
 class MenuScreen:
-    """Full-screen overlays: title, level select, level clear and victory.
+    """Full-screen overlays: level select, level clear and victory.
 
-    Clicks on them, by touch or mouse, are queued as taps: a level's index, :attr:`BACK` or :attr:`ANYWHERE`.
+    Clicks on them, by touch or mouse, are queued as taps: a level's index or :attr:`ANYWHERE`.
     """
 
     KEYS = "↑ ↓ accelerate / brake &nbsp;·&nbsp; ← → strafe &nbsp;·&nbsp; SPACE jump, again in mid-air"
     KEYS_EXTRA = "ESC menu &nbsp;·&nbsp; M mute &nbsp;·&nbsp; F full screen"
-    EDITOR_KEY = " &nbsp;·&nbsp; E level editor"
     LEVELS_PER_COLUMN = 7
     REPO_URL = "https://github.com/rguillon/synthride"
     # The prompt to go on, in words for the keyboard and for touch: the page shows the one that fits
     PROMPT = (
         '<p class="prompt"><span class="key-text">PRESS ENTER</span><span class="touch-text">TAP TO START</span></p>'
     )
-    BACK = "back"
     ANYWHERE = "anywhere"
     RESUME = "resume"
     MAIN_MENU = "main-menu"
@@ -50,26 +48,18 @@ class MenuScreen:
         ((TileType.FINISH,), "▚", "finish line"),
     )
 
-    def __init__(self, bridge: JsBridge, *, editor: bool = False) -> None:
-        """Render into the ``menu`` element, telling of the level editor's key if the game has an ``editor``."""
+    def __init__(self, bridge: JsBridge) -> None:
+        """Render into the ``menu`` element, showing the commit the page was built from."""
         self._container = bridge.document.getElementById("menu")
         self._current: str | None = None
-        self._editor_key = self.EDITOR_KEY if editor else ""
         self._taps: list[int | str] = []
+        self._commit = escape(str(bridge.document.body.dataset.commit))
         self._container.addEventListener("click", bridge.proxy(self.on_click))
 
     @property
     def current(self) -> str | None:
         """A key naming the screen on show, or None when hidden."""
         return self._current
-
-    def show_title(self) -> None:
-        """Show the title screen."""
-        self._show(
-            "title",
-            '<h1 class="logo">SYNTHRIDE</h1><p class="subtitle">RIDE THE NEON GRID</p>'
-            f'{self.PROMPT}<p class="keys">{self.KEYS}<br>{self.KEYS_EXTRA}{self._editor_key}</p>',
-        )
 
     def show_level_select(self, names: Sequence[str], selected: int, *, editor: bool = False) -> None:
         """Show the level list, in columns of ``LEVELS_PER_COLUMN``, with ``selected`` highlighted.
@@ -85,13 +75,14 @@ class MenuScreen:
             f'<ul class="level-list">{"".join(items[start : start + self.LEVELS_PER_COLUMN])}</ul>'
             for start in range(0, len(items), self.LEVELS_PER_COLUMN)
         )
-        edit = " &nbsp;·&nbsp; E edit" if editor else ""
+        edit = " &nbsp;·&nbsp; E edit &nbsp;·&nbsp; N new" if editor else ""
         self._show(
             f"select:{selected}:{editor}:{'|'.join(names)}",
-            '<button class="menu-back" data-back>◀ BACK</button><p class="subtitle">SELECT LEVEL</p>'
+            '<h1 class="logo">SYNTHRIDE</h1><p class="subtitle">SELECT LEVEL</p>'
             f'<div class="level-columns">{columns}</div>{self.legend()}'
-            f'<p class="keys">↑ ↓ ← → choose &nbsp;·&nbsp; ENTER ride{edit} &nbsp;·&nbsp; ESC back</p>'
-            f'<a class="repo-link" href="{self.REPO_URL}" target="_blank" rel="noopener">SOURCE ON GITHUB</a>',
+            f'<p class="keys">↑ ↓ ← → choose &nbsp;·&nbsp; ENTER ride{edit}<br>{self.KEYS}<br>{self.KEYS_EXTRA}</p>'
+            f'<a class="repo-link" href="{self.REPO_URL}" target="_blank" rel="noopener">SOURCE ON GITHUB</a>'
+            f'<p class="commit">COMMIT {self._commit}</p>',
         )
 
     @classmethod
@@ -132,7 +123,7 @@ class MenuScreen:
         )
 
     def on_click(self, event: JsObject) -> None:
-        """Queue the tap a click makes: on a level, on the back button or anywhere else; links are left to open."""
+        """Queue the tap a click makes: on a level, on a pause button or anywhere else; links are left to open."""
         target = event.target  # a lookup that finds nothing gives jsnull, falsy but not None
         if target.closest("a"):
             return
@@ -143,8 +134,6 @@ class MenuScreen:
             self._taps.append(self.RESUME)
         elif target.closest("[data-menu]"):
             self._taps.append(self.MAIN_MENU)
-        elif target.closest("[data-back]"):
-            self._taps.append(self.BACK)
         else:
             self._taps.append(self.ANYWHERE)
 

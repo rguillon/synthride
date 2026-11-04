@@ -9,7 +9,6 @@ from enum import Enum, auto
 class GamePhase(Enum):
     """The states of the game session."""
 
-    TITLE = auto()
     LEVEL_SELECT = auto()
     PLAYING = auto()
     DYING = auto()

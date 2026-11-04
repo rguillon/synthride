@@ -31,7 +31,7 @@ def push_stick(page: Page, dx: float, dy: float) -> None:
 
 
 def take(url: str) -> None:
-    """Tap through the title to the level select, then ride the first level, taking a screenshot of each, per way."""
+    """Touch the level select, then ride the first level, taking a screenshot of each, per way."""
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(args=["--enable-unsafe-swiftshader"])
         for suffix, viewport in VIEWPORTS.items():
@@ -45,7 +45,7 @@ def ride(browser: Browser, url: str, viewport: ViewportSize, suffix: str) -> Non
     page.goto(url)
     page.wait_for_selector("#loading", state="detached", timeout=60_000)
     page.add_style_tag(content="#hud-fps { visibility: hidden; }")  # software WebGL makes it read ~10 FPS
-    page.tap("#menu")  # title -> level select
+    page.tap("#menu", position={"x": 2, "y": 2})  # a touch on the empty corner of the level select
     page.wait_for_function("document.body.classList.contains('touch')")  # the tap turned touch mode on
     page.wait_for_selector('[data-level="0"]')
     page.wait_for_timeout(500)

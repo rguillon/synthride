@@ -1,6 +1,11 @@
 # Copyright (c) 2026 Renaud Guillon
 # SPDX-License-Identifier: MIT
 
+import re
+import subprocess
+
+import pytest
+
 from synthride.server.html_page_builder import HtmlPageBuilder
 
 
@@ -19,6 +24,31 @@ def test_page_has_the_game_containers() -> None:
         assert f'id="{element_id}"' in page
     for name in ("UnrealBloomPass", "LineSegments2", "LineSegmentsGeometry", "LineMaterial"):
         assert name in page
+
+
+def test_page_carries_the_commit() -> None:
+    assert 'data-commit="abc1234"' in HtmlPageBuilder(commit="abc1234").build()
+
+
+def test_commit_comes_from_ci(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GITHUB_SHA", "0123456789abcdef")
+    assert HtmlPageBuilder.current_commit() == "0123456"
+
+
+def test_commit_comes_from_git(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("GITHUB_SHA", raising=False)
+    sha = HtmlPageBuilder.current_commit()
+    assert sha == "unknown" or re.fullmatch(r"[0-9a-f]{7,}", sha)
+
+
+@pytest.mark.parametrize("failure", [OSError(), subprocess.CalledProcessError(1, "git")])
+def test_commit_is_unknown_without_git(monkeypatch: pytest.MonkeyPatch, failure: Exception) -> None:
+    def fail(*_args: object, **_kwargs: object) -> None:
+        raise failure
+
+    monkeypatch.delenv("GITHUB_SHA", raising=False)
+    monkeypatch.setattr(subprocess, "run", fail)
+    assert HtmlPageBuilder.current_commit() == "unknown"
 
 
 def test_dev_page_turns_the_editor_on() -> None:
