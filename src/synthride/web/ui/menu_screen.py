@@ -34,6 +34,8 @@ class MenuScreen:
     )
     BACK = "back"
     ANYWHERE = "anywhere"
+    RESUME = "resume"
+    MAIN_MENU = "main-menu"
     # (tile types sharing a line, the pattern drawn on them, what they do)
     LEGEND: ClassVar[tuple[tuple[tuple[TileType, ...], str, str], ...]] = (
         ((TileType.NORMAL,), "■", "solid ground"),
@@ -118,6 +120,17 @@ class MenuScreen:
             f'<h1 class="logo">YOU WIN</h1><p class="subtitle">ALL GRIDS CONQUERED</p>{self.PROMPT}',
         )
 
+    def show_pause(self, *, riding: bool = False) -> None:
+        """Show the pause screen, its second button leading back to the editor when ``riding``, else to the menus."""
+        leave = "BACK TO EDITOR" if riding else "MAIN MENU"
+        self._show(
+            f"pause:{riding}",
+            '<div class="pause"><h2 class="headline">PAUSED</h2>'
+            '<button class="menu-button" data-resume>&#9654; RESUME</button>'
+            f'<button class="menu-button" data-menu>{leave}</button>'
+            '<p class="keys">ESC or ENTER resume &nbsp;·&nbsp; BACKSPACE leave</p></div>',
+        )
+
     def on_click(self, event: JsObject) -> None:
         """Queue the tap a click makes: on a level, on the back button or anywhere else; links are left to open."""
         target = event.target  # a lookup that finds nothing gives jsnull, falsy but not None
@@ -126,6 +139,10 @@ class MenuScreen:
         level = target.closest("[data-level]")
         if level:
             self._taps.append(int(level.dataset.level))
+        elif target.closest("[data-resume]"):
+            self._taps.append(self.RESUME)
+        elif target.closest("[data-menu]"):
+            self._taps.append(self.MAIN_MENU)
         elif target.closest("[data-back]"):
             self._taps.append(self.BACK)
         else:

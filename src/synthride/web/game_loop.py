@@ -81,7 +81,10 @@ class GameLoop:
         self._track_group: JsObject = None
         self._last_timestamp: float | None = None
         self._time = 0.0
+        self.paused = False
         self._frame_proxy = bridge.proxy(self.on_frame)
+        bridge.window.addEventListener("blur", bridge.proxy(lambda _event: self.pause()))
+        bridge.document.addEventListener("visibilitychange", bridge.proxy(self.on_visibility_change))
         backdrop.add_to(renderer.scene)
         renderer.add(ship_model.group)
         renderer.mirror(ship_model.body)  # not the shadow: it would hide the mirror image
@@ -101,14 +104,45 @@ class GameLoop:
         self.tick(min(max(dt, 0.0), self.MAX_FRAME_SECONDS))
         self._bridge.window.requestAnimationFrame(self._frame_proxy)
 
+    def on_visibility_change(self, _event: JsObject) -> None:
+        """Pause when the page is hidden: another tab, or the phone's screen off."""
+        if self._bridge.document.visibilityState == "hidden":
+            self.pause()
+
+    def pause(self) -> None:
+        """Freeze the ride, if one is on, behind the pause screen, and release the keys held."""
+        if self.paused or self.session.phase not in (GamePhase.PLAYING, GamePhase.DYING):
+            return
+        self.paused = True
+        self._keyboard.release_all()
+        self._music.pause()
+
+    def resume(self) -> None:
+        """Go on with a paused ride."""
+        if self.paused:
+            self.paused = False
+            self._music.resume()
+
+    def leave(self) -> None:
+        """Quit a paused ride, back to the editor it was started from or to the level select."""
+        self.resume()
+        if self.session.riding:
+            self.session.open_editor()
+        else:
+            self.session.open_level_select()
+
     def tick(self, dt: float) -> None:
-        """Advance the whole game by ``dt`` seconds and render a frame."""
-        self._time += dt
+        """Advance the whole game by ``dt`` seconds and render a frame, or only redraw while paused."""
         session = self.session
         for key in self._keyboard.consume_presses():
             self.handle_key(key)
         for tap in self._menu.consume_taps():
             self.handle_tap(tap)
+        if self.paused:
+            self._update_overlays()
+            self._renderer.render()
+            return
+        self._time += dt
         self._handle_editor_actions()
         events = session.update(dt, self._keyboard.ship_input())
         self._sound_effects.play(events)
@@ -146,26 +180,37 @@ class GameLoop:
         letter = self._keyboard.letter(key)
         if letter == self.MUTE:
             self._music.toggle_mute()
+        elif self.paused:
+            self._handle_pause_key(key)
         elif phase is GamePhase.EDITOR and self._editor is not None:
             self._editor.handle_key(key, letter)
         elif letter == self.EDIT and phase in (GamePhase.TITLE, GamePhase.LEVEL_SELECT) and self._editor is not None:
             self._open_editor(self._editor, from_level_select=phase is GamePhase.LEVEL_SELECT)
-        elif session.riding and phase in (GamePhase.PLAYING, GamePhase.DYING) and key == "Escape":
-            session.open_editor()
+        elif phase in (GamePhase.PLAYING, GamePhase.DYING) and key == "Escape":
+            self.pause()
         elif phase is GamePhase.TITLE and key in self.CONFIRM:
             self._music.start()
             session.open_level_select()
         elif phase is GamePhase.LEVEL_SELECT:
             self._handle_level_select_key(key)
-        elif (phase in (GamePhase.PLAYING, GamePhase.DYING) and key == "Escape") or (
-            phase is GamePhase.VICTORY and key in self.CONFIRM
-        ):
+        elif phase is GamePhase.VICTORY and key in self.CONFIRM:
             session.open_level_select()
+
+    def _handle_pause_key(self, key: str) -> None:
+        if key in ("Escape", "Enter"):
+            self.resume()
+        elif key == "Backspace":
+            self.leave()
 
     def handle_tap(self, tap: int | str) -> None:
         """React to a tap on the menus, as the key it stands for: a level rides it, back is Escape, else Enter."""
         session, phase = self.session, self.session.phase
-        if phase is GamePhase.LEVEL_SELECT:
+        if self.paused:
+            if tap == self._menu.RESUME:
+                self.resume()
+            elif tap == self._menu.MAIN_MENU:
+                self.leave()
+        elif phase is GamePhase.LEVEL_SELECT:
             if isinstance(tap, int) and 0 <= tap < len(session.levels):
                 session.selected_level = tap
                 self.handle_key("Enter")
@@ -228,6 +273,9 @@ class GameLoop:
         self._hud.show(visible=phase in self.HUD_PHASES)
         if phase in self.HUD_PHASES:
             self._hud.update(session)
+        if self.paused:
+            self._menu.show_pause(riding=session.riding)
+            return
         match phase:
             case GamePhase.TITLE:
                 self._menu.show_title()

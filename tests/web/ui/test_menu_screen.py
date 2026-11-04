@@ -108,6 +108,19 @@ def test_clicks_queue_taps() -> None:
     assert menu.consume_taps() == []
 
 
+def test_pause_screen_has_resume_and_leave_buttons() -> None:
+    container, menu = make_menu()
+    menu.show_pause()
+    assert "data-resume" in container.innerHTML
+    assert "MAIN MENU" in container.innerHTML
+    assert menu.current == "pause:False"
+    menu.show_pause(riding=True)
+    assert "BACK TO EDITOR" in container.innerHTML
+    click(container, FakeElement(tag="button", resume=""))
+    click(container, FakeElement(tag="button", menu=""))
+    assert menu.consume_taps() == [MenuScreen.RESUME, MenuScreen.MAIN_MENU]
+
+
 def test_clicks_on_links_are_not_taps() -> None:
     container, menu = make_menu()
     click(container, FakeElement(tag="a"))

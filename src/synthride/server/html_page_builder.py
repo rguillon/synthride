@@ -117,6 +117,12 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
 #editor .keys { margin: 0; }
 #loading { z-index: 4; }
 .level-list li { cursor: pointer; }
+.pause { display: flex; flex-direction: column; align-items: center; gap: 1.2rem; margin: auto 0; }
+.menu-button { font: inherit; font-size: 1.1rem; letter-spacing: 0.2em; color: var(--cyan); cursor: pointer;
+  background: rgba(11,0,20,0.5); border: 2px solid rgba(0,240,255,0.55); border-radius: 14px; min-width: 15rem;
+  min-height: 52px; padding: 0 1.4rem; text-shadow: 0 0 8px var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,0.35); }
+.menu-button:hover, .menu-button:focus-visible { color: var(--pink); border-color: var(--pink);
+  text-shadow: 0 0 8px var(--pink); }
 /* Touch: shown once the page has seen a touch, which adds the "touch" class to the body */
 #touch, #mute, .menu-back, .touch-text { display: none; }
 #touch { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
