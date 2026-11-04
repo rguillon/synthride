@@ -26,7 +26,10 @@ class HtmlPageBuilder:
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport"
+  content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>SynthRide</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&display=swap">
@@ -40,8 +43,8 @@ class HtmlPageBuilder:
   --text: #f6e9ff;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; overflow: hidden; background: var(--night); color: var(--text);
-  font-family: "Orbitron", system-ui, sans-serif; }
+html, body { touch-action: pan-x pan-y; margin: 0; height: 100%; overflow: hidden; background: var(--night);
+  color: var(--text); font-family: "Orbitron", system-ui, sans-serif; }
 body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 5;
   background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,0.18) 2px 3px); }
 #stage, #stage canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
@@ -206,6 +209,7 @@ body.touch #fullscreen { display: block; top: max(8px, env(safe-area-inset-top))
   right: calc(max(12px, env(safe-area-inset-right)) + 48px); }
 body.touch #hud:not([hidden]) ~ #fullscreen { right: calc(max(12px, env(safe-area-inset-right)) + 96px); }
 body:not(.touch) .hud-top, body:not(.touch) .progress { margin-right: 56px; }
+body.no-fullscreen #fullscreen { display: none !important; }
 body.fullscreen #fullscreen { color: var(--pink); border-color: rgba(255,43,214,0.6); }
 /* Held upright, the buttons take a row of their own on top, and the HUD and menus start below it */
 @media (orientation: portrait) {
