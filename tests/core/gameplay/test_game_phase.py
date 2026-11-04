@@ -5,5 +5,5 @@ from synthride.core.gameplay.game_phase import GamePhase
 
 
 def test_phases() -> None:
-    assert GamePhase.TITLE in GamePhase
-    assert len(GamePhase) == 7
+    assert GamePhase.LEVEL_SELECT in GamePhase
+    assert len(GamePhase) == 6

@@ -66,7 +66,7 @@ class Main:
             sparks=NeonSparks(bridge),
             backdrop=SpaceBackdrop(bridge),
             hud=Hud(bridge),
-            menu=MenuScreen(bridge, editor=editor is not None),
+            menu=MenuScreen(bridge),
             music=SynthMusic(SynthVoices(bridge, context, master)),
             sound_effects=SoundEffects(SynthVoices(bridge, context, master)),
             editor=editor,

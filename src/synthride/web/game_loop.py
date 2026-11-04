@@ -38,8 +38,9 @@ class GameLoop:
     LEFT = frozenset({"ArrowLeft", "KeyA"})
     RIGHT = frozenset({"ArrowRight", "KeyD"})
     HUD_PHASES = frozenset({GamePhase.PLAYING, GamePhase.DYING, GamePhase.LEVEL_WON})
-    TAP_TO_GO_ON = frozenset({GamePhase.TITLE, GamePhase.VICTORY})
+    TAP_TO_GO_ON = frozenset({GamePhase.VICTORY})
     EDIT = "e"
+    NEW = "n"
     MUTE = "m"
     # The stretch of track whose tunnel roofs the chase camera ducks under: from where it sits behind
     # the ship to a little ahead, so it is already low when the ship enters a tunnel.
@@ -82,6 +83,7 @@ class GameLoop:
         self._last_timestamp: float | None = None
         self._time = 0.0
         self.paused = False
+        self._music_started = False
         self._frame_proxy = bridge.proxy(self.on_frame)
         bridge.window.addEventListener("blur", bridge.proxy(lambda _event: self.pause()))
         bridge.document.addEventListener("visibilitychange", bridge.proxy(self.on_visibility_change))
@@ -175,8 +177,9 @@ class GameLoop:
         self._renderer.render()
 
     def handle_key(self, key: str) -> None:
-        """React to a fresh key press in the menus."""
+        """React to a fresh key press in the menus. The first one starts the music: browsers wait for a gesture."""
         session, phase = self.session, self.session.phase
+        self._start_music()
         letter = self._keyboard.letter(key)
         if letter == self.MUTE:
             self._music.toggle_mute()
@@ -184,17 +187,19 @@ class GameLoop:
             self._handle_pause_key(key)
         elif phase is GamePhase.EDITOR and self._editor is not None:
             self._editor.handle_key(key, letter)
-        elif letter == self.EDIT and phase in (GamePhase.TITLE, GamePhase.LEVEL_SELECT) and self._editor is not None:
-            self._open_editor(self._editor, from_level_select=phase is GamePhase.LEVEL_SELECT)
+        elif letter in (self.EDIT, self.NEW) and phase is GamePhase.LEVEL_SELECT and self._editor is not None:
+            self._open_editor(self._editor, selected=letter == self.EDIT)
         elif phase in (GamePhase.PLAYING, GamePhase.DYING) and key == "Escape":
             self.pause()
-        elif phase is GamePhase.TITLE and key in self.CONFIRM:
-            self._music.start()
-            session.open_level_select()
         elif phase is GamePhase.LEVEL_SELECT:
             self._handle_level_select_key(key)
         elif phase is GamePhase.VICTORY and key in self.CONFIRM:
             session.open_level_select()
+
+    def _start_music(self) -> None:
+        if not self._music_started:
+            self._music_started = True
+            self._music.start()
 
     def _handle_pause_key(self, key: str) -> None:
         if key in ("Escape", "Enter"):
@@ -205,6 +210,7 @@ class GameLoop:
     def handle_tap(self, tap: int | str) -> None:
         """React to a tap on the menus, as the key it stands for: a level rides it, back is Escape, else Enter."""
         session, phase = self.session, self.session.phase
+        self._start_music()
         if self.paused:
             if tap == self._menu.RESUME:
                 self.resume()
@@ -214,15 +220,13 @@ class GameLoop:
             if isinstance(tap, int) and 0 <= tap < len(session.levels):
                 session.selected_level = tap
                 self.handle_key("Enter")
-            elif tap == self._menu.BACK:
-                self.handle_key("Escape")
         elif phase in self.TAP_TO_GO_ON and tap == self._menu.ANYWHERE:
             self.handle_key("Enter")
 
-    def _open_editor(self, editor: EditorScreen, *, from_level_select: bool) -> None:
-        """Open the editor: on the selected level from the level select, on the last track from the title."""
+    def _open_editor(self, editor: EditorScreen, *, selected: bool) -> None:
+        """Open the editor on the level selected in the level select, or else on the last track it had."""
         session = self.session
-        if from_level_select:
+        if selected:
             index = session.selected_level
             editor.open_level(session.levels[index], index)
         session.open_editor()
@@ -253,8 +257,6 @@ class GameLoop:
             session.select_level_column(1, self._menu.LEVELS_PER_COLUMN)
         elif key in self.CONFIRM:
             self._sound_effects.play(session.start())
-        elif key == "Escape":
-            session.return_to_title()
 
     def _show_level(self, level: Level) -> bool:
         """Rebuilds the track meshes and redresses the sky when ``level`` is not the one shown. Returns True if so."""
@@ -277,8 +279,6 @@ class GameLoop:
             self._menu.show_pause(riding=session.riding)
             return
         match phase:
-            case GamePhase.TITLE:
-                self._menu.show_title()
             case GamePhase.LEVEL_SELECT:
                 names = [level.name for level in session.levels]
                 self._menu.show_level_select(names, session.selected_level, editor=self._editor is not None)

@@ -37,14 +37,14 @@ class GameSession:
     MAX_STEPS_PER_UPDATE = 30
 
     def __init__(self, levels: Sequence[Level], config: GameConfig | None = None) -> None:
-        """Create a session on the title screen, with the first level loaded."""
+        """Create a session on the level select screen, with the first level loaded."""
         if not levels:
             msg = "a session needs at least one level"
             raise ValueError(msg)
         self.config = config or GameConfig()
         self.levels = tuple(levels)
         self._test_level: Level | None = None
-        self.phase = GamePhase.TITLE
+        self.phase = GamePhase.LEVEL_SELECT
         self.selected_level = 0
         self._physics = ShipPhysics(self.config)
         self._effects = TileEffectApplier(self.config)
@@ -113,10 +113,6 @@ class GameSession:
     def start(self) -> list[GameEvent]:
         """Start a new game at the selected level."""
         return self._begin_level(self.selected_level)
-
-    def return_to_title(self) -> None:
-        """Go back to the title screen."""
-        self.phase = GamePhase.TITLE
 
     def update(self, dt: float, ship_input: ShipInput) -> list[GameEvent]:
         """Advance the session by ``dt`` seconds and return the events that happened."""

@@ -48,7 +48,7 @@ def test_requires_levels() -> None:
 
 def test_menu_flow() -> None:
     session = GameSession([make_level(FLAT), make_level(FLAT)])
-    assert session.phase is GamePhase.TITLE
+    assert session.phase is GamePhase.LEVEL_SELECT
     assert session.update(1, FORWARD) == []
     session.open_level_select()
     assert session.phase is GamePhase.LEVEL_SELECT
@@ -61,8 +61,6 @@ def test_menu_flow() -> None:
     assert session.start() == [GameEvent.LEVEL_STARTED]
     assert session.phase is GamePhase.PLAYING
     assert session.level_index == 1
-    session.return_to_title()
-    assert session.phase is GamePhase.TITLE
 
 
 def test_level_select_moves_between_columns() -> None:

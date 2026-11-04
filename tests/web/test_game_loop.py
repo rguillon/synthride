@@ -66,7 +66,7 @@ def build_game(*, with_editor: bool = False) -> SimpleNamespace:
         sparks=NeonSparks(bridge),
         backdrop=SpaceBackdrop(bridge),
         hud=Hud(bridge),
-        menu=MenuScreen(bridge, editor=with_editor),
+        menu=MenuScreen(bridge),
         music=SynthMusic(voices),
         sound_effects=SoundEffects(voices),
         editor=editor,
@@ -104,10 +104,9 @@ def test_title_shows_menu_and_track(game: SimpleNamespace) -> None:
 
 
 def test_menu_navigation_to_playing_and_back(game: SimpleNamespace) -> None:
-    press(game, "Enter")
     assert game.session.phase is GamePhase.LEVEL_SELECT
-    assert game.context.resume.calls == [()]
     press(game, "ArrowDown")
+    assert game.context.resume.calls == [()]
     assert '<li class="selected" data-level="1">02' in menu_html(game)
     press(game, "ArrowUp", "ArrowUp")
     assert game.session.selected_level == 1
@@ -120,12 +119,12 @@ def test_menu_navigation_to_playing_and_back(game: SimpleNamespace) -> None:
     press(game, "Escape", "Backspace")  # pause, then leave
     assert game.session.phase is GamePhase.LEVEL_SELECT
     press(game, "Escape")
-    assert game.session.phase is GamePhase.TITLE
+    assert game.session.phase is GamePhase.LEVEL_SELECT
 
 
 def test_level_select_left_and_right_change_column(game: SimpleNamespace) -> None:
     game.session.levels = game.session.levels * MenuScreen.LEVELS_PER_COLUMN
-    press(game, "Enter", "ArrowDown", "ArrowRight")
+    press(game, "ArrowDown", "ArrowRight")
     assert game.session.selected_level == MenuScreen.LEVELS_PER_COLUMN + 1
     press(game, "ArrowLeft")
     assert game.session.selected_level == 1
@@ -136,12 +135,12 @@ def test_each_level_brings_its_own_sky(game: SimpleNamespace) -> None:
     sky = backdrop._sky_material.uniforms  # noqa: SLF001
     game.loop.tick(1 / 60)
     first = sky.uNebula.value.setHex.calls[-1]
-    press(game, "Enter", "ArrowDown", "Enter")
+    press(game, "ArrowDown", "Enter")
     assert sky.uNebula.value.setHex.calls[-1] != first
 
 
 def test_level_select_ignores_other_keys(game: SimpleNamespace) -> None:
-    press(game, "Enter", "KeyX")
+    press(game, "KeyX")
     assert game.session.phase is GamePhase.LEVEL_SELECT
     assert game.session.selected_level == 0
 
@@ -166,12 +165,10 @@ def tap(game: SimpleNamespace, target: FakeElement) -> None:
 
 
 def test_taps_walk_the_menus(game: SimpleNamespace) -> None:
-    tap(game, FakeElement())
+    assert game.session.phase is GamePhase.LEVEL_SELECT
+    tap(game, FakeElement())  # nothing to go on to here
     assert game.session.phase is GamePhase.LEVEL_SELECT
     assert game.context.resume.calls == [()]
-    tap(game, FakeElement(tag="button", back=""))
-    assert game.session.phase is GamePhase.TITLE
-    tap(game, FakeElement())
     tap(game, FakeElement(tag="li", level="1"))
     assert game.session.phase is GamePhase.PLAYING
     assert game.session.level_index == 1
@@ -225,12 +222,12 @@ def editor_element(game: SimpleNamespace) -> FakeElement:
 
 def test_without_an_editor_e_does_nothing(game: SimpleNamespace) -> None:
     press(game, "KeyE")
-    assert game.session.phase is GamePhase.TITLE
+    assert game.session.phase is GamePhase.LEVEL_SELECT
 
 
-def test_e_on_the_title_opens_the_editor_over_its_track(edited: SimpleNamespace) -> None:
+def test_e_on_the_level_select_opens_the_editor_over_the_selected_level(edited: SimpleNamespace) -> None:
     edited.loop.tick(1 / 60)
-    assert "E level editor" in menu_html(edited)
+    assert "E edit" in menu_html(edited)
     press(edited, "KeyE")
     assert edited.session.phase is GamePhase.EDITOR
     assert edited.bridge.document.getElementById("menu").hidden
@@ -268,14 +265,20 @@ def test_a_test_ride_returns_to_the_editor(edited: SimpleNamespace) -> None:
 
 
 def test_e_on_the_level_select_edits_the_selected_level(edited: SimpleNamespace) -> None:
-    press(edited, "Enter", "ArrowDown", "KeyE")
+    press(edited, "ArrowDown", "KeyE")
     assert edited.editor.settings.name == "L2"
     assert edited.editor.grid.length == 5
     assert edited.editor.file == "level_02.json"
 
 
+def test_n_opens_a_new_level_and_escape_keeps_the_selection(edited: SimpleNamespace) -> None:
+    press(edited, "ArrowDown", "KeyN", "Escape")
+    assert edited.session.phase is GamePhase.LEVEL_SELECT
+    assert edited.session.selected_level == 1
+
+
 def test_saved_levels_join_the_level_select(edited: SimpleNamespace) -> None:
-    press(edited, "KeyE")
+    press(edited, "KeyN")
     edited.editor.on_change(
         SimpleNamespace(target=SimpleNamespace(dataset=SimpleNamespace(field="name"), value="Mine"))
     )
@@ -294,7 +297,7 @@ def test_saved_levels_join_the_level_select(edited: SimpleNamespace) -> None:
 def test_editor_actions_outside_the_editor_are_dropped(edited: SimpleNamespace) -> None:
     edited.editor.act(EditorScreen.RIDE)
     edited.loop.tick(1 / 60)
-    assert edited.session.phase is GamePhase.TITLE
+    assert edited.session.phase is GamePhase.LEVEL_SELECT
 
 
 def test_letter_keys_follow_the_layout(edited: SimpleNamespace) -> None:
@@ -311,7 +314,7 @@ def test_letter_keys_follow_the_layout(edited: SimpleNamespace) -> None:
 
 
 def ride(game: SimpleNamespace) -> None:
-    press(game, "Enter", "Enter")
+    press(game, "Enter")
     assert game.session.phase is GamePhase.PLAYING
 
 
@@ -338,8 +341,6 @@ def test_hiding_the_page_pauses_but_showing_it_does_not(game: SimpleNamespace) -
 
 
 def test_losing_focus_outside_a_ride_does_nothing(game: SimpleNamespace) -> None:
-    game.bridge.window.dispatch("blur")
-    press(game, "Enter")
     game.bridge.window.dispatch("blur")
     assert not game.loop.paused
     assert game.context.suspend.calls == []

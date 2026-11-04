@@ -22,7 +22,7 @@ class FakeDocument:
     def __init__(self) -> None:
         self.elements: dict[str, FakeElement] = {}
         self.created: list[FakeElement] = []
-        self.body = FakeElement("body", tag="body")
+        self.body = FakeElement("body", tag="body", commit="abc1234")
         self.documentElement = FakeElement("html", tag="html")
         self.visibilityState = "visible"
         self.fullscreenElement: FakeElement | FakeJsNull = JS_NULL

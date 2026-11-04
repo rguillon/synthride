@@ -5,7 +5,11 @@
 
 from __future__ import annotations
 
+import html
 import json
+import os
+import subprocess
+from pathlib import Path
 from string import Template
 
 
@@ -60,6 +64,7 @@ body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-in
   text-shadow: 0 0 8px var(--pink); }
 .repo-link { font-size: 0.7rem; letter-spacing: 0.2em; color: var(--cyan); text-decoration: none;
   text-shadow: 0 0 8px var(--cyan); }
+.commit { margin: 0; font-size: 0.65rem; letter-spacing: 0.2em; opacity: 0.6; }
 .repo-link:hover, .repo-link:focus-visible { color: var(--pink); text-shadow: 0 0 8px var(--pink); }
 .headline { font-size: clamp(1.8rem, 7vw, 4rem); margin: 0; color: var(--pink); text-shadow: 0 0 20px var(--pink); }
 #hud { position: fixed; inset: 0; z-index: 2; pointer-events: none; padding: 16px; font-size: 0.8rem;
@@ -234,7 +239,7 @@ body.fullscreen #fullscreen { color: var(--pink); border-color: rgba(255,43,214,
 </script>
 <script src="$pyodide_url/pyodide.js"></script>
 </head>
-<body>
+<body data-commit="$commit">
 <div id="stage"></div>
 <div id="hud" hidden></div>
 <div id="touch">
@@ -290,12 +295,35 @@ try {
         bundle_url: str = "synthride.zip",
         *,
         dev: bool = False,
+        commit: str | None = None,
     ) -> None:
-        """Use the given library versions and load the bundle from ``bundle_url``; ``dev`` turns the editor on."""
+        """Use the given library versions and load the bundle from ``bundle_url``; ``dev`` turns the editor on.
+
+        The menu shows ``commit``, by default the one the working tree is on.
+        """
         self._dev = dev
+        self._commit = commit or self.current_commit()
         self._pyodide_version = pyodide_version
         self._three_version = three_version
         self._bundle_url = bundle_url
+
+    @staticmethod
+    def current_commit() -> str:
+        """Return the short SHA of the commit being built: ``GITHUB_SHA`` in CI, else git's HEAD, else ``unknown``."""
+        sha = os.environ.get("GITHUB_SHA")
+        if sha:
+            return sha[:7]
+        try:
+            result = subprocess.run(
+                ["git", "rev-parse", "--short", "HEAD"],  # noqa: S607
+                capture_output=True,
+                text=True,
+                check=True,
+                cwd=Path(__file__).parent,
+            )
+        except (OSError, subprocess.CalledProcessError):
+            return "unknown"
+        return result.stdout.strip() or "unknown"
 
     @property
     def pyodide_url(self) -> str:
@@ -313,5 +341,6 @@ try {
             pyodide_url=self.pyodide_url,
             three_url=self.three_url,
             bundle_url=self._bundle_url,
+            commit=html.escape(self._commit),
             entry=json.dumps(self.DEV_ENTRY if self._dev else self.ENTRY),
         )
