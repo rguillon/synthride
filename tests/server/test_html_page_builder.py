@@ -33,7 +33,7 @@ def test_page_has_the_touch_controls() -> None:
     assert "data-knob" in page
     for code in ("Escape", "KeyM"):
         assert f'data-press="{code}"' in page
-    for element_id in ("touch", "mute", "rotate"):
+    for element_id in ("touch", "mute"):
         assert f'id="{element_id}"' in page
     assert page.index('id="hud"') < page.index('id="touch"')  # the pads show with the HUD: #hud ~ #touch
     assert page.index('id="mute"') < page.index('id="loading"')  # the loading screen covers it

@@ -117,7 +117,7 @@ def test_menu_navigation_to_playing_and_back(game: SimpleNamespace) -> None:
     assert not game.bridge.document.getElementById("hud").hidden
     assert game.bridge.document.getElementById("menu").hidden
     assert len(game.renderer.scene.remove.calls) == 1  # level 1 track swapped for level 2
-    press(game, "Escape")
+    press(game, "Escape", "Backspace")  # pause, then leave
     assert game.session.phase is GamePhase.LEVEL_SELECT
     press(game, "Escape")
     assert game.session.phase is GamePhase.TITLE
@@ -261,6 +261,8 @@ def test_a_test_ride_returns_to_the_editor(edited: SimpleNamespace) -> None:
     assert not edited.bridge.document.getElementById("hud").hidden
     assert editor_element(edited).hidden
     press(edited, "Escape")
+    assert "BACK TO EDITOR" in menu_html(edited)
+    press(edited, "Backspace")
     assert session.phase is GamePhase.EDITOR
     assert not editor_element(edited).hidden
 
@@ -306,3 +308,97 @@ def test_letter_keys_follow_the_layout(edited: SimpleNamespace) -> None:
     window.dispatch("keydown", FakeKeyEvent("KeyW", key="z"))
     edited.loop.tick(1 / 60)
     assert not edited.editor.grid.can_undo
+
+
+def ride(game: SimpleNamespace) -> None:
+    press(game, "Enter", "Enter")
+    assert game.session.phase is GamePhase.PLAYING
+
+
+def test_losing_focus_pauses_the_ride(game: SimpleNamespace) -> None:
+    ride(game)
+    game.bridge.window.dispatch("blur")
+    game.loop.tick(1 / 60)
+    assert game.loop.paused
+    assert game.context.suspend.calls == [()]
+    assert "PAUSED" in menu_html(game)
+    assert "RESUME" in menu_html(game)
+    assert "MAIN MENU" in menu_html(game)
+    assert not game.bridge.document.getElementById("menu").hidden
+
+
+def test_hiding_the_page_pauses_but_showing_it_does_not(game: SimpleNamespace) -> None:
+    ride(game)
+    game.bridge.document.visibilityState = "visible"
+    game.bridge.document.dispatch("visibilitychange")
+    assert not game.loop.paused
+    game.bridge.document.visibilityState = "hidden"
+    game.bridge.document.dispatch("visibilitychange")
+    assert game.loop.paused
+
+
+def test_losing_focus_outside_a_ride_does_nothing(game: SimpleNamespace) -> None:
+    game.bridge.window.dispatch("blur")
+    press(game, "Enter")
+    game.bridge.window.dispatch("blur")
+    assert not game.loop.paused
+    assert game.context.suspend.calls == []
+
+
+def test_a_paused_game_stands_still(game: SimpleNamespace) -> None:
+    ride(game)
+    for _ in range(3):
+        game.loop.tick(1 / 60)
+    game.loop.pause()
+    game.loop.pause()  # already paused
+    assert game.context.suspend.calls == [()]
+    before = (game.session.ship.position.z, game.loop._time)  # noqa: SLF001
+    renders = len(game.renderer.composer.render.calls)
+    for _ in range(5):
+        game.loop.tick(1 / 60)
+    assert (game.session.ship.position.z, game.loop._time) == before  # noqa: SLF001
+    assert len(game.renderer.composer.render.calls) == renders + 5
+
+
+def test_resume_button_goes_on_with_the_ride(game: SimpleNamespace) -> None:
+    ride(game)
+    game.loop.pause()
+    game.loop.tick(1 / 60)
+    resumed = len(game.context.resume.calls)
+    tap(game, FakeElement(tag="button", resume=""))
+    assert not game.loop.paused
+    assert game.session.phase is GamePhase.PLAYING
+    assert len(game.context.resume.calls) == resumed + 1
+    assert game.bridge.document.getElementById("menu").hidden
+
+
+def test_main_menu_button_leaves_the_ride(game: SimpleNamespace) -> None:
+    ride(game)
+    game.loop.resume()  # not paused: nothing to resume
+    assert game.context.resume.calls == [()]
+    game.loop.pause()
+    tap(game, FakeElement(tag="button", menu=""))
+    assert not game.loop.paused
+    assert game.session.phase is GamePhase.LEVEL_SELECT
+
+
+def test_other_taps_do_nothing_while_paused(game: SimpleNamespace) -> None:
+    ride(game)
+    game.loop.pause()
+    tap(game, FakeElement())
+    assert game.loop.paused
+
+
+def test_escape_and_enter_resume_and_space_does_not(game: SimpleNamespace) -> None:
+    ride(game)
+    press(game, "Escape")
+    assert game.loop.paused
+    press(game, "Space", "KeyX")
+    assert game.loop.paused
+    press(game, "Escape")
+    assert not game.loop.paused
+    press(game, "Escape", "Enter")
+    assert not game.loop.paused
+    press(game, "Escape", "KeyM")
+    assert game.loop.paused
+    assert game.loop._music.muted  # noqa: SLF001

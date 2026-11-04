@@ -294,6 +294,14 @@ class SynthMusic:
             self._step = 0
             self._next_time = self._voices.now + 0.1
 
+    def pause(self) -> None:
+        """Freeze the audio clock, and with it the music and every sound still playing."""
+        self._voices.context.suspend()
+
+    def resume(self) -> None:
+        """Let the audio clock run again after :meth:`pause`."""
+        self._voices.context.resume()
+
     def toggle_mute(self) -> None:
         """Mute or unmute the music."""
         self.muted = not self.muted

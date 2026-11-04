@@ -128,3 +128,16 @@ def test_no_reflection_over_a_gap() -> None:
     _, _, renderer = make_renderer()
     renderer.reflect_on(Ship(Vector3(4, 0.5, 10)), None)
     assert renderer.reflection.strength == 0
+
+
+def test_camera_widens_its_field_of_view_when_the_window_is_taller_than_wide() -> None:
+    bridge, _, renderer = make_renderer()
+    ship = Ship(Vector3(4, 0.5, 10))
+    renderer.follow(ship, speed_fraction=0, dt=0.016, snap=True)
+    assert renderer.camera.fov == SceneRenderer.BASE_FOV
+    bridge.window.innerWidth, bridge.window.innerHeight = 400, 800
+    bridge.window.dispatch("resize")
+    renderer.follow(ship, speed_fraction=0, dt=0.016, snap=True)
+    assert SceneRenderer.BASE_FOV < renderer.camera.fov < 120
+    renderer.overlook(0, 0, 0)
+    assert SceneRenderer.BASE_FOV < renderer.camera.fov < 120

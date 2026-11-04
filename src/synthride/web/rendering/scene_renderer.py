@@ -105,6 +105,16 @@ class SceneRenderer:
         self.camera.updateProjectionMatrix()
         self._lines.resize(width, height)
 
+    def _vertical_fov(self, fov: float) -> float:
+        """Return ``fov``, widened for a window taller than it is wide so the track keeps room at the sides.
+
+        The field of view is vertical: held upright the view would shrink to a slit. The horizontal angle is kept
+        halfway, in tangent terms, between the landscape's and the square's.
+        """
+        if self.camera.aspect >= 1:
+            return fov
+        return math.degrees(2 * math.atan(math.tan(math.radians(fov) / 2) / math.sqrt(self.camera.aspect)))
+
     def add(self, item: JsObject) -> None:
         """Add ``item`` to the scene."""
         self.scene.add(item)
@@ -151,7 +161,7 @@ class SceneRenderer:
         self._look = (x, y + 0.3, z - self.LOOK_AHEAD)
         self.camera.position.set(*self._eye)
         self.camera.lookAt(*self._look)
-        self.camera.fov = self.BASE_FOV + self.SPEED_FOV * speed_fraction
+        self.camera.fov = self._vertical_fov(self.BASE_FOV + self.SPEED_FOV * speed_fraction)
         self.camera.updateProjectionMatrix()
 
     def overlook(self, x: float, z: float, ground: float) -> None:
@@ -161,7 +171,7 @@ class SceneRenderer:
         self._camera_position = list(self._eye)
         self.camera.position.set(*self._eye)
         self.camera.lookAt(*self._look)
-        self.camera.fov = self.BASE_FOV
+        self.camera.fov = self._vertical_fov(self.BASE_FOV)
         self.camera.updateProjectionMatrix()
 
     def reflect_on(self, ship: Ship, deck: float | None) -> None:
